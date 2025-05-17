@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-
 def preprocess_PCs(hdf5_file, include_gps_time=False, include_intensity=True, normalize_intensity=True):
     data = {}
     feature_names = []
@@ -76,35 +75,25 @@ def preprocess_PCs(hdf5_file, include_gps_time=False, include_intensity=True, no
 
 
 
-hdf5_file = 'D:\\HFX3D\\dataset_preprocessing\\HFX3D.h5'            # Path to HDF5 file
+hdf5_file = "Path_To_Your_HDF5_file"            # Path to HDF5 file
 all_buildings, features = preprocess_PCs(hdf5_file, include_gps_time=False, include_intensity=False, normalize_intensity=False)
-
-
 print("Keys:", all_buildings.keys())
-print("First point in Building1:", all_buildings['Building1'][300])
-print("First point in Building1:", all_buildings['Building1'][1000])
-print("First point in Building1:", all_buildings['Building1'][5000])
-
-building2 = all_buildings['Building2']
 
 
-
-
-
-
-
-# # Plotting the point clouds
-# fig = plt.figure(figsize=(10, 8))
-# ax = fig.add_subplot(111, projection='3d')
-#
-# #ax.scatter(building1[:, 0], building1[:, 1], building1[:, 2], color='b', s=1, label='Building 1')
-# ax.scatter(building2[:, 0], building2[:, 1], building2[:, 2], color='r', s=1, label='Building 2')
-#
-# ax.set_xlabel('X')
-# ax.set_ylabel('Y')
-# ax.set_zlabel('Z')
-#
-# ax.set_title('Point Cloud Visualization')
-# ax.legend()
-#
-# plt.show()
+# Print random samples of points with their features
+num_samples = 5  # num samples
+print("\nPrinting random samples with their features:")
+for building_name, building_data in all_buildings.items():
+    print(f"\nRandom samples from {building_name}:")
+    random_indices = np.random.choice(len(building_data), num_samples, replace=False)
+    for idx in random_indices:
+        point_str = f"Point {idx}: "
+        point_features = [f"{feature.upper()}: {building_data[idx][feat_idx]:.4f}"
+                         if feature in ['x', 'y', 'z', 'red', 'green', 'blue']
+                         else f"{feature.upper()}: {int(building_data[idx][feat_idx])}"
+                         if feature == 'raw_classification'
+                         else f"{feature.upper()}: {building_data[idx][feat_idx]}"
+                         for feat_idx, feature in enumerate(features)]
+        point_str += ", ".join(point_features)
+        print(point_str)
+    print("-" * 50)

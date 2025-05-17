@@ -4,7 +4,7 @@ import h5py
 import numpy as np
 
 # Path to your folder containing .las files
-folder_path = 'D:\\HFX3D\\HFX3D_dataset'  ## path to folder having .las files
+folder_path = 'Path_To_Folder_With_las_Files'  ## path to folder having .las files
 output_hdf5 = 'HFX3D.h5'   #### output hdf5 file name
 
 # Get all .las files
