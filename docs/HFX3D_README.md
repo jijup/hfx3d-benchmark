@@ -34,7 +34,7 @@ HFX_<BuildingID>_<SensorType>_<Status>.las
 | `BLD008`    | MonaCampbell_C	                |
 | `BLD009`    | Halifax_Central_Library         |
 | `BLD010`    | Emera_Place	                    |
-| `BLD011`    | (Not assigned yet)	                |
+| `BLD011`    | (Not assigned yet)	            |
 
 
 ---
