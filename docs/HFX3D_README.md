@@ -22,16 +22,19 @@ HFX_<BuildingID>_<SensorType>_<Status>.las
 
 ### 🏡 Building Index
 
-| Building ID | Building Name         |
-|-------------|-----------------------|
-| `BLD001`    | Goldberg              |
-| `BLD002`    | MonaCampbell_A        |
-| `BLD003`    | MonaCampbell_B        |
-| `BLD004`    | Kenneth_Rowe          |
-| `BLD005`    | Schulich_School_of_Law|
-| `BLD006`    | VIC_Suites            |
-| `BLD007`    | *(Not assigned yet)*  |
-| `BLD008`    | *(Not assigned yet)*  |
+| Building ID | Building Name                   |
+|-------------|---------------------------------|
+| `BLD001`    | Goldberg                        |
+| `BLD002`    | MonaCampbell_A                  |
+| `BLD003`    | MonaCampbell_B                  |
+| `BLD004`    | Kenneth_Rowe                    |
+| `BLD005`    | Schulich_School_of_Law          |
+| `BLD006`    | VIC_Suites                      |
+| `BLD007`    | Engineering_Building            |
+| `BLD008`    | MonaCampbell_C	                |
+| `BLD009`    | Halifax_Central_Library         |
+| `BLD010`    | Emera_Place	                    |
+| `BLD011`    | (Not assigned yet)	                |
 
 
 ---
