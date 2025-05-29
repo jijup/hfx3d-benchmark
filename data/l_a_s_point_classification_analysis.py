@@ -612,7 +612,7 @@ def main():
     analyzer = PointCloudAnalyzer()
 
     # Get directory path from user
-    dir_path = r"C:\Users\abdia\PycharmProjects\hfx3d-benchmark\data\WACV"
+    dir_path = "Path"
 
     # Analyze directory
     results = analyzer.analyze_directory(dir_path)
