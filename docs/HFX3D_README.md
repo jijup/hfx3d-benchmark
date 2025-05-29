@@ -34,12 +34,13 @@ HFX_<BuildingID>_<SensorType>_<Status>.las
 | `BLD008`    | MonaCampbell_C	                |
 | `BLD009`    | Halifax_Central_Library         |
 | `BLD010`    | Emera_Place	                    |
-| `BLD011`    | (Not assigned yet)	            |
-
+| `BLD011`    | Dal_Gerard_Hall                 |
+| `BLD012`    | The_Margaritta	                |
+| `BLD013`    | (Not assigned)                  |
 
 ---
 
-### ✅ Example Filename Breakdown
+### ✅ Example of Filename Breakdown
 
 ```
 HFX_BLD002_ZEB_CLEAN.las
