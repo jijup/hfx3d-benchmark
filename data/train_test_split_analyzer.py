@@ -613,7 +613,7 @@ class TrainTestSplitAnalyzer:
 
 def main():
     # Get the path to the folder containing LAS files
-    data_folder = r"C:\Users\abdia\PycharmProjects\hfx3d-benchmark\data\WACV"
+    data_folder = "path"
     
     # Create analyzer and run analysis
     analyzer = TrainTestSplitAnalyzer(data_folder)
