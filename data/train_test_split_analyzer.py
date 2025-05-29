@@ -294,7 +294,7 @@ class TrainTestSplitAnalyzer:
             y='Class', 
             hue='Split',
             data=df,
-            palette=palette_dict,  # Changed from self.colors to palette_dict
+            palette=palette_dict,
             order=class_order,
             orient='h'
         )
