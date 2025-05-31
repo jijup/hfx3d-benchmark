@@ -22,7 +22,7 @@ class PointCloudAnalyzer:
         plt.style.use('seaborn-v0_8')
         sns.set_palette("husl")
 
-    def load_label_map(self, json_path="label_map.json"):
+    def load_label_map(self, json_path=r"C:\Users\s4824030\PycharmProjects\hfx3d-benchmark\configs\label_map.json"):
         try:
             with open(json_path, 'r') as f:
                 return json.load(f)
@@ -612,7 +612,7 @@ def main():
     analyzer = PointCloudAnalyzer()
 
     # Get directory path from user
-    dir_path = "Path"
+    dir_path = r"C:\Users\s4824030\PycharmProjects\hfx3d-benchmark\data\WACV\processed"
 
     # Analyze directory
     results = analyzer.analyze_directory(dir_path)

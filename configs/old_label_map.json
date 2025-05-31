@@ -1,0 +1,15 @@
+{
+    "unlabelled": 0,
+    "wall": 1,
+    "window": 2,
+    "door": 3,
+    "balcony": 4,
+    "vegetation": 5,
+    "stairs": 6,
+    "terrain": 7,
+    "roof": 8,
+    "blinds": 9,
+    "other": 10,
+    "column": 11,
+    "arch": 12
+}
