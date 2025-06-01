@@ -36,7 +36,8 @@ HFX_<BuildingID>_<SensorType>_<Status>.las
 | `BLD010`    | Emera_Place	                    |
 | `BLD011`    | Dal_Gerard_Hall                 |
 | `BLD012`    | The_Margaritta	                |
-| `BLD013`    | (Not assigned)                  |
+| `BLD013`    | 1801_Hollis_St	                |
+| `BLD014`    | Summit_Place  	                |
 
 ---
 
