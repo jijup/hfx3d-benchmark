@@ -28,9 +28,9 @@ class PointCloudAnalyzer:
                 return json.load(f)
         except FileNotFoundError:
             return {
-                "unlabelled": 0, "wall": 1, "window": 2, "door": 3,
-                "balcony": 4, "vegetation": 5, "stairs": 6, "terrain": 7,
-                "roof": 8, "blinds": 9, "other": 10, "column": 11, "arch": 12
+                "wall": 0, "window": 1, "door": 2,
+                "balcony": 3, "vegetation": 4, "stairs": 5, "terrain": 6,
+                "roof": 7, "blinds": 8, "other": 9, "column": 10, "arch": 11
             }
 
     def analyze_directory(self, directory):
