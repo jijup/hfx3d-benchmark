@@ -1,159 +1,42 @@
-<details>
-<summary>BLD001 – Goldberg</summary>
+### 🏗️ HFX3D Review Checklist
 
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD002 – MonaCampbell_A</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD003 – MonaCampbell_B</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD004 – Kenneth_Rowe</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD005 – Schulich_School_of_Law</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD006 – VIC_Suites</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD007 – Engineering_Building</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD008 – MonaCampbell_C</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD009 – Halifax_Central_Library</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD010 – Emera_Place</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD011 – Dal_Gerard_Hall</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD012 – The_Margaritta</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD013 – 1801_Hollis_St_1</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD014 – Summit_Place</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD015 – 1801_Hollis_St_2</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD016 – 1801_Hollis_St_3</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD017 – 1801_Hollis_St_4</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD018 – The_Exchange</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD019 – ____________</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
-
-<details>
-<summary>BLD020 – ____________</summary>
-
-- [ ] Review 1 & Label 0 Removed  
-- [ ] Review 2 & Label 0 Removed  
-
-</details>
+- [ ] `BLD001 – Goldberg` Review 1 & Label 0 Removed  
+- [ ] `BLD001 – Goldberg` Review 2 & Label 0 Removed  
+- [ ] `BLD002 – MonaCampbell_A` Review 1 & Label 0 Removed  
+- [ ] `BLD002 – MonaCampbell_A` Review 2 & Label 0 Removed  
+- [ ] `BLD003 – MonaCampbell_B` Review 1 & Label 0 Removed  
+- [ ] `BLD003 – MonaCampbell_B` Review 2 & Label 0 Removed  
+- [ ] `BLD004 – Kenneth_Rowe` Review 1 & Label 0 Removed  
+- [ ] `BLD004 – Kenneth_Rowe` Review 2 & Label 0 Removed  
+- [ ] `BLD005 – Schulich_School_of_Law` Review 1 & Label 0 Removed  
+- [ ] `BLD005 – Schulich_School_of_Law` Review 2 & Label 0 Removed  
+- [ ] `BLD006 – VIC_Suites` Review 1 & Label 0 Removed  
+- [ ] `BLD006 – VIC_Suites` Review 2 & Label 0 Removed  
+- [ ] `BLD007 – Engineering_Building` Review 1 & Label 0 Removed  
+- [ ] `BLD007 – Engineering_Building` Review 2 & Label 0 Removed  
+- [ ] `BLD008 – MonaCampbell_C` Review 1 & Label 0 Removed  
+- [ ] `BLD008 – MonaCampbell_C` Review 2 & Label 0 Removed  
+- [ ] `BLD009 – Halifax_Central_Library` Review 1 & Label 0 Removed  
+- [ ] `BLD009 – Halifax_Central_Library` Review 2 & Label 0 Removed  
+- [ ] `BLD010 – Emera_Place` Review 1 & Label 0 Removed  
+- [ ] `BLD010 – Emera_Place` Review 2 & Label 0 Removed  
+- [ ] `BLD011 – Dal_Gerard_Hall` Review 1 & Label 0 Removed  
+- [ ] `BLD011 – Dal_Gerard_Hall` Review 2 & Label 0 Removed  
+- [ ] `BLD012 – The_Margaritta` Review 1 & Label 0 Removed  
+- [ ] `BLD012 – The_Margaritta` Review 2 & Label 0 Removed  
+- [ ] `BLD013 – 1801_Hollis_St_1` Review 1 & Label 0 Removed  
+- [ ] `BLD013 – 1801_Hollis_St_1` Review 2 & Label 0 Removed  
+- [ ] `BLD014 – Summit_Place` Review 1 & Label 0 Removed  
+- [ ] `BLD014 – Summit_Place` Review 2 & Label 0 Removed  
+- [ ] `BLD015 – 1801_Hollis_St_2` Review 1 & Label 0 Removed  
+- [ ] `BLD015 – 1801_Hollis_St_2` Review 2 & Label 0 Removed  
+- [ ] `BLD016 – 1801_Hollis_St_3` Review 1 & Label 0 Removed  
+- [ ] `BLD016 – 1801_Hollis_St_3` Review 2 & Label 0 Removed  
+- [ ] `BLD017 – 1801_Hollis_St_4` Review 1 & Label 0 Removed  
+- [ ] `BLD017 – 1801_Hollis_St_4` Review 2 & Label 0 Removed  
+- [ ] `BLD018 – The_Exchange` Review 1 & Label 0 Removed  
+- [ ] `BLD018 – The_Exchange` Review 2 & Label 0 Removed  
+- [ ] `BLD019 – ____________` Review 1 & Label 0 Removed  
+- [ ] `BLD019 – ____________` Review 2 & Label 0 Removed  
+- [ ] `BLD020 – ____________` Review 1 & Label 0 Removed  
+- [ ] `BLD020 – ____________` Review 2 & Label 0 Removed  
