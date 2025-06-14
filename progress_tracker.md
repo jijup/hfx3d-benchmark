@@ -1,6 +1,6 @@
 ### 🏗️ HFX3D Review Checklist
 
-- [ ]  BLD001 – Goldberg Review 1 & Label 0 Removed  
+- [ ] BLD001 – Goldberg Review 1 & Label 0 Removed  
 - [ ] `BLD001 – Goldberg` Review 2 & Label 0 Removed  
 - [ ] `BLD002 – MonaCampbell_A` Review 1 & Label 0 Removed  
 - [ ] `BLD002 – MonaCampbell_A` Review 2 & Label 0 Removed  
