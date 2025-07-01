@@ -9,7 +9,7 @@
 
 # Purge  to remove any existing modules to avoid conflicts
 module purge
-# Load modules in correct order.
+# Load modules in correct order. For example these are the ones I needed for SqueezeSegV3 training.
 # Check the ones you need to load or install. I.e Scipy-stack contains numpy. scipy, pandas etc. no need to install them.
 module load StdEnv/2023 StdEnv/2020 gcc cuda opencv/4.5.5 python/3.10 scipy-stack/2022a
 
