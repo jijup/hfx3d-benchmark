@@ -42,8 +42,11 @@ HFX_<BuildingID>_<SensorType>_<Status>.las
 | `BLD016`    | 1801_Hollis_St_3         |
 | `BLD017`    | 1801_Hollis_St_4         |
 | `BLD018`    | The_Exchange             |
-| `BLD019`    | ____________             |
-| `BLD020`    | ____________             |
+| `BLD019`    | Sexton_Campus_1          |
+| `BLD020`    | Sexton_Campus_2          |
+| `BLD021`    | Sexton_Campus_3          |
+| `BLD022`    | Steel_Ocean_1            |
+| `BLD023`    | Steel_Ocean_2            |
 
 ---
 
