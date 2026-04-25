@@ -1,0 +1,6 @@
+model,test_miou,val_miou_best,epochs,status,repo
+PTv2m2,17.58,28.36,800,done,https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-pointcept
+DGCNN,18.31,,200,done,https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-dgcnn
+PTv3,,28.79,800,running,https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-pointcept
+RandLA-Net,,,100,running,https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-randlanet
+PointNet++ SSG,,,64,running,https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-pointnet2

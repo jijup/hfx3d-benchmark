@@ -1,0 +1,23 @@
+# PointNet++ SSG hyperparameters used for HFX3D benchmark
+# Full run: 64 epochs, 2×H100 — in progress
+
+model:
+  name: PointNet2_SSG
+  num_classes: 12
+  in_channels: 7         # xyz(3) + rgb(3) + intensity(1)
+  grouping: SSG          # Single-Scale Grouping
+
+training:
+  epochs: 64
+  optimizer: Adam
+  lr: 0.001
+  lr_decay: 0.7
+  lr_decay_every: 10     # epochs
+  num_points: 4096       # points per sample
+  sample_rate: 1.0       # fraction of chunks drawn per epoch (~65k samples)
+  batch_size: 8
+
+data:
+  num_classes: 12
+  classes: [wall, window, door, balcony, vegetation, stairs, terrain, roof, blinds, other, column, arch]
+  features: [xyz, rgb, intensity]

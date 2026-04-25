@@ -1,0 +1,22 @@
+# DGCNN hyperparameters — HFX3D benchmark
+# Full run: 200 epochs, 2×H100, best test mIoU 18.31% (ep162)
+
+model:
+  name: DGCNN_semseg_hfx3d
+  k: 20
+  emb_dims: 1024
+  dropout: 0.5
+  in_channels: 7        # xyz(3) + rgb(3) + intensity(1)
+  num_classes: 12
+
+training:
+  epochs: 200
+  batch_size: 8
+  optimizer: AdamW
+  lr: 0.001
+  lr_scheduler: cosine_annealing
+  num_points: 4096
+
+data:
+  classes: [wall, window, door, balcony, vegetation, stairs, terrain, roof, blinds, other, column, arch]
+  features: [xyz, rgb, intensity]

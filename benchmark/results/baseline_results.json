@@ -1,0 +1,64 @@
+{
+  "classes": ["wall", "window", "door", "balcony", "vegetation", "stairs", "terrain", "roof", "blinds", "other", "column", "arch"],
+  "models": {
+    "PTv2m2": {
+      "status": "done",
+      "epochs": 800,
+      "test_miou": 17.58,
+      "val_miou_best": 28.36,
+      "per_class_iou": {
+        "wall": 60.45,
+        "window": 12.03,
+        "door": 0.00,
+        "balcony": 24.07,
+        "vegetation": 36.24,
+        "stairs": 0.00,
+        "terrain": 40.56,
+        "roof": 1.15,
+        "blinds": 6.92,
+        "other": 29.58,
+        "column": 0.00,
+        "arch": 0.00
+      }
+    },
+    "DGCNN": {
+      "status": "done",
+      "epochs": 200,
+      "best_epoch": 162,
+      "test_miou": 18.31,
+      "per_class_iou": {
+        "wall": 62.0,
+        "window": 15.4,
+        "door": 1.5,
+        "balcony": 0.0,
+        "vegetation": 25.0,
+        "stairs": 10.2,
+        "terrain": 81.5,
+        "roof": 0.1,
+        "blinds": 5.7,
+        "other": 16.6,
+        "column": 0.0,
+        "arch": 1.9
+      }
+    },
+    "PTv3": {
+      "status": "running",
+      "epochs": 800,
+      "val_miou_best_so_far": 28.79,
+      "test_miou": null,
+      "per_class_iou": null
+    },
+    "RandLA-Net": {
+      "status": "running",
+      "epochs": 100,
+      "test_miou": null,
+      "per_class_iou": null
+    },
+    "PointNet++ SSG": {
+      "status": "running",
+      "epochs": 64,
+      "test_miou": null,
+      "per_class_iou": null
+    }
+  }
+}

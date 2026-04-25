@@ -1,0 +1,27 @@
+# Point Transformer hyperparameters — HFX3D benchmark
+# PTv2m2: 800 epochs, test mIoU 17.58%
+# PTv3:   800 epochs, in progress (best val mIoU 28.79% so far)
+
+ptv2m2:
+  model: DefaultSegmentor
+  in_channels: 10       # coord(3) + color(3) + normal(3) + intensity(1)
+  num_classes: 12
+  epochs: 800
+  optimizer: AdamW
+  lr: 0.006
+  batch_size: 8
+
+ptv3:
+  model: DefaultSegmentorV2
+  in_channels: 7        # color(3) + normal(3) + intensity(1)
+  num_classes: 12
+  epochs: 800
+  return_grid_coord: true
+  flash_attention: true
+  optimizer: AdamW
+  lr: 0.006
+  batch_size: 8
+
+data:
+  classes: [wall, window, door, balcony, vegetation, stairs, terrain, roof, blinds, other, column, arch]
+  voxel_size: 0.04
