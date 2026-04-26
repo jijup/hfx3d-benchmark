@@ -47,17 +47,35 @@ labels/semantic        — (N,)   integer labels 0–11
 
 ## Benchmark Results
 
-All models trained on 13 buildings, evaluated on 5 held-out test buildings.
+All models trained on 13 buildings, evaluated on 5 held-out test buildings. Results pending.
 
-Results pending — all runs in progress.
+### Summary
 
-| Model | Test mIoU | Val mIoU (best) | Epochs |
-|-------|-----------|-----------------|--------|
-| PTv2 (Point Transformer V2) | TBD | TBD | 800 |
-| PTv3 (Point Transformer V3) | TBD | TBD | 800 |
-| DGCNN | TBD | — | 200 |
-| RandLA-Net | TBD | — | 50 |
-| PointNet++ (SSG) | TBD | — | 64 |
+| Model | Epochs | Test mIoU | Test mAcc | Test allAcc |
+|-------|--------|-----------|-----------|-------------|
+| PTv2 (Point Transformer V2) | 800 | TBD | TBD | TBD |
+| PTv3 (Point Transformer V3) | 800 | TBD | TBD | TBD |
+| DGCNN | 200 | TBD | TBD | TBD |
+| RandLA-Net | 50 | TBD | TBD | TBD |
+| PointNet++ (SSG) | 64 | TBD | TBD | TBD |
+
+### Per-Class IoU
+
+| Class | PTv2 | PTv3 | DGCNN | RandLA-Net | PointNet++ |
+|-------|------|------|-------|------------|------------|
+| wall | TBD | TBD | TBD | TBD | TBD |
+| window | TBD | TBD | TBD | TBD | TBD |
+| door | TBD | TBD | TBD | TBD | TBD |
+| balcony | TBD | TBD | TBD | TBD | TBD |
+| vegetation | TBD | TBD | TBD | TBD | TBD |
+| stairs | TBD | TBD | TBD | TBD | TBD |
+| terrain | TBD | TBD | TBD | TBD | TBD |
+| roof | TBD | TBD | TBD | TBD | TBD |
+| blinds | TBD | TBD | TBD | TBD | TBD |
+| other | TBD | TBD | TBD | TBD | TBD |
+| column | TBD | TBD | TBD | TBD | TBD |
+| arch | TBD | TBD | TBD | TBD | TBD |
+| **mIoU** | TBD | TBD | TBD | TBD | TBD |
 
 ## Reproducing Results
 
@@ -65,7 +83,7 @@ All HFX3D-specific integration files (dataset adapters, configs, SLURM scripts) 
 
 | Model | Framework | HFX3D files |
 |-------|-----------|-------------|
-| PTv2m2 / PTv3 | [Pointcept](https://github.com/Pointcept/Pointcept) | `models/pointcept/` |
+| PTv2 / PTv3 | [Pointcept](https://github.com/Pointcept/Pointcept) | `models/pointcept/` |
 | DGCNN | [AnTao97/dgcnn.pytorch](https://github.com/AnTao97/dgcnn.pytorch) | `models/dgcnn/` |
 | RandLA-Net | [QingyongHu/RandLA-Net](https://github.com/QingyongHu/RandLA-Net) | `models/randlanet/` |
 | PointNet++ | [yanx27/Pointnet_Pointnet2_pytorch](https://github.com/yanx27/Pointnet_Pointnet2_pytorch) | `models/pointnet2/` |
