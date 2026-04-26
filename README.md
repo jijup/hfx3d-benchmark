@@ -53,7 +53,7 @@ All models trained on 13 buildings, evaluated on 5 held-out test buildings.
 |-------|-----------|-----------------|--------|
 | PTv2m2 (Point Transformer V2) | **17.58%** | 28.36% | 800 |
 | DGCNN | **18.31%** | — | 200 |
-| PTv3 (Point Transformer V3) | TBD | 29.39% | 800 |
+| PTv3 (Point Transformer V3) | **29.57%** | 29.39% | 800 |
 | RandLA-Net | TBD | — | 50 |
 | PointNet++ (SSG) | TBD | — | 64 |
 
@@ -61,19 +61,19 @@ All models trained on 13 buildings, evaluated on 5 held-out test buildings.
 
 | Class | PTv2m2 | DGCNN | PTv3 | RandLA-Net | PointNet++ |
 |-------|--------|-------|------|------------|------------|
-| wall | 60.5% | 62.0% | TBD | TBD | TBD |
-| window | 12.0% | 15.4% | TBD | TBD | TBD |
-| door | 0.0% | 1.5% | TBD | TBD | TBD |
-| balcony | 24.1% | 0.0% | TBD | TBD | TBD |
-| vegetation | 36.2% | 25.0% | TBD | TBD | TBD |
-| stairs | 0.0% | 10.2% | TBD | TBD | TBD |
-| terrain | 40.6% | 81.5% | TBD | TBD | TBD |
-| roof | 1.2% | 0.1% | TBD | TBD | TBD |
-| blinds | 6.9% | 5.7% | TBD | TBD | TBD |
-| other | 29.6% | 16.6% | TBD | TBD | TBD |
-| column | 0.0% | 0.0% | TBD | TBD | TBD |
-| arch | 0.0% | 1.9% | TBD | TBD | TBD |
-| **mIoU** | **17.58%** | **18.31%** | TBD | TBD | TBD |
+| wall | 60.5% | 62.0% | 76.6% | TBD | TBD |
+| window | 12.0% | 15.4% | 28.0% | TBD | TBD |
+| door | 0.0% | 1.5% | 6.8% | TBD | TBD |
+| balcony | 24.1% | 0.0% | 1.3% | TBD | TBD |
+| vegetation | 36.2% | 25.0% | 76.8% | TBD | TBD |
+| stairs | 0.0% | 10.2% | 0.1% | TBD | TBD |
+| terrain | 40.6% | 81.5% | 86.9% | TBD | TBD |
+| roof | 1.2% | 0.1% | 0.0% | TBD | TBD |
+| blinds | 6.9% | 5.7% | 10.2% | TBD | TBD |
+| other | 29.6% | 16.6% | 44.9% | TBD | TBD |
+| column | 0.0% | 0.0% | 23.2% | TBD | TBD |
+| arch | 0.0% | 1.9% | 0.0% | TBD | TBD |
+| **mIoU** | **17.58%** | **18.31%** | **29.57%** | TBD | TBD |
 
 ## Reproducing Results
 
