@@ -20,7 +20,7 @@ apptainer exec --nv --cleanenv \
    export OMP_NUM_THREADS=4 && \
    python main_HFX3D.py \
      --log_dir output_hfx3d \
-     --max_epoch 50 \
+     --max_epoch 100 \
      --batch_size 4 \
      --data_root /home/<user>/projects/def-<pi>/<user>/WACV_Splits \
      --gpus 2'
