@@ -14,7 +14,6 @@ Benchmark suite for semantic segmentation of urban building facade LiDAR point c
 | Test points | ~67M |
 | Format | HDF5 (`.h5`), one file per building |
 | Classes | 12 semantic classes |
-| RGB | ~70% black (ZEB scanner; low colour reliability) |
 | Intensity | Normalised [0, 1] |
 | Coordinates | Unit-sphere normalised per building |
 
