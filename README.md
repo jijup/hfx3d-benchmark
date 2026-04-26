@@ -49,15 +49,13 @@ labels/semantic        — (N,)   integer labels 0–11
 
 All models trained on 13 buildings, evaluated on 5 held-out test buildings.
 
-| Model | Test mIoU | Val mIoU (best) | Epochs | Repo |
-|-------|-----------|-----------------|--------|------|
-| PTv2m2 (Point Transformer V2) | **17.58%** | 28.36% | 800 | [hfx3d-pointcept](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-pointcept) |
-| DGCNN | **18.31%** | — | 200 | [hfx3d-dgcnn](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-dgcnn) |
-| PTv3 (Point Transformer V3) | TBD | 28.79%* | 800 | [hfx3d-pointcept](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-pointcept) |
-| RandLA-Net | TBD | — | 100 | [hfx3d-randlanet](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-randlanet) |
-| PointNet++ (SSG) | TBD | — | 64 | [hfx3d-pointnet2](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-pointnet2) |
-
-*PTv3 val mIoU at intermediate checkpoint — run in progress.
+| Model | Test mIoU | Val mIoU (best) | Epochs |
+|-------|-----------|-----------------|--------|
+| PTv2m2 (Point Transformer V2) | **17.58%** | 28.36% | 800 |
+| DGCNN | **18.31%** | — | 200 |
+| PTv3 (Point Transformer V3) | TBD | 29.39% | 800 |
+| RandLA-Net | TBD | — | 50 |
+| PointNet++ (SSG) | TBD | — | 64 |
 
 ### Per-Class IoU Breakdown
 
@@ -79,14 +77,14 @@ All models trained on 13 buildings, evaluated on 5 held-out test buildings.
 
 ## Reproducing Results
 
-Each model has its own repo with setup instructions for Alliance Canada (fir.alliancecan.ca). Clone the relevant repo and follow its README — see `docs/reproduction.md` for step-by-step commands.
+All HFX3D-specific integration files (dataset adapters, configs, SLURM scripts) are in the `models/` folder. See `docs/reproduction.md` for step-by-step setup instructions.
 
-| Model | Repo | SLURM script |
-|-------|------|--------------|
-| PTv2m2 / PTv3 | [hfx3d-pointcept](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-pointcept) | `submit_job_hfx3d.sh` / `submit_ptv3_hfx3d.sh` |
-| DGCNN | [hfx3d-dgcnn](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-dgcnn) | `submit_dgcnn_hfx3d.sh` |
-| RandLA-Net | [hfx3d-randlanet](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-randlanet) | `submit_randlanet_hfx3d.sh` |
-| PointNet++ | [hfx3d-pointnet2](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-pointnet2) | `submit_pointnet2_hfx3d.sh` |
+| Model | Framework | HFX3D files |
+|-------|-----------|-------------|
+| PTv2m2 / PTv3 | [Pointcept](https://github.com/Pointcept/Pointcept) | `models/pointcept/` |
+| DGCNN | [AnTao97/dgcnn.pytorch](https://github.com/AnTao97/dgcnn.pytorch) | `models/dgcnn/` |
+| RandLA-Net | [QingyongHu/RandLA-Net](https://github.com/QingyongHu/RandLA-Net) | `models/randlanet/` |
+| PointNet++ | [yanx27/Pointnet_Pointnet2_pytorch](https://github.com/yanx27/Pointnet_Pointnet2_pytorch) | `models/pointnet2/` |
 
 ## Infrastructure
 
@@ -99,17 +97,32 @@ Each model has its own repo with setup instructions for Alliance Canada (fir.all
 
 ```
 hfx3d-benchmark/
+├── models/
+│   ├── dgcnn/
+│   │   ├── submit_dgcnn_hfx3d.sh      # SLURM full run (200 epochs, 2×H100)
+│   │   └── submit_dgcnn_smoke.sh      # SLURM smoke test (5 epochs)
+│   ├── randlanet/
+│   │   ├── hfx3d_dataset.py           # HFX3D dataset adapter
+│   │   ├── helper_hfx3d.py            # Config and KNN utilities
+│   │   ├── submit_randlanet_hfx3d.sh  # SLURM full run (50 epochs, 2×H100)
+│   │   └── submit_randlanet_smoke.sh  # SLURM smoke test (3 epochs)
+│   ├── pointnet2/
+│   │   ├── HFX3DDataLoader.py         # HFX3D dataset adapter
+│   │   ├── submit_pointnet2_hfx3d.sh  # SLURM full run (64 epochs, 2×H100)
+│   │   └── submit_pointnet2_smoke.sh  # SLURM smoke test (5 epochs)
+│   └── pointcept/
+│       ├── hfx3d.py                   # HFX3D dataset class (register in Pointcept)
+│       ├── semseg-pt-v2m2-0-base.py   # PTv2 config
+│       ├── semseg-pt-v3m1-0-base.py   # PTv3 config
+│       ├── submit_job_hfx3d.sh        # SLURM PTv2 full run (800 epochs, 2×H100)
+│       └── submit_ptv3_hfx3d.sh       # SLURM PTv3 full run (800 epochs, 2×H100)
 ├── benchmark/results/
-│   ├── leaderboard.csv          # mIoU summary table
-│   └── baseline_results.json    # per-class IoU for each model
+│   ├── leaderboard.csv                # mIoU summary table
+│   └── baseline_results.json         # per-class IoU for each model
 ├── configs/
-│   ├── label_map.json           # class ID → name mapping
-│   ├── dgcnn.yaml
-│   ├── pointtransformer.yaml
-│   ├── randlanet.yaml
-│   └── pointnet2.yaml
+│   └── label_map.json                 # class ID → name mapping
 └── docs/
-    ├── label_taxonomy.md        # class descriptions and notes
-    ├── reproduction.md          # step-by-step reproduction guide
-    └── HFX3D_README.md          # building index and naming convention
+    ├── label_taxonomy.md              # class descriptions and notes
+    ├── reproduction.md                # step-by-step reproduction guide
+    └── HFX3D_README.md               # building index and naming convention
 ```
