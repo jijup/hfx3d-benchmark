@@ -47,6 +47,7 @@ HFX_<BuildingID>_<SensorType>_<Status>.las
 | `BLD021`    | Sexton_Campus_3          |
 | `BLD022`    | Steele_Ocean_1           |
 | `BLD023`    | Steele_Ocean_2           |
+| `BLD024`    | Sobeys_Inspiration_Hub   |
 
 ---
 
