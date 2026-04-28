@@ -1,6 +1,0 @@
-model,epochs,test_miou,test_macc,test_allacc
-PTv2,800,,,
-PTv3,800,,,
-DGCNN,200,,,
-RandLA-Net,50,,,
-PointNet++ SSG,64,,,

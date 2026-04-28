@@ -1,0 +1,6 @@
+model,OA,muP,muR,muF1,muIoU
+PTv2,,,,,
+PTv3,,,,,
+DGCNN,,,,,
+RandLA-Net,,,,,
+PointNet++,,,,,

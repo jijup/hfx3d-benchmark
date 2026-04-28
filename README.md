@@ -50,13 +50,13 @@ All models trained on 13 buildings, evaluated on 5 held-out test buildings. Resu
 
 ### Summary
 
-| Model | Epochs | Test mIoU | Test mAcc | Test allAcc |
-|-------|--------|-----------|-----------|-------------|
-| PTv2 (Point Transformer V2) | 800 | TBD | TBD | TBD |
-| PTv3 (Point Transformer V3) | 800 | TBD | TBD | TBD |
-| DGCNN | 200 | TBD | TBD | TBD |
-| RandLA-Net | 50 | TBD | TBD | TBD |
-| PointNet++ (SSG) | 64 | TBD | TBD | TBD |
+| Model | OA | μP | μR | μF1 | μIoU |
+|-------|----|----|-----|-----|------|
+| PTv2 (Point Transformer V2) | — | — | — | — | — |
+| PTv3 (Point Transformer V3) | — | — | — | — | — |
+| DGCNN | — | — | — | — | — |
+| RandLA-Net | — | — | — | — | — |
+| PointNet++ (SSG) | — | — | — | — | — |
 
 ### Per-Class IoU
 
@@ -99,31 +99,18 @@ All HFX3D-specific integration files (dataset adapters, configs, SLURM scripts) 
 ```
 hfx3d-benchmark/
 ├── models/
-│   ├── dgcnn/
-│   │   ├── submit_dgcnn_hfx3d.sh      # SLURM full run (200 epochs, 2×H100)
-│   │   └── submit_dgcnn_smoke.sh      # SLURM smoke test (5 epochs)
-│   ├── randlanet/
-│   │   ├── hfx3d_dataset.py           # HFX3D dataset adapter
-│   │   ├── helper_hfx3d.py            # Config and KNN utilities
-│   │   ├── submit_randlanet_hfx3d.sh  # SLURM full run (50 epochs, 2×H100)
-│   │   └── submit_randlanet_smoke.sh  # SLURM smoke test (3 epochs)
-│   ├── pointnet2/
-│   │   ├── HFX3DDataLoader.py         # HFX3D dataset adapter
-│   │   ├── submit_pointnet2_hfx3d.sh  # SLURM full run (64 epochs, 2×H100)
-│   │   └── submit_pointnet2_smoke.sh  # SLURM smoke test (5 epochs)
-│   └── pointcept/
-│       ├── hfx3d.py                   # HFX3D dataset class (register in Pointcept)
-│       ├── semseg-pt-v2m2-0-base.py   # PTv2 config
-│       ├── semseg-pt-v3m1-0-base.py   # PTv3 config
-│       ├── submit_job_hfx3d.sh        # SLURM PTv2 full run (800 epochs, 2×H100)
-│       └── submit_ptv3_hfx3d.sh       # SLURM PTv3 full run (800 epochs, 2×H100)
-├── benchmark/results/
-│   ├── leaderboard.csv                # mIoU summary table
-│   └── baseline_results.json         # per-class IoU for each model
+│   ├── dgcnn/          # SLURM scripts for DGCNN
+│   ├── randlanet/      # dataset adapter + SLURM scripts for RandLA-Net
+│   ├── pointnet2/      # dataset adapter + SLURM scripts for PointNet++
+│   └── pointcept/      # dataset class, configs, SLURM scripts for PTv2/PTv3
+├── results/
+│   ├── benchmark_results.xlsx  # full results: OA, μP, μR, μF1, μIoU + per-class
+│   └── leaderboard.csv         # summary table (machine-readable)
 ├── configs/
-│   └── label_map.json                 # class ID → name mapping
-└── docs/
-    ├── label_taxonomy.md              # class descriptions and notes
-    ├── reproduction.md                # step-by-step reproduction guide
-    └── HFX3D_README.md               # building index and naming convention
+│   └── label_map.json          # class ID → name mapping
+├── docs/
+│   ├── label_taxonomy.md       # class descriptions and notes
+│   ├── reproduction.md         # step-by-step reproduction guide
+│   └── HFX3D_README.md         # building index and naming convention
+└── DataPreprocessing/          # LAS → HDF5 conversion scripts
 ```
