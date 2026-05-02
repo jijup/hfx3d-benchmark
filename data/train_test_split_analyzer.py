@@ -2,6 +2,8 @@ import os
 import re
 import laspy
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import json
 from collections import defaultdict, Counter
