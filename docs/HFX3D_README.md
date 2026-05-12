@@ -44,10 +44,11 @@ HFX_<BuildingID>_<SensorType>_<Status>.las
 | `BLD018`    | The_Exchange             |
 | `BLD019`    | Sexton_Campus_1          |
 | `BLD020`    | Sexton_Campus_2          |
-| `BLD021`    |       -                  |
+| `BLD021`    | TD_Building              |
 | `BLD022`    | Steele_Ocean_1           |
 | `BLD023`    | Steele_Ocean_2           |
 | `BLD024`    | Sobeys_Inspiration_Hub   |
+| `BLD025`    | Belmont_House            |
 
 ---
 
