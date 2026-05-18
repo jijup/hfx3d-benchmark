@@ -22,7 +22,9 @@ class PointCloudAnalyzer:
         plt.style.use('seaborn-v0_8')
         sns.set_palette("husl")
 
-    def load_label_map(self, json_path=r"C:\Users\s4824030\PycharmProjects\hfx3d-benchmark\configs\label_map.json"):
+    def load_label_map(self, json_path=None):
+        if json_path is None:
+            json_path = Path(__file__).parent.parent / 'configs' / 'label_map.json'
         with open(json_path, 'r') as f:
             return json.load(f)
 
@@ -86,11 +88,13 @@ class PointCloudAnalyzer:
             ax1.text(bar.get_x() + bar.get_width() / 2., height * 1.05, f'{int(height):,}',
                      ha='center', va='bottom', fontsize=8, fontweight='bold')
 
-        eighty_pct_idx = np.where(cumulative_pct >= 80)[0][0]
-        ax1.axvline(x=eighty_pct_idx, color='black', linestyle='--', alpha=0.7)
-        ax1.text(eighty_pct_idx + 0.5, ax1.get_ylim()[0] * 10,
-                 f'80% of points\nin {eighty_pct_idx+1} classes\n({(eighty_pct_idx+1)/len(classes):.1%} of classes)',
-                 fontsize=10, bbox=dict(facecolor='white', alpha=0.7))
+        eighty_pct_hits = np.where(cumulative_pct >= 80)[0]
+        if len(eighty_pct_hits) > 0:
+            eighty_pct_idx = eighty_pct_hits[0]
+            ax1.axvline(x=eighty_pct_idx, color='black', linestyle='--', alpha=0.7)
+            ax1.text(eighty_pct_idx + 0.5, ax1.get_ylim()[0] * 10,
+                     f'80% of points\nin {eighty_pct_idx+1} classes\n({(eighty_pct_idx+1)/len(classes):.1%} of classes)',
+                     fontsize=10, bbox=dict(facecolor='white', alpha=0.7))
         ax1.grid(True, axis='y', alpha=0.3)
 
         info_text = (f"Dataset Statistics:\n"
@@ -206,11 +210,13 @@ class PointCloudAnalyzer:
                    rotation=45, ha='right', fontsize=9)
         plt.title('Class Distribution', fontsize=12)
 
-        eighty_pct_idx = np.where(np.cumsum(counts) / total_points >= 0.8)[0][0]
-        ax1.axvline(x=eighty_pct_idx, color='black', linestyle='--', alpha=0.7)
-        ax1.text(eighty_pct_idx + 0.3, bar_heights[0] * 0.1,
-                 f'80% of points in\n{eighty_pct_idx+1} classes',
-                 fontsize=9, bbox=dict(facecolor='white', alpha=0.7))
+        eighty_pct_hits = np.where(np.cumsum(counts) / total_points >= 0.8)[0]
+        if len(eighty_pct_hits) > 0:
+            eighty_pct_idx = eighty_pct_hits[0]
+            ax1.axvline(x=eighty_pct_idx, color='black', linestyle='--', alpha=0.7)
+            ax1.text(eighty_pct_idx + 0.3, bar_heights[0] * 0.1,
+                     f'80% of points in\n{eighty_pct_idx+1} classes',
+                     fontsize=9, bbox=dict(facecolor='white', alpha=0.7))
 
         plt.tight_layout(w_pad=4)
         plt.subplots_adjust(bottom=0.35)
@@ -308,13 +314,26 @@ class PointCloudAnalyzer:
                 f.write("\n")
 
 def main():
-    analyzer = PointCloudAnalyzer()
-    dir_path = r"C:\Users\s4824030\PycharmProjects\hfx3d-benchmark\data\WACV"
-    results = analyzer.analyze_directory(dir_path)
+    import argparse
+    parser = argparse.ArgumentParser(
+        description='Analyse class distribution of LAS files and generate visualizations')
+    parser.add_argument('las_dir', help='Directory containing .las files to analyse')
+    parser.add_argument('--output_dir', default=None,
+                        help='Output directory for plots and report '
+                             '(default: DataPreprocessing/analysis_output)')
+    parser.add_argument('--label_map', default=None,
+                        help='Path to label_map.json (default: configs/label_map.json)')
+    args = parser.parse_args()
+
+    analyzer = PointCloudAnalyzer(output_dir=args.output_dir)
+    if args.label_map:
+        analyzer.label_map = analyzer.load_label_map(args.label_map)
+        analyzer.id_to_name = {v: k for k, v in analyzer.label_map.items()}
+
+    results = analyzer.analyze_directory(args.las_dir)
     if results:
         analyzer.generate_visualizations(results)
         print(f"\nAnalysis complete! Results saved to: {analyzer.output_dir}")
-        os.startfile(analyzer.output_dir)
 
 
 if __name__ == "__main__":

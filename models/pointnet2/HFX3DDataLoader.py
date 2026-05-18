@@ -5,9 +5,9 @@ Dataset path: /home/abdiaziz/projects/def-jijup/abdiaziz/WACV_Splits/
   train/  and  test/  subdirs, each with *.h5 files (one per building).
 
 Each .h5 file contains:
-  point_cloud/xyz        (N, 3) float32  unit-sphere normalised
+  point_cloud/xyz        (N, 3) float32  mean-centered, metric scale preserved
   point_cloud/rgb        (N, 3) float32  [0, 1]
-  point_cloud/intensity  (N,)   float32  [0, 1]
+  point_cloud/intensity  (N,)   float32  [0, 1]  (global p1/p99 normalization)
   labels/semantic        (N,)   uint8    0-11
 
 12 classes:

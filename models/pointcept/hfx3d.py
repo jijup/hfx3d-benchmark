@@ -171,10 +171,10 @@ class HFX3DDataset(DefaultDataset):
             if normals is not None:
                 normals = normals[indices]
 
-        # Data is already normalized from LAS converter:
-        # - XYZ: centered and unit-sphere normalized (within [-1,1])
-        # - RGB: divided by 65535.0 (already [0,1])
-        # - Intensity: min-max normalized per file (already [0,1])
+        # Data is already normalized by las_to_hdf5.py (Official HFX3D Input Protocol):
+        # - XYZ: mean-centered per building, metric scale preserved
+        # - RGB: divided by 65535.0 → [0, 1]
+        # - Intensity: global p1/p99 percentile normalization → [0, 1]
         # Just ensure correct data types
         xyz = xyz.astype(np.float32)
         rgb = rgb.astype(np.float32)

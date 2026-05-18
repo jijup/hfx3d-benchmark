@@ -254,28 +254,30 @@ class LASLabelProcessor:
 
 
 def main():
-    # Configuration
-    input_folder = r"C:\Users\s4824030\PycharmProjects\hfx3d-benchmark\data\WACV"
-    output_folder = None  # Will create 'processed' subfolder in input_folder
+    import argparse
+    import json
 
-    # Create processor
+    parser = argparse.ArgumentParser(
+        description='Remove label-0 points and shift remaining labels down by 1 in LAS files')
+    parser.add_argument('input_folder', help='Folder containing .las files to process')
+    parser.add_argument('--output_folder', default=None,
+                        help='Output folder (default: <input_folder>/processed)')
+    parser.add_argument('--no-backup', action='store_true',
+                        help='Skip creating backups of original files')
+    args = parser.parse_args()
+
     processor = LASLabelProcessor(
-        input_folder=input_folder,
-        output_folder=output_folder,
-        backup=True  # Set to False if you don't want backups
+        input_folder=args.input_folder,
+        output_folder=args.output_folder,
+        backup=not args.no_backup,
     )
 
-    # Process all files
     stats = processor.process_all_files()
-
-    # Validate the processing
     processor.validate_processing()
 
-    # Optionally save statistics to file
-    import json
     stats_file = processor.output_folder / "processing_stats.json"
     with open(stats_file, 'w') as f:
-        json.dump(stats, f, indent=2)
+        json.dump(processor.convert_numpy_types(stats), f, indent=2)
     print(f"\nDetailed statistics saved to: {stats_file}")
 
 
