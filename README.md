@@ -55,19 +55,8 @@ Each building is stored as an HDF5 file with keys `point_cloud/{xyz,rgb,intensit
 
 Trained on 18 buildings, evaluated on 4 held-out test buildings. Results pending.
 
-| Model | OA | mIoU | μF1 |
-|-------|----|----|-----|
-| PTv3 (Point Transformer V3) | — | — | — |
-| PTv2 (Point Transformer V2) | — | — | — |
-| DGCNN | — | — | — |
-| RandLA-Net | — | — | — |
-| PointNet++ (SSG) | — | — | — |
-| PointNet | — | — | — |
-
-### Per-Class IoU
-
-| Class | PTv3 | PTv2 | DGCNN | RandLA-Net | PointNet++ | PointNet |
-|-------|------|------|-------|------------|------------|---------|
+| | PTv3 | PTv2 | DGCNN | RandLA-Net | PointNet++ | PointNet |
+|---|------|------|-------|------------|------------|---------|
 | wall | — | — | — | — | — | — |
 | window | — | — | — | — | — | — |
 | door | — | — | — | — | — | — |
@@ -80,6 +69,9 @@ Trained on 18 buildings, evaluated on 4 held-out test buildings. Results pending
 | other | — | — | — | — | — | — |
 | column | — | — | — | — | — | — |
 | arch | — | — | — | — | — | — |
+| **mIoU** | — | — | — | — | — | — |
+| **OA** | — | — | — | — | — | — |
+| **μF1** | — | — | — | — | — | — |
 
 ## Reproducing Results
 
