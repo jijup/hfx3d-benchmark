@@ -27,12 +27,12 @@
       <step r="142" g="36"  b="170" pos="0.666667"/>
       <step r="0"   g="229" b="168" pos="0.666667"/>
       <step r="0"   g="229" b="168" pos="0.750000"/>
-      <step r="255" g="0"   b="255" pos="0.750000"/>
-      <step r="255" g="0"   b="255" pos="0.833333"/>
-      <step r="156" g="204" b="0"   pos="0.833333"/>
+      <step r="158" g="158" b="158" pos="0.750000"/>
+      <step r="158" g="158" b="158" pos="0.833333"/>
+      <step r="224" g="64"  b="251" pos="0.833333"/>
+      <step r="224" g="64"  b="251" pos="0.916667"/>
       <step r="156" g="204" b="0"   pos="0.916667"/>
-      <step r="158" g="158" b="158" pos="0.916667"/>
-      <step r="158" g="158" b="158" pos="1.000000"/>
+      <step r="156" g="204" b="0"   pos="1.000000"/>
       <label val="0">Wall</label>
       <label val="1">Window</label>
       <label val="2">Door</label>
@@ -42,9 +42,9 @@
       <label val="6">Terrain</label>
       <label val="7">Roof</label>
       <label val="8">Blinds</label>
-      <label val="9">Column</label>
-      <label val="10">Arch</label>
-      <label val="11">Other</label>
+      <label val="9">Other</label>
+      <label val="10">Column</label>
+      <label val="11">Arch</label>
     </Data>
   </ColorScale>
 </CloudCompare>
