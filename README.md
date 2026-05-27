@@ -64,6 +64,23 @@ Trained on 18 buildings, evaluated on 4 held-out test buildings. Results pending
 | PointNet++ (SSG) | — | — | — |
 | PointNet | — | — | — |
 
+### Per-Class IoU
+
+| Class | PTv3 | PTv2 | DGCNN | RandLA-Net | PointNet++ | PointNet |
+|-------|------|------|-------|------------|------------|---------|
+| wall | — | — | — | — | — | — |
+| window | — | — | — | — | — | — |
+| door | — | — | — | — | — | — |
+| balcony | — | — | — | — | — | — |
+| vegetation | — | — | — | — | — | — |
+| stairs | — | — | — | — | — | — |
+| terrain | — | — | — | — | — | — |
+| roof | — | — | — | — | — | — |
+| blinds | — | — | — | — | — | — |
+| other | — | — | — | — | — | — |
+| column | — | — | — | — | — | — |
+| arch | — | — | — | — | — | — |
+
 ## Reproducing Results
 
 Full setup instructions (framework cloning, file placement, dataset path configuration) are in [`docs/reproduction.md`](docs/reproduction.md).
