@@ -10,12 +10,14 @@ hfx3d-benchmark/
 │   ├── pointcept/       # HFX3DDataset class + PTv2/PTv3 configs
 │   ├── dgcnn/           # training, eval, and full-scene inference scripts
 │   ├── randlanet/       # dataset adapter, model, training, and eval scripts
-│   └── pointnet2/       # dataset loader + training/eval scripts (PointNet & PointNet++)
+│   ├── pointnet2/       # dataset loader + training/eval scripts (PointNet & PointNet++)
+│   └── kpconv/          # dataset adapter + training/eval placeholders
 ├── slurm/
 │   ├── pointcept/       # PTv2/PTv3 SLURM scripts (seed 42/123/456)
 │   ├── dgcnn/           # DGCNN SLURM scripts (seed 42/123/456)
 │   ├── randlanet/       # RandLA-Net SLURM scripts (seed 42/123/456) + eval
 │   ├── pointnet2/       # PointNet/PointNet++ SLURM scripts (seed 42/123/456)
+│   ├── kpconv/          # KPConv SLURM scripts (seed 42/123/456)
 │   ├── run_all_baselines.sh
 │   └── evaluate_all_baselines.sh
 ├── preprocessing/
@@ -63,24 +65,25 @@ Trained on 18 buildings, evaluated on 4 held-out test buildings. Results pending
 | RandLA-Net | — | — | — | — | — |
 | PointNet++ (SSG) | — | — | — | — | — |
 | PointNet | — | — | — | — | — |
+| KPConv | — | — | — | — | — |
 
 ### Per-Class IoU
 
-| Class | PTv3 | PTv2 | DGCNN | RandLA-Net | PointNet++ | PointNet |
-|-------|------|------|-------|------------|------------|---------|
-| wall | — | — | — | — | — | — |
-| window | — | — | — | — | — | — |
-| door | — | — | — | — | — | — |
-| balcony | — | — | — | — | — | — |
-| vegetation | — | — | — | — | — | — |
-| stairs | — | — | — | — | — | — |
-| terrain | — | — | — | — | — | — |
-| roof | — | — | — | — | — | — |
-| blinds | — | — | — | — | — | — |
-| other | — | — | — | — | — | — |
-| column | — | — | — | — | — | — |
-| arch | — | — | — | — | — | — |
-| **mIoU** | — | — | — | — | — | — |
+| Class | PTv3 | PTv2 | DGCNN | RandLA-Net | PointNet++ | PointNet | KPConv |
+|-------|------|------|-------|------------|------------|---------|--------|
+| wall | — | — | — | — | — | — | — |
+| window | — | — | — | — | — | — | — |
+| door | — | — | — | — | — | — | — |
+| balcony | — | — | — | — | — | — | — |
+| vegetation | — | — | — | — | — | — | — |
+| stairs | — | — | — | — | — | — | — |
+| terrain | — | — | — | — | — | — | — |
+| roof | — | — | — | — | — | — | — |
+| blinds | — | — | — | — | — | — | — |
+| other | — | — | — | — | — | — | — |
+| column | — | — | — | — | — | — | — |
+| arch | — | — | — | — | — | — | — |
+| **mIoU** | — | — | — | — | — | — | — |
 
 ## Reproducing Results
 
@@ -97,6 +100,7 @@ sbatch slurm/dgcnn/submit_dgcnn_seed42.sh      # DGCNN (~15 min, 200 epochs)
 sbatch slurm/randlanet/submit_randla_seed42.sh # RandLA-Net (~24h, 100 epochs)
 sbatch slurm/pointnet2/submit_pn2_seed42.sh    # PointNet++ (~24h, 64 epochs)
 sbatch slurm/pointnet2/submit_pn_seed42.sh     # PointNet   (~24h, 64 epochs)
+sbatch slurm/kpconv/submit_kpconv_seed42.sh    # KPConv     (TODO: not yet implemented)
 ```
 
 Set `HFX3D_DATA_ROOT` to your `HFX3D_Splits/` path before training; all dataset loaders read this env var.
@@ -109,6 +113,7 @@ Set `HFX3D_DATA_ROOT` to your `HFX3D_Splits/` path before training; all dataset 
 | DGCNN | [AnTao97/dgcnn.pytorch](https://github.com/AnTao97/dgcnn.pytorch) |
 | RandLA-Net | [QingyongHu/RandLA-Net](https://github.com/QingyongHu/RandLA-Net) |
 | PointNet / PointNet++ | [yanx27/Pointnet_Pointnet2_pytorch](https://github.com/yanx27/Pointnet_Pointnet2_pytorch) |
+| KPConv | [HuguesTHOMAS/KPConv-PyTorch](https://github.com/HuguesTHOMAS/KPConv-PyTorch) |
 
 ## Preprocessing
 
