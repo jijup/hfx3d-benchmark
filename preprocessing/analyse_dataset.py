@@ -10,6 +10,9 @@ from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
 from scipy.stats import entropy
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from configs.palette import HEX as _CLS_HEX, CHART_STYLE, CHART_RC
 
 
 class PointCloudAnalyzer:
@@ -19,8 +22,8 @@ class PointCloudAnalyzer:
         self.output_dir = output_dir or os.path.join(os.path.dirname(os.path.abspath(__file__)), "analysis_output")
         os.makedirs(self.output_dir, exist_ok=True)
 
-        plt.style.use('seaborn-v0_8')
-        sns.set_palette("husl")
+        plt.style.use(CHART_STYLE)
+        plt.rcParams.update(CHART_RC)
 
     def load_label_map(self, json_path=None):
         if json_path is None:
@@ -68,9 +71,10 @@ class PointCloudAnalyzer:
 
         bars = ax1.bar(range(len(classes)), counts, color='skyblue', alpha=0.7)
         for i, bar in enumerate(bars):
-            bar.set_color(plt.cm.YlOrRd(np.exp(-i/5)))
-            bar.set_edgecolor('black')
-            bar.set_linewidth(0.5)
+            class_id = classes[i]
+            bar.set_color(_CLS_HEX[class_id] if class_id < len(_CLS_HEX) else '#9E9E9E')
+            bar.set_edgecolor('white')
+            bar.set_linewidth(0.8)
 
         ax1.set_title('Long-Tail Distribution of Point Cloud Classes', fontsize=16, pad=20)
         ax1.set_xlabel('Class Name', fontsize=14)
@@ -81,30 +85,14 @@ class PointCloudAnalyzer:
                              rotation=45, ha='right', fontsize=10)
 
         total = sum(counts)
-        cumulative_pct = np.cumsum(counts) / total * 100
 
         for bar in bars:
             height = bar.get_height()
             ax1.text(bar.get_x() + bar.get_width() / 2., height * 1.05, f'{int(height):,}',
                      ha='center', va='bottom', fontsize=8, fontweight='bold')
 
-        eighty_pct_hits = np.where(cumulative_pct >= 80)[0]
-        if len(eighty_pct_hits) > 0:
-            eighty_pct_idx = eighty_pct_hits[0]
-            ax1.axvline(x=eighty_pct_idx, color='black', linestyle='--', alpha=0.7)
-            ax1.text(eighty_pct_idx + 0.5, ax1.get_ylim()[0] * 10,
-                     f'80% of points\nin {eighty_pct_idx+1} classes\n({(eighty_pct_idx+1)/len(classes):.1%} of classes)',
-                     fontsize=10, bbox=dict(facecolor='white', alpha=0.7))
         ax1.grid(True, axis='y', alpha=0.3)
 
-        info_text = (f"Dataset Statistics:\n"
-                     f"• Total points: {total:,}\n"
-                     f"• Classes: {len(classes)}\n"
-                     f"• Top class ({self.id_to_name.get(classes[0], 'Unknown')}) has {counts[0]/total:.1%} of points")
-        
-        plt.figtext(0.01, 0.01, info_text, fontsize=9,
-                    bbox=dict(facecolor='white', edgecolor='gray', boxstyle='round,pad=0.5'))
-        
         plt.tight_layout()
         plt.subplots_adjust(bottom=0.22)  # Make room for x-labels and stats annotation
         plt.savefig(os.path.join(self.output_dir, f'class_distribution_{timestamp}.png'), dpi=300, bbox_inches='tight')
@@ -124,7 +112,7 @@ class PointCloudAnalyzer:
         sns.heatmap(data,
                     xticklabels=[self.id_to_name.get(c, f'Unknown-{c}') for c in classes],
                     yticklabels=[f.replace('.las', '') for f in files],
-                    cmap='YlOrRd',
+                    cmap='Blues',
                     norm='log')
 
         plt.title('Point Distribution Heatmap (log scale)', fontsize=14, pad=20)
@@ -147,11 +135,13 @@ class PointCloudAnalyzer:
         values_pie = list(proportions.values())
 
         ax_pie = plt.subplot(1, 2, 1)
+        pie_colors = [_CLS_HEX[k] if k < len(_CLS_HEX) else '#9E9E9E' for k in proportions.keys()]
         wedges, _ = ax_pie.pie(
             values_pie,
             labels=None,
             autopct=None,
             startangle=90,
+            colors=pie_colors,
             wedgeprops=dict(edgecolor='white', linewidth=0.5)
         )
         ax_pie.set_title('Class Proportions', pad=20)
@@ -189,16 +179,17 @@ class PointCloudAnalyzer:
         ax1 = plt.gca()
         bars = ax1.bar(range(len(classes)), counts, alpha=0.7, width=0.7)
         for i, bar in enumerate(bars):
-            bar.set_color(plt.cm.YlOrRd(np.exp(-i/3)))
-            bar.set_edgecolor('black')
-            bar.set_linewidth(0.5)
+            class_id = classes[i]
+            bar.set_color(_CLS_HEX[class_id] if class_id < len(_CLS_HEX) else '#9E9E9E')
+            bar.set_edgecolor('white')
+            bar.set_linewidth(0.8)
 
         ax1.set_yscale('log')
         ax1.set_xlabel('Class Name', fontsize=12)
         ax1.set_ylabel('Number of Points (log scale)', fontsize=12)
 
         bar_heights = [bar.get_height() for bar in bars]
-        ax1.plot(range(len(classes)), bar_heights, 'r-', linewidth=2, marker='o', markersize=5)
+        ax1.plot(range(len(classes)), bar_heights, color='#DC2626', linewidth=2, marker='o', markersize=5)
 
         for bar in bars:
             height = bar.get_height()
@@ -209,14 +200,6 @@ class PointCloudAnalyzer:
                    [self.id_to_name.get(c, f'Unknown-{c}').capitalize() for c in classes],
                    rotation=45, ha='right', fontsize=9)
         plt.title('Class Distribution', fontsize=12)
-
-        eighty_pct_hits = np.where(np.cumsum(counts) / total_points >= 0.8)[0]
-        if len(eighty_pct_hits) > 0:
-            eighty_pct_idx = eighty_pct_hits[0]
-            ax1.axvline(x=eighty_pct_idx, color='black', linestyle='--', alpha=0.7)
-            ax1.text(eighty_pct_idx + 0.3, bar_heights[0] * 0.1,
-                     f'80% of points in\n{eighty_pct_idx+1} classes',
-                     fontsize=9, bbox=dict(facecolor='white', alpha=0.7))
 
         plt.tight_layout(w_pad=4)
         plt.subplots_adjust(bottom=0.35)
@@ -233,14 +216,14 @@ class PointCloudAnalyzer:
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
 
-        ax1.bar(range(len(labels)), total_points, color='steelblue', alpha=0.8)
+        ax1.bar(range(len(labels)), total_points, color='#2563EB', alpha=0.8)
         ax1.set_title('Total Points per Building')
         ax1.set_xticks(range(len(labels)))
         ax1.set_xticklabels(labels, rotation=45, ha='right')
         ax1.set_ylabel('Total Points (log scale)')
         ax1.set_yscale('log')
 
-        ax2.bar(range(len(labels)), num_classes, color='steelblue', alpha=0.8)
+        ax2.bar(range(len(labels)), num_classes, color='#2563EB', alpha=0.8)
         ax2.set_title('Number of Classes per Building')
         ax2.set_xticks(range(len(labels)))
         ax2.set_xticklabels(labels, rotation=45, ha='right')

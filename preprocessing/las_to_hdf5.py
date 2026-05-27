@@ -10,8 +10,8 @@ Normalization (Official HFX3D Input Protocol):
 Usage:
     python las_to_hdf5.py <input_dir> <output_dir>
 
-input_dir must contain train/ and test/ subdirectories with .las files.
-p1/p99 are computed from the training split only and applied to both splits.
+input_dir must contain train/ and optionally val/ and test/ subdirs with .las files.
+p1/p99 are computed from the training split only and applied to all splits.
 Normalization stats are written to <output_dir>/normalization_stats.json.
 """
 
@@ -126,7 +126,7 @@ def process_directory(input_dir, output_dir):
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
 
-    for split in ['train', 'test']:
+    for split in ['train', 'val', 'test']:
         (output_dir / split).mkdir(parents=True, exist_ok=True)
 
     # Pass 1: compute intensity stats from training data only
@@ -141,7 +141,7 @@ def process_directory(input_dir, output_dir):
         print(f"  p1 = {intensity_p1:.4f},  p99 = {intensity_p99:.4f}")
 
     # Pass 2: convert all splits using the global stats
-    for split in ['train', 'test']:
+    for split in ['train', 'val', 'test']:
         split_dir = input_dir / split
         if not split_dir.exists():
             print(f"Warning: {split_dir} not found, skipping")
@@ -171,9 +171,9 @@ def main():
     parser = argparse.ArgumentParser(
         description='Convert LAS files to HDF5 (Official HFX3D Input Protocol)')
     parser.add_argument('input_dir',
-                        help='Directory with train/ and test/ subdirs containing .las files')
+                        help='Directory with train/ and optionally val/ and test/ subdirs containing .las files')
     parser.add_argument('output_dir',
-                        help='Output directory; train/ and test/ subdirs will be created')
+                        help='Output directory; train/, val/, and test/ subdirs will be created')
     args = parser.parse_args()
 
     if not os.path.isdir(args.input_dir):

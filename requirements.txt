@@ -65,3 +65,15 @@ urllib3==2.4.0
 wcwidth==0.2.13
 webencodings==0.5.1
 yarg==0.1.9
+
+# ── Additional dependencies (install separately) ──────────────────────────
+imageio>=2.0.0
+imageio-ffmpeg>=0.4.0   # MP4 export in render scripts
+pandas>=1.5.0           # split analyser
+seaborn>=0.12.0         # analysis chart styling
+tqdm>=4.60.0            # progress bars in preprocessing
+
+# PyTorch — not pinned here because the correct install command depends on CUDA
+# version. The Alliance Canada container provides PyTorch 2.4.1 + CUDA 12.1.
+# For local use: https://pytorch.org/get-started/locally/
+# torch>=2.0.0
