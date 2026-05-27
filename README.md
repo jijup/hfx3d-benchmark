@@ -85,25 +85,23 @@ Set `HFX3D_DATA_ROOT` to your `HFX3D_Splits/` path before training; all dataset 
 
 ### Framework Repos
 
-| Model | Upstream | Org fork |
-|-------|----------|----------|
-| PTv2 / PTv3 | [Pointcept/Pointcept](https://github.com/Pointcept/Pointcept) | [hfx3d-pointcept](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-pointcept) |
-| DGCNN | [AnTao97/dgcnn.pytorch](https://github.com/AnTao97/dgcnn.pytorch) | [hfx3d-dgcnn](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-dgcnn) |
-| RandLA-Net | [QingyongHu/RandLA-Net](https://github.com/QingyongHu/RandLA-Net) | [hfx3d-randlanet](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-randlanet) |
-| PointNet / PointNet++ | [yanx27/Pointnet_Pointnet2_pytorch](https://github.com/yanx27/Pointnet_Pointnet2_pytorch) | [hfx3d-pointnet2](https://github.com/Graphical-Spatial-Computing-Lab/hfx3d-pointnet2) |
+| Model | Upstream |
+|-------|----------|
+| PTv2 / PTv3 | [Pointcept/Pointcept](https://github.com/Pointcept/Pointcept) |
+| DGCNN | [AnTao97/dgcnn.pytorch](https://github.com/AnTao97/dgcnn.pytorch) |
+| RandLA-Net | [QingyongHu/RandLA-Net](https://github.com/QingyongHu/RandLA-Net) |
+| PointNet / PointNet++ | [yanx27/Pointnet_Pointnet2_pytorch](https://github.com/yanx27/Pointnet_Pointnet2_pytorch) |
 
 ## Preprocessing
 
-```bash
-# Step 1 — strip unlabelled points from raw LAS, shift labels down by 1
-python preprocessing/preprocess.py <raw_las_folder>
+The distributed LAS files are already cleaned and labelled (`preprocess.py` was applied by the authors). To produce the HDF5 training data from the distributed LAS files:
 
-# Step 2 — convert to HDF5 with official normalization
-#   input_dir must contain train/ val/ test/ subdirs
+```bash
+# input_dir must contain train/ val/ test/ subdirs with .las files
 python preprocessing/las_to_hdf5.py <input_dir> <output_dir>
 ```
 
-`las_to_hdf5.py` computes intensity p1/p99 from training files in the first pass, then normalises all splits with those stats.
+`las_to_hdf5.py` is two-pass: it computes intensity p1/p99 from training files first, then normalises all splits with those stats. `preprocess.py` is included for reference or if adapting to a new raw dataset.
 
 ## Infrastructure
 
