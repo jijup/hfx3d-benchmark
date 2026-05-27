@@ -67,8 +67,6 @@ webencodings==0.5.1
 yarg==0.1.9
 
 # ── Additional dependencies (install separately) ──────────────────────────
-imageio>=2.0.0
-imageio-ffmpeg>=0.4.0   # MP4 export in render scripts
 pandas>=1.5.0           # split analyser
 seaborn>=0.12.0         # analysis chart styling
 tqdm>=4.60.0            # progress bars in preprocessing
