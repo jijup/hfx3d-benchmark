@@ -104,7 +104,7 @@ class HFX3DDataset(DefaultDataset):
                     eigenvalues, eigenvectors = np.linalg.eigh(cov)
                     normal = eigenvectors[:, 0]  # Smallest eigenvalue
                     normals[i + j] = normal / (np.linalg.norm(normal) + 1e-8)
-                except:
+                except Exception:
                     normals[i + j] = [0, 0, 1]  # Default to z-up
 
         return normals.astype(np.float32)

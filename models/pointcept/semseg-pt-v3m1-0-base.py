@@ -1,3 +1,4 @@
+import os
 _base_ = ["../_base_/default_runtime.py"]
 
 # misc custom setting
@@ -65,7 +66,7 @@ param_dicts = [dict(keyword="block", lr=0.0006)]
 
 # dataset settings
 dataset_type = "HFX3DDataset"
-data_root = "/home/abdiaziz/projects/def-jijup/abdiaziz/WACV_Splits"
+data_root = os.environ.get("HFX3D_DATA_ROOT", "/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits")
 
 dataset_params = dict(
     max_points_per_building=500000,

@@ -1,3 +1,4 @@
+import os
 _base_ = ["../_base_/default_runtime.py"]
 
 # misc custom setting
@@ -51,7 +52,7 @@ scheduler = dict(
 
 # dataset settings
 dataset_type = "HFX3DDataset"
-data_root = "/home/abdiaziz/projects/def-jijup/abdiaziz/WACV_Splits"
+data_root = os.environ.get("HFX3D_DATA_ROOT", "/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits")
 
 # Dataset parameters for direct HDF5 loading
 dataset_params = dict(

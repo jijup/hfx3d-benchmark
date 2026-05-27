@@ -75,18 +75,18 @@ class HFX3DDataset(torch_data.Dataset):
     Parameters
     ----------
     mode : 'training' | 'validation'
-    data_root : str   path to WACV_Splits/
+    data_root : str   path to HFX3D_Splits/
     num_points : int  points per crop (default cfg.num_points)
     """
 
     def __init__(self, mode,
-                 data_root='/home/abdiaziz/projects/def-jijup/abdiaziz/WACV_Splits',
+                 data_root=os.environ.get("HFX3D_DATA_ROOT", "/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits"),
                  num_points=None):
         self.name = 'HFX3D'
         self.mode = mode
         self.num_points = num_points or cfg.num_points
 
-        split = 'train' if mode == 'training' else 'test'
+        split = {'training': 'train', 'validation': 'val', 'test': 'test'}.get(mode, 'test')
         split_dir = os.path.join(data_root, split)
         self.data_list = sorted(glob.glob(os.path.join(split_dir, '*.h5')))
         assert len(self.data_list) > 0, \

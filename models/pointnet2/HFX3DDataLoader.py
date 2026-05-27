@@ -1,8 +1,8 @@
 """
 HFX3D Dataset Loader for PointNet++ semantic segmentation.
 
-Dataset path: /home/abdiaziz/projects/def-jijup/abdiaziz/WACV_Splits/
-  train/  and  test/  subdirs, each with *.h5 files (one per building).
+Dataset path: /home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits/
+  train/  val/  test/  subdirs, each with *.h5 files (one per building).
 
 Each .h5 file contains:
   point_cloud/xyz        (N, 3) float32  mean-centered, metric scale preserved
@@ -50,13 +50,13 @@ class HFX3DDataset(Dataset):
     def __init__(
         self,
         split="train",
-        data_root="/home/abdiaziz/projects/def-jijup/abdiaziz/WACV_Splits",
+        data_root=os.environ.get("HFX3D_DATA_ROOT", "/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits"),
         num_point=4096,
         sample_rate=1.0,
         transform=None,
     ):
         super().__init__()
-        assert split in ("train", "test"), f"split must be 'train' or 'test', got '{split}'"
+        assert split in ("train", "val", "test"), f"split must be 'train', 'val', or 'test', got '{split}'"
         self.num_point = num_point
         self.transform = transform
 
