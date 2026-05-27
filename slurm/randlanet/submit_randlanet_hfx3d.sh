@@ -13,7 +13,7 @@ module load apptainer
 
 apptainer exec --nv --cleanenv \
   --bind /home/<user>:/home/<user> \
-  --bind /home/<user>/projects/def-<pi>/<user>/WACV_Splits:/home/<user>/projects/def-<pi>/<user>/WACV_Splits \
+  --bind /home/<user>/projects/def-<pi>/<user>/HFX3D_Splits:/home/<user>/projects/def-<pi>/<user>/HFX3D_Splits \
   /home/<user>/pointcept.sif bash -lc \
   'cd /home/<user>/<randlanet_dir> && \
    export PYTHONNOUSERSITE=1 && \
@@ -22,5 +22,5 @@ apptainer exec --nv --cleanenv \
      --log_dir output_hfx3d \
      --max_epoch 100 \
      --batch_size 4 \
-     --data_root /home/<user>/projects/def-<pi>/<user>/WACV_Splits \
+     --data_root /home/<user>/projects/def-<pi>/<user>/HFX3D_Splits \
      --gpus 2'

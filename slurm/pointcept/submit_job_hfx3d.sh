@@ -14,7 +14,7 @@ mkdir -p /home/<user>/<pointcept_dir>/logs
 
 apptainer exec --nv --cleanenv \
   --bind /home/<user>:/home/<user> \
-  --bind /home/<user>/projects/def-<pi>/<user>/WACV_Splits:/home/<user>/projects/def-<pi>/<user>/WACV_Splits \
+  --bind /home/<user>/projects/def-<pi>/<user>/HFX3D_Splits:/home/<user>/projects/def-<pi>/<user>/HFX3D_Splits \
   /home/<user>/pointcept.sif bash -lc \
   'cd /home/<user>/<pointcept_dir> && \
    export PYTHONNOUSERSITE=1 && \

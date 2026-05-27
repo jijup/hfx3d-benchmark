@@ -1,3 +1,28 @@
 __pycache__/
 *.pyc
 .env
+
+# IDE
+.idea/
+.vscode/
+
+# Claude Code session data
+.claude/
+
+# Dataset files
+data/HFX3D/
+data/HFX3D_Splits/
+
+# Generated outputs
+Output/
+viz/
+viz_output/
+preprocessing/analysis_output/
+split_analysis_output/
+
+# Not yet ready for release
+tools/
+static/
+inspect_hdf5.py
+utils/create_viz.py
+utils/VIZ_README.md

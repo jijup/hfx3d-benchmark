@@ -13,12 +13,12 @@ module load apptainer
 
 apptainer exec --nv --cleanenv \
   --bind /home/<user>:/home/<user> \
-  --bind /home/<user>/projects/def-<pi>/<user>/WACV_Splits:/home/<user>/projects/def-<pi>/<user>/WACV_Splits \
+  --bind /home/<user>/projects/def-<pi>/<user>/HFX3D_Splits:/home/<user>/projects/def-<pi>/<user>/HFX3D_Splits \
   /home/<user>/pointcept.sif bash -lc \
   'cd /home/<user>/<dgcnn_dir> && export PYTHONNOUSERSITE=1 && \
    python main_semseg_hfx3d.py \
      --exp_name dgcnn_hfx3d_run1 \
-     --data_root /home/<user>/projects/def-<pi>/<user>/WACV_Splits \
+     --data_root /home/<user>/projects/def-<pi>/<user>/HFX3D_Splits \
      --num_points 4096 \
      --samples_per_building 100 \
      --k 20 \
