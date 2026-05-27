@@ -1,6 +1,7 @@
 #!/bin/bash
+#SBATCH --exclude=fc10608,fc10715
 #SBATCH --job-name=ptnet2_hfx3d_s123
-#SBATCH --time=7-00:00:00
+#SBATCH --time=3-00:00:00
 #SBATCH --gpus-per-node=h100:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=80G

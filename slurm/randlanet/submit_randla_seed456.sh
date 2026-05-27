@@ -20,7 +20,7 @@ apptainer exec --nv --cleanenv \
    export OMP_NUM_THREADS=4 && \
    python main_HFX3D.py \
      --log_dir output_hfx3d_seed456 \
-     --max_epoch 100 \
+     --max_epoch 200 \
      --batch_size 4 \
      --data_root /home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits \
      --gpus 2 \

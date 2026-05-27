@@ -1,15 +1,13 @@
 #!/bin/bash
+#SBATCH --exclude=fc10608,fc10715
 #SBATCH --job-name=ptnet2_hfx3d_s456
 #SBATCH --time=3-00:00:00
 #SBATCH --gpus-per-node=h100:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=80G
-#SBATCH --output=logs/%x-%j.out
-
-set -euo pipefail
+#SBATCH --output=/home/abdiaziz/PointNet2/logs/ptnet2_hfx3d_s456-%j.out
 
 mkdir -p ~/PointNet2/logs
-
 module load apptainer
 
 apptainer exec --nv --cleanenv \
@@ -18,7 +16,7 @@ apptainer exec --nv --cleanenv \
   /home/abdiaziz/pointcept.sif bash -lc \
   'cd ~/PointNet2 && \
    export PYTHONNOUSERSITE=1 && \
-   export PYTHONPATH="${HOME}/PointNet2:${PYTHONPATH:-}" && \
+   export OMP_NUM_THREADS=4 && \
    python train_semseg_hfx3d.py \
      --model pointnet2_sem_seg \
      --data_root /home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits \
