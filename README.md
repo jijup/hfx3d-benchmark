@@ -71,6 +71,8 @@ Trained on 18 buildings, evaluated on 4 held-out test buildings. Results pending
 | arch | — | — | — | — | — | — |
 | **mIoU** | — | — | — | — | — | — |
 | **OA** | — | — | — | — | — | — |
+| **μP** | — | — | — | — | — | — |
+| **μR** | — | — | — | — | — | — |
 | **μF1** | — | — | — | — | — | — |
 
 ## Reproducing Results
