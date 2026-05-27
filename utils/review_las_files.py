@@ -90,9 +90,10 @@ def compare_labels_using_distributions(original_path, modified_path):
     else:
         print("\nNo changes in class distributions — skipping IoU per class.")
 
-# Example usage
-original_path = "Path_To_your_original_file.las"
-modified_path = "Path_To_your_modified_file.las"
-
-# Compare labels using class distributions
-compare_labels_using_distributions(original_path, modified_path)
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='Compare classifications between two LAS files')
+    parser.add_argument('original', help='Path to original LAS file')
+    parser.add_argument('modified', help='Path to modified LAS file')
+    args = parser.parse_args()
+    compare_labels_using_distributions(args.original, args.modified)

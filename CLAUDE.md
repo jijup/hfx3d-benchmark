@@ -11,8 +11,9 @@ HFX3D Benchmark is a semantic segmentation benchmark for urban building facade L
 - **Cluster:** Alliance Canada — `fir.alliancecan.ca`
 - **Scheduler:** SLURM (`sbatch`)
 - **Container:** Apptainer SIF at `/home/<user>/pointcept.sif` (PyTorch 2.4.1, CUDA 12.1)
-- **Dataset on cluster:** `/home/<user>/projects/def-<pi>/<user>/WACV_Splits/` with `train/` and `test/` subdirs
+- **Dataset on cluster:** `/home/<user>/projects/def-<pi>/<user>/HFX3D_Splits/` with `train/`, `val/`, and `test/` subdirs
 - Models are **not cloned into this repo** — files from `models/<framework>/` are copied into separate framework checkouts
+- **`HFX3D_DATA_ROOT`** — set this env var to your `HFX3D_Splits/` path before training; all dataset loaders and Pointcept configs read it, falling back to the committed cluster path if unset
 
 ## Common Commands
 
@@ -25,17 +26,18 @@ python preprocessing/preprocess.py <raw_las_folder> [--output_folder <out>] [--n
 
 # Step 2 — convert cleaned LAS → HDF5 with official normalization
 python preprocessing/las_to_hdf5.py <input_dir> <output_dir>
-# input_dir must contain train/ and test/ subdirs with .las files
+# input_dir must contain train/ val/ test/ subdirs with .las files
 
 # Analyse class distribution of a LAS directory
 python preprocessing/analyse_dataset.py <las_dir> [--output_dir <out>]
 
 # Submit a training job (on cluster, after copying model files)
-sbatch submit_job_hfx3d.sh      # PTv2
-sbatch submit_ptv3_hfx3d.sh     # PTv3
-sbatch submit_dgcnn_hfx3d.sh    # DGCNN
-sbatch submit_randlanet_hfx3d.sh
-sbatch submit_pointnet2_hfx3d.sh
+# All SLURM scripts live in slurm/<framework>/
+sbatch slurm/pointcept/submit_job_hfx3d.sh      # PTv2
+sbatch slurm/pointcept/submit_ptv3_hfx3d.sh     # PTv3
+sbatch slurm/dgcnn/submit_dgcnn_hfx3d.sh        # DGCNN
+sbatch slurm/randlanet/submit_randlanet_hfx3d_v4.sh
+sbatch slurm/pointnet2/submit_pointnet2_hfx3d.sh
 ```
 
 There are no unit tests and no lint configuration in this repo.
@@ -80,6 +82,45 @@ metadata/centroid      (3,)    float64   original centroid before centering
 
 **Class imbalance is severe.** RGB is unreliable — ~70 % of points have near-black values from the ZEB scanner. Models relying heavily on colour underperform. `door`, `column`, and `arch` deviate from the 80/20 split target because their points concentrate in few buildings.
 
+## Design System & Color Protocol
+
+`configs/palette.py` is the single Python source of truth for all colours. Import from it; never hardcode hex values in scripts.
+
+### 12-class semantic palette
+
+Matches `configs/scalar_fields.xml` (CloudCompare) and all web/JS files exactly.
+
+| ID | Class | Hex |
+|----|-------|-----|
+| 0 | wall | `#2F4BFF` |
+| 1 | window | `#FF7A00` |
+| 2 | door | `#00B8D9` |
+| 3 | balcony | `#FFD600` |
+| 4 | vegetation | `#00C853` |
+| 5 | stairs | `#FF1744` |
+| 6 | terrain | `#A05A2C` |
+| 7 | roof | `#8E24AA` |
+| 8 | blinds | `#00E5A8` |
+| 9 | other | `#9E9E9E` |
+| 10 | column | `#E040FB` |
+| 11 | arch | `#9CCC00` |
+
+### Split colours
+
+| Split | Hex |
+|-------|-----|
+| train | `#2563EB` |
+| val | `#F59E0B` |
+| test | `#DC2626` |
+
+### Chart rules
+
+- **Class distribution bars/wedges**: each bar/wedge uses the class's canonical hex from `palette.HEX`
+- **Per-building heatmaps**: `cmap='Blues'`
+- **File statistics bars**: `#2563EB`
+- **Style**: `CHART_STYLE` + `CHART_RC` from `configs/palette.py` (whitegrid, no top/right spines)
+- **CSS tokens**: `--cls-<name>` and `--split-<train|val|test>` are defined in `static/css/style.css`
+
 ## Architecture
 
 ### Dataset adapters (`models/<framework>/`)
@@ -109,7 +150,13 @@ Three scripts, run in order:
 
 ## Dataset Split
 
-20 train / 5 test buildings. Split was chosen by brute-force to minimise per-class deviation from 20 % test target. Test set: `BLD006, BLD014, BLD015, BLD022, BLD024`.
+18 train / 4 val / 4 test buildings (26 total). Split definitions live in `data/splits/{train,val,test}.txt` — the analyser reads them at runtime; nothing is hardcoded.
+
+| Split | Buildings |
+|-------|-----------|
+| Train (18) | BLD001–004, BLD006–007, BLD009–016, BLD018–020, BLD023 |
+| Val (4) | BLD008, BLD022, BLD024, BLD025 |
+| Test (4) | BLD005, BLD017, BLD021, BLD026 |
 
 ## Building File Naming
 
