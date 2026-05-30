@@ -14,7 +14,7 @@ model = dict(
     backbone_out_channels=64,
     backbone=dict(
         type="PT-v3m1",
-        in_channels=7,  # color(3) + normal(3) + intensity(1)
+        in_channels=4,  # color(3) + intensity(1) — normals not used
         order=("z", "z-trans", "hilbert", "hilbert-trans"),
         stride=(2, 2, 2, 2),
         enc_depths=(2, 2, 2, 6, 2),
@@ -52,7 +52,8 @@ model = dict(
 )
 
 # scheduler settings
-epoch = 800
+epoch = 200
+seed = 42
 optimizer = dict(type="AdamW", lr=0.006, weight_decay=0.05)
 scheduler = dict(
     type="OneCycleLR",
@@ -66,10 +67,12 @@ param_dicts = [dict(keyword="block", lr=0.0006)]
 
 # dataset settings
 dataset_type = "HFX3DDataset"
-data_root = os.environ.get("HFX3D_DATA_ROOT", "/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits")
+data_root = os.environ.get("HFX3D_DATA_ROOT", "/path/to/HFX3D_Splits")  # set HFX3D_DATA_ROOT env var
 
+# max_points_per_building=None → full cloud flows into GridSample+SphereCrop.
+# The old 500k random cap discarded ~97% of each building and broke test coverage.
 dataset_params = dict(
-    max_points_per_building=500000,
+    max_points_per_building=None,
     sample_method="random",
     compute_normals=False,
 )
@@ -78,18 +81,8 @@ data = dict(
     num_classes=12,
     ignore_index=-1,
     names=[
-        "wall",
-        "window",
-        "door",
-        "balcony",
-        "vegetation",
-        "stairs",
-        "terrain",
-        "roof",
-        "blinds",
-        "other",
-        "column",
-        "arch",
+        "wall", "window", "door", "balcony", "vegetation", "stairs",
+        "terrain", "roof", "blinds", "other", "column", "arch",
     ],
     train=dict(
         type=dataset_type,
@@ -110,47 +103,29 @@ data = dict(
             dict(type="ChromaticAutoContrast", p=0.2, blend_factor=None),
             dict(type="ChromaticTranslation", p=0.95, ratio=0.05),
             dict(type="ChromaticJitter", p=0.95, std=0.05),
-            dict(
-                type="GridSample",
-                grid_size=0.002,
-                hash_type="fnv",
-                mode="train",
-                return_grid_coord=True,
-            ),
+            dict(type="GridSample", grid_size=0.02, hash_type="fnv", mode="train", return_grid_coord=True),
             dict(type="SphereCrop", point_max=100000, mode="random"),
             dict(type="ShufflePoint"),
             dict(type="ToTensor"),
-            dict(
-                type="Collect",
-                keys=("coord", "grid_coord", "segment"),
-                feat_keys=("color", "normal", "intensity"),
-            ),
+            dict(type="Collect", keys=("coord", "grid_coord", "segment"), feat_keys=("color", "intensity")),
         ],
         test_mode=False,
     ),
     val=dict(
         type=dataset_type,
-        split="test",
+        split="val",
         data_root=data_root,
         max_points_per_building=dataset_params["max_points_per_building"],
         sample_method=dataset_params["sample_method"],
         compute_normals=dataset_params["compute_normals"],
+        # Val uses a local SphereCrop (same as train) for checkpoint selection.
+        # A full-cloud forward OOMs on 19M-pt buildings. Full-scene eval is done
+        # at test time via tools/test_fullscene_hfx3d.py (KNN-crop voting).
         transform=[
-            dict(type="Copy", keys_dict={"segment": "origin_segment"}),
-            dict(
-                type="GridSample",
-                grid_size=0.002,
-                hash_type="fnv",
-                mode="train",
-                return_grid_coord=True,
-                return_inverse=True,
-            ),
+            dict(type="GridSample", grid_size=0.02, hash_type="fnv", mode="train", return_grid_coord=True),
+            dict(type="SphereCrop", point_max=100000, mode="random"),
             dict(type="ToTensor"),
-            dict(
-                type="Collect",
-                keys=("coord", "grid_coord", "segment", "origin_segment", "inverse"),
-                feat_keys=("color", "normal", "intensity"),
-            ),
+            dict(type="Collect", keys=("coord", "grid_coord", "segment"), feat_keys=("color", "intensity")),
         ],
         test_mode=False,
     ),
@@ -164,42 +139,32 @@ data = dict(
         transform=[],
         test_mode=True,
         test_cfg=dict(
-            voxelize=dict(
-                type="GridSample",
-                grid_size=0.002,
-                hash_type="fnv",
-                mode="test",
-                return_grid_coord=True,
-            ),
+            voxelize=dict(type="GridSample", grid_size=0.02, hash_type="fnv", mode="test", return_grid_coord=True),
             crop=None,
             post_transform=[
                 dict(type="ToTensor"),
-                dict(
-                    type="Collect",
-                    keys=("coord", "grid_coord", "index"),
-                    feat_keys=("color", "normal", "intensity"),
-                ),
+                dict(type="Collect", keys=("coord", "grid_coord", "index"), feat_keys=("color", "intensity")),
             ],
             aug_transform=[
                 [dict(type="RandomRotateTargetAngle", angle=[0], axis="z", center=[0, 0, 0], p=1)],
-                [dict(type="RandomRotateTargetAngle", angle=[1 / 2], axis="z", center=[0, 0, 0], p=1)],
+                [dict(type="RandomRotateTargetAngle", angle=[1/2], axis="z", center=[0, 0, 0], p=1)],
                 [dict(type="RandomRotateTargetAngle", angle=[1], axis="z", center=[0, 0, 0], p=1)],
-                [dict(type="RandomRotateTargetAngle", angle=[3 / 2], axis="z", center=[0, 0, 0], p=1)],
+                [dict(type="RandomRotateTargetAngle", angle=[3/2], axis="z", center=[0, 0, 0], p=1)],
                 [dict(type="RandomRotateTargetAngle", angle=[0], axis="z", center=[0, 0, 0], p=1),
                  dict(type="RandomScale", scale=[0.95, 0.95])],
-                [dict(type="RandomRotateTargetAngle", angle=[1 / 2], axis="z", center=[0, 0, 0], p=1),
+                [dict(type="RandomRotateTargetAngle", angle=[1/2], axis="z", center=[0, 0, 0], p=1),
                  dict(type="RandomScale", scale=[0.95, 0.95])],
                 [dict(type="RandomRotateTargetAngle", angle=[1], axis="z", center=[0, 0, 0], p=1),
                  dict(type="RandomScale", scale=[0.95, 0.95])],
-                [dict(type="RandomRotateTargetAngle", angle=[3 / 2], axis="z", center=[0, 0, 0], p=1),
+                [dict(type="RandomRotateTargetAngle", angle=[3/2], axis="z", center=[0, 0, 0], p=1),
                  dict(type="RandomScale", scale=[0.95, 0.95])],
                 [dict(type="RandomRotateTargetAngle", angle=[0], axis="z", center=[0, 0, 0], p=1),
                  dict(type="RandomScale", scale=[1.05, 1.05])],
-                [dict(type="RandomRotateTargetAngle", angle=[1 / 2], axis="z", center=[0, 0, 0], p=1),
+                [dict(type="RandomRotateTargetAngle", angle=[1/2], axis="z", center=[0, 0, 0], p=1),
                  dict(type="RandomScale", scale=[1.05, 1.05])],
                 [dict(type="RandomRotateTargetAngle", angle=[1], axis="z", center=[0, 0, 0], p=1),
                  dict(type="RandomScale", scale=[1.05, 1.05])],
-                [dict(type="RandomRotateTargetAngle", angle=[3 / 2], axis="z", center=[0, 0, 0], p=1),
+                [dict(type="RandomRotateTargetAngle", angle=[3/2], axis="z", center=[0, 0, 0], p=1),
                  dict(type="RandomScale", scale=[1.05, 1.05])],
                 [dict(type="RandomFlip", p=1)],
             ],

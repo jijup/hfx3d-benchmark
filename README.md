@@ -55,35 +55,37 @@ Each building is stored as an HDF5 file with keys `point_cloud/{xyz,rgb,intensit
 
 ## Benchmark Results
 
-Trained on 18 buildings, evaluated on 4 held-out test buildings. Results pending.
+Phase 1 baseline: 18 train / 4 val / 4 test, seed 42, 200 epochs, unweighted CE. Full-scene 100%-coverage inference for all models.
 
-| Model | OA | mIoU | μP | μR | μF1 |
-|-------|----|----|----|----|-----|
-| PTv3 (Point Transformer V3) | — | — | — | — | — |
-| PTv2 (Point Transformer V2) | — | — | — | — | — |
-| DGCNN | — | — | — | — | — |
-| RandLA-Net | — | — | — | — | — |
-| PointNet++ (SSG) | — | — | — | — | — |
-| PointNet | — | — | — | — | — |
+### Summary (Phase 1, seed 42)
+
+| Model | OA | mIoU | mP | mR | mF1 |
+|-------|-----|------|----|----|-----|
+| PointNet++ (SSG) | 78.3% | **28.47%** | 39.1% | 34.3% | 34.8% |
+| PointNet | 74.4% | **25.34%** | 39.0% | 31.9% | 32.1% |
+| PTv2 (Point Transformer V2) | 78.8% | **19.90%** | 24.1% | 24.7% | 23.6% |
+| PTv3 (Point Transformer V3) | 69.5% | **15.79%** | 28.2% | 20.9% | 19.4% |
+| DGCNN | 69.3% | **13.04%** | 31.3% | 16.6% | 15.7% |
+| RandLA-Net | 41.5% | **5.91%** | 9.9% | 10.8% | 9.0% |
 | KPConv | — | — | — | — | — |
 
-### Per-Class IoU
+### Per-Class IoU (Phase 1, seed 42)
 
 | Class | PTv3 | PTv2 | DGCNN | RandLA-Net | PointNet++ | PointNet | KPConv |
 |-------|------|------|-------|------------|------------|---------|--------|
-| wall | — | — | — | — | — | — | — |
-| window | — | — | — | — | — | — | — |
-| door | — | — | — | — | — | — | — |
-| balcony | — | — | — | — | — | — | — |
-| vegetation | — | — | — | — | — | — | — |
-| stairs | — | — | — | — | — | — | — |
-| terrain | — | — | — | — | — | — | — |
-| roof | — | — | — | — | — | — | — |
-| blinds | — | — | — | — | — | — | — |
-| other | — | — | — | — | — | — | — |
-| column | — | — | — | — | — | — | — |
-| arch | — | — | — | — | — | — | — |
-| **mIoU** | — | — | — | — | — | — | — |
+| wall | 73.52% | 75.44% | 61.55% | 41.16% | 72.71% | 67.85% | — |
+| window | 11.52% | 16.79% | 4.26% | 6.72% | 21.80% | 16.80% | — |
+| door | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.19% | — |
+| balcony | 8.87% | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | — |
+| vegetation | 0.07% | 62.50% | 6.87% | 0.00% | 83.83% | 80.98% | — |
+| stairs | 9.02% | 0.00% | 0.00% | 0.00% | 56.58% | 40.50% | — |
+| terrain | 85.47% | 84.05% | 83.79% | 22.99% | 82.52% | 72.36% | — |
+| roof | 0.00% | 0.00% | 0.00% | 0.00% | 0.04% | 0.43% | — |
+| blinds | 0.00% | 0.00% | 0.00% | 0.00% | 8.42% | 2.81% | — |
+| other | 0.97% | 0.00% | 0.00% | 0.00% | 15.08% | 20.29% | — |
+| column | 0.00% | 0.00% | 0.00% | 0.00% | 0.66% | 1.82% | — |
+| arch | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | — |
+| **mIoU** | **15.79%** | **19.90%** | **13.04%** | **5.91%** | **28.47%** | **25.34%** | — |
 
 ## Reproducing Results
 

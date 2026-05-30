@@ -155,8 +155,9 @@ class HFX3DDataset(DefaultDataset):
 
         num_points = len(xyz)
 
-        # Sample points if building is too large
-        if num_points > self.max_points:
+        # Sample points if building is too large (opt-in; None disables the cap
+        # so the full cloud flows into GridSample+SphereCrop transforms)
+        if self.max_points and num_points > self.max_points:
             if self.sample_method == 'random':
                 # Random sampling
                 indices = np.random.choice(num_points, self.max_points, replace=False)
