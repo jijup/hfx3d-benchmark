@@ -2,37 +2,25 @@
 <CloudCompare>
   <ColorScale version="1">
     <Properties>
-      <name>HFX3D_v2_Swapped</name>
-      <uuid>{c9f1b7aa-92b1-4d5e-8d91-5c2f3b7c0012}</uuid>
+      <name>HFX3D_v3</name>
+      <uuid>{d7e2c3f1-04a5-4b8e-9c12-6f3a8d1e0045}</uuid>
       <absolute>1</absolute>
       <minValue>0</minValue>
       <range>12</range>
     </Properties>
     <Data>
-      <step r="47"  g="75"  b="255" pos="0.000000"/>
-      <step r="47"  g="75"  b="255" pos="0.083333"/>
-      <step r="255" g="122" b="0"   pos="0.083333"/>
-      <step r="255" g="122" b="0"   pos="0.166667"/>
-      <step r="0"   g="184" b="217" pos="0.166667"/>
-      <step r="0"   g="184" b="217" pos="0.250000"/>
-      <step r="255" g="214" b="0"   pos="0.250000"/>
-      <step r="255" g="214" b="0"   pos="0.333333"/>
-      <step r="0"   g="200" b="83"  pos="0.333333"/>
-      <step r="0"   g="200" b="83"  pos="0.416667"/>
-      <step r="255" g="23"  b="68"  pos="0.416667"/>
-      <step r="255" g="23"  b="68"  pos="0.500000"/>
-      <step r="160" g="90"  b="44"  pos="0.500000"/>
-      <step r="160" g="90"  b="44"  pos="0.583333"/>
-      <step r="142" g="36"  b="170" pos="0.583333"/>
-      <step r="142" g="36"  b="170" pos="0.666667"/>
-      <step r="0"   g="229" b="168" pos="0.666667"/>
-      <step r="0"   g="229" b="168" pos="0.750000"/>
-      <step r="158" g="158" b="158" pos="0.750000"/>
-      <step r="158" g="158" b="158" pos="0.833333"/>
-      <step r="224" g="64"  b="251" pos="0.833333"/>
-      <step r="224" g="64"  b="251" pos="0.916667"/>
-      <step r="156" g="204" b="0"   pos="0.916667"/>
-      <step r="156" g="204" b="0"   pos="1.000000"/>
+      <!-- wall       #ff1e1e --> <step r="255" g="30"  b="30"  pos="0.000000"/> <step r="255" g="30"  b="30"  pos="0.083333"/>
+      <!-- window     #00b4ff --> <step r="0"   g="180" b="255" pos="0.083333"/> <step r="0"   g="180" b="255" pos="0.166667"/>
+      <!-- door       #00e664 --> <step r="0"   g="230" b="100" pos="0.166667"/> <step r="0"   g="230" b="100" pos="0.250000"/>
+      <!-- balcony    #ffdc00 --> <step r="255" g="220" b="0"   pos="0.250000"/> <step r="255" g="220" b="0"   pos="0.333333"/>
+      <!-- vegetation #b400ff --> <step r="180" g="0"   b="255" pos="0.333333"/> <step r="180" g="0"   b="255" pos="0.416667"/>
+      <!-- stairs     #ff8cc8 --> <step r="255" g="140" b="200" pos="0.416667"/> <step r="255" g="140" b="200" pos="0.500000"/>
+      <!-- terrain    #00ffe6 --> <step r="0"   g="255" b="230" pos="0.500000"/> <step r="0"   g="255" b="230" pos="0.583333"/>
+      <!-- roof       #ff6400 --> <step r="255" g="100" b="0"   pos="0.583333"/> <step r="255" g="100" b="0"   pos="0.666667"/>
+      <!-- blinds     #7800ff --> <step r="120" g="0"   b="255" pos="0.666667"/> <step r="120" g="0"   b="255" pos="0.750000"/>
+      <!-- other      #a0a0a0 --> <step r="160" g="160" b="160" pos="0.750000"/> <step r="160" g="160" b="160" pos="0.833333"/>
+      <!-- column     #ffdc50 --> <step r="255" g="220" b="80"  pos="0.833333"/> <step r="255" g="220" b="80"  pos="0.916667"/>
+      <!-- arch       #000000 --> <step r="0"   g="0"   b="0"   pos="0.916667"/> <step r="0"   g="0"   b="0"   pos="1.000000"/>
       <label val="0">Wall</label>
       <label val="1">Window</label>
       <label val="2">Door</label>
