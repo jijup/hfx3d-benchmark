@@ -8,17 +8,17 @@ CLASS_NAMES = [
 ]
 
 HEX = [
-    '#ff1e1e',  # 0  wall
-    '#00b4ff',  # 1  window
-    '#00e664',  # 2  door
-    '#ffdc00',  # 3  balcony
-    '#b400ff',  # 4  vegetation
-    '#ff8cc8',  # 5  stairs
-    '#00ffe6',  # 6  terrain
-    '#ff6400',  # 7  roof
+    '#ff2828',  # 0  wall
+    '#00ccff',  # 1  window
+    '#005449',  # 2  door
+    '#ffee00',  # 3  balcony
+    '#00ff50',  # 4  vegetation
+    '#ff99ff',  # 5  stairs
+    '#b84600',  # 6  terrain
+    '#ff00b4',  # 7  roof
     '#7800ff',  # 8  blinds
     '#a0a0a0',  # 9  other
-    '#ffdc50',  # 10 column
+    '#4f0004',  # 10 column
     '#000000',  # 11 arch
 ]
 
