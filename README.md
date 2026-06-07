@@ -13,6 +13,10 @@ Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 
 <sub>BLD022 — raw RGB point cloud (left) &nbsp;·&nbsp; ground-truth semantic labels (right)</sub>
 
+<br>
+
+<img src="assets/class_legend.svg" alt="Class colour legend"/>
+
 </div>
 
 ---
