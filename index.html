@@ -855,6 +855,19 @@
   </div>
 </section>
 
+<!-- ════════════════════════════════════════════════════ VISITORS ══ -->
+<section id="visitors" style="background:var(--dark-bg);padding:100px 0 0">
+  <div style="padding:0 24px 48px">
+    <div class="section-head dark-head fade-up">
+      <p class="section-label">Visitor Map</p>
+      <h2 class="section-title">Where Our Visitors Come From</h2>
+    </div>
+  </div>
+  <div style="max-width:1440px;margin:0 auto;padding:0 16px 48px">
+    <div id="visitorMap" tabindex="0" style="height:520px;width:100%;position:relative;border-radius:12px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,.4)"></div>
+  </div>
+</section>
+
 <!-- ════════════════════════════════════════════════════════ FOOTER ══ -->
 <footer>
   <div class="footer-brand">HFX<span>3D</span></div>
@@ -865,16 +878,7 @@
     <a href="#explorer">3D Explorer</a>
     <a href="#benchmark">Results</a>
   </div>
-  <div style="margin:24px auto 16px;width:100%;max-width:720px;display:flex;flex-direction:column;align-items:center;gap:10px">
-    <span style="font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35)">Visitors</span>
-    <a href="https://mapmyvisitors.com/web/1c57l" title="Visit tracker" style="display:block;width:100%">
-      <img src="https://mapmyvisitors.com/map.png?d=lB9zdoAkT7wXJy1PfVdcVJ5LKQrSm_8mWRSRkuw9lpM&cl=ffffff" style="width:100%;border-radius:10px;display:block" alt="Visitor map">
-    </a>
-  </div>
-  <p class="footer-copy">
-    HFX3D · Halifax, Nova Scotia &nbsp;·&nbsp;
-    Page inspired by <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>
-  </p>
+  <p class="footer-copy">HFX3D · Halifax, Nova Scotia</p>
 </footer>
 
 <!-- ════════════════════════════════════════════════════ SCRIPTS ══ -->
@@ -886,6 +890,88 @@
 <script src="static/js/main.js"></script>
 <script src="static/js/viewer.js"></script>
 <script src="static/js/map.js"></script>
+
+<script>
+(function () {
+  if (typeof mapboxgl === 'undefined') return;
+  var container = document.getElementById('visitorMap');
+  if (!container) return;
+
+  var initialized = false;
+  var SB_URL = 'https://yruxlnnjprgzoazyklsw.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlydXhsbm5qcHJnem9henlrbHN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NDA0NDYsImV4cCI6MjA5NjQxNjQ0Nn0.EwnEzH_Opta8a09IIVIFT2_ACeGA45UkeFoseVkMKW0';
+
+  function sbHeaders(extra) {
+    return Object.assign({ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' }, extra || {});
+  }
+
+  function initVisitorMap() {
+    if (initialized) return;
+    initialized = true;
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYWJkaTEyMyIsImEiOiJjbXE0MHBtOXQxeGIxMnNwc3lnZmpyemhvIn0.wf9REvjcKczyyjsF6kiBJA';
+    var vmap = new mapboxgl.Map({
+      container: 'visitorMap',
+      style: 'mapbox://styles/mapbox/standard',
+      center: [0, 20],
+      zoom: 1.8,
+      projection: 'mercator',
+      pitch: 0, bearing: 0,
+      antialias: true
+    });
+    vmap.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'top-right');
+    vmap.keyboard.enable();
+
+    function makePinEl(color, size) {
+      var w = size || 22, h = Math.round(w * 1.4);
+      var el = document.createElement('div');
+      el.style.cssText = 'width:' + w + 'px;height:' + h + 'px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))';
+      el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 22 31">' +
+        '<path d="M11 0C4.9 0 0 4.9 0 11c0 8.3 11 20 11 20S22 19.3 22 11C22 4.9 17.1 0 11 0z" fill="' + color + '"/>' +
+        '<circle cx="11" cy="11" r="4.5" fill="rgba(255,255,255,0.85)"/>' +
+        '</svg>';
+      return el;
+    }
+
+    function addPin(lon, lat, isCurrent) {
+      var el = isCurrent ? makePinEl('#2563eb', 28) : makePinEl('#f97316', 20);
+      new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+        .setLngLat([lon, lat])
+        .addTo(vmap);
+    }
+
+    vmap.on('load', function () {
+      vmap.resize();
+
+      fetch(SB_URL + '/rest/v1/visitors?select=lat,lon', { headers: sbHeaders() })
+        .then(function(r) { return r.json(); })
+        .then(function(rows) {
+          if (!Array.isArray(rows)) return;
+          rows.forEach(function(v) { addPin(v.lon, v.lat, false); });
+        })
+        .catch(function() {});
+
+      fetch('https://ipapi.co/json/')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (!d.latitude || !d.longitude) return;
+          fetch(SB_URL + '/rest/v1/visitors', {
+            method: 'POST',
+            headers: sbHeaders({ 'Prefer': 'return=minimal' }),
+            body: JSON.stringify({ lat: d.latitude, lon: d.longitude, city: d.city, country: d.country_name })
+          }).catch(function() {});
+          addPin(d.longitude, d.latitude, true);
+        })
+        .catch(function() {});
+    });
+  }
+
+  var observer = new IntersectionObserver(function(entries) {
+    if (entries[0].isIntersecting) { observer.disconnect(); initVisitorMap(); }
+  }, { threshold: 0.1 });
+  observer.observe(container);
+})();
+</script>
 
 </body>
 </html>

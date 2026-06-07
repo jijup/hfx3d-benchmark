@@ -159,7 +159,7 @@
   if (typeof deck === 'undefined' || typeof mapboxgl === 'undefined') return;
   if (!document.getElementById('coverageMap')) return;
 
-  const TOKEN = 'pk.eyJ1IjoiYWJkaTEyMyIsImEiOiJjbW9vb3Ntb2ExZ3l6MnlwcWRjYW44anJpIn0.tef9irW7o-2tL-n3vAPMkA';
+  const TOKEN = 'pk.eyJ1IjoiYWJkaTEyMyIsImEiOiJjbXE0MHBtOXQxeGIxMnNwc3lnZmpyemhvIn0.wf9REvjcKczyyjsF6kiBJA';
 
   /* ── Canonical semantic class colours ── */
   const SEM_CLASSES = [
