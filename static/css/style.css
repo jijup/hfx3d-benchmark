@@ -450,7 +450,7 @@ footer { background: var(--hero-bg); border-top: 1px solid rgba(255,255,255,.06)
 .footer-links a { font-size: .82rem; color: rgba(255,255,255,.38); text-decoration: none;
   padding: 4px 10px; border-radius: 6px; transition: color .15s; }
 .footer-links a:hover { color: rgba(255,255,255,.75); }
-.footer-copy { font-size: .76rem; color: rgba(255,255,255,.2); }
+.footer-copy { font-size: .76rem; color: rgba(255,255,255,.5); }
 .footer-copy a { color: rgba(255,255,255,.32); text-decoration: none; }
 .footer-copy a:hover { color: rgba(255,255,255,.6); }
 
