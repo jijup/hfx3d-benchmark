@@ -71,13 +71,8 @@
       A large-scale LiDAR facade dataset annotated for semantic, instance, and functional
       understanding of real urban buildings.
     </p>
-    <p class="hero-authors fade-up">
-      <a href="#">Author One</a><sup>†</sup>&ensp;·&ensp;
-      <a href="#">Author Two</a><sup>†</sup>&ensp;·&ensp;
-      <a href="#">Author Three</a><sup>‡</sup>
-    </p>
     <p class="hero-affil fade-up">
-      <sup>†‡</sup>Saint Mary's University, Halifax, Nova Scotia
+      Saint Mary's University, Halifax, Nova Scotia
     </p>
     <div class="hero-btns fade-up">
       <a href="#" class="btn btn-ghost-dark"><i class="fas fa-file-pdf"></i> Paper</a>
@@ -200,6 +195,15 @@
       <div class="stat-card">
         <div class="stat-card-label">Features</div>
         <div class="stat-card-value" style="font-size:1rem">XYZ · RGB · Int · GPS</div>
+      </div>
+    </div>
+
+    <!-- Class distribution charts -->
+    <div class="fade-up" style="margin-top:48px">
+      <p class="taxonomy-title">Class &amp; Split Distribution</p>
+      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+        <img src="assets/images/class_distribution.png" alt="Class distribution (log scale)" style="flex:1 1 55%;min-width:280px;border-radius:8px">
+        <img src="assets/images/split_distribution.png" alt="Per-class split breakdown" style="flex:1 1 38%;min-width:240px;border-radius:8px">
       </div>
     </div>
 
@@ -808,13 +812,17 @@
       <h2 class="section-title">Support &amp; Resources</h2>
     </div>
     <div class="ack-body fade-up">
-      <p>
-        This work was supported by the Natural Sciences and Engineering Research Council of Canada (NSERC).
-        Computational resources were provided by the Digital Research Alliance of Canada.
-        We thank the building owners and facility managers across Halifax for granting scanning access to their properties.
-        The quality of the HFX3D annotations is owed to the dedication of our labelling team:
-        Tooba Javed, Prachi Kudeshia, Jack Greenlaw, Avery Cao, and Khushal Das.
-      </p>
+      <div style="display:flex;align-items:flex-start;gap:32px;flex-wrap:wrap">
+        <img src="assets/images/SMU_SCIENCE_4C.png" alt="Saint Mary's University Faculty of Science" style="height:80px;object-fit:contain;flex-shrink:0">
+        <p style="margin:0">
+          This work was supported by the <strong>Natural Sciences and Engineering Research Council of Canada (NSERC)</strong>.
+          Computational resources were provided by the <strong>Digital Research Alliance of Canada</strong>.
+          We gratefully acknowledge <strong>Saint Mary's University</strong> for institutional support.
+          We thank the building owners and facility managers across Halifax for generously granting scanning access to their properties.
+          The quality of the HFX3D annotations is owed to the dedication of our collection, curation and labelling team:
+          Tooba Javed, Prachi Kudeshia, Jack Greenlaw, Avery Cao, and Khushal Das.
+        </p>
+      </div>
     </div>
   </div>
 </section>
