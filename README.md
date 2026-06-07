@@ -3,7 +3,7 @@
 <div align="center">
 
 Semantic segmentation benchmark for urban building facade LiDAR point clouds.<br>
-**26 buildings · ~491.9 M points · 12 semantic classes · 7 baselines**<br>
+**26 buildings · ~491.9 M points · 12 semantic classes · 4 seasons · 5 neighbourhoods**<br>
 Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 
 <br>
