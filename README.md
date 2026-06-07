@@ -211,7 +211,7 @@ This work was supported by the Natural Sciences and Engineering Research Council
 
 | Component | License |
 |-----------|---------|
-| Dataset (point clouds + labels) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Dataset (point clouds + labels) | [CC BY 4.0](LICENSE-DATA) |
 | Benchmark code | [MIT](LICENSE) |
 
 ---
