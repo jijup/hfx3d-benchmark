@@ -203,6 +203,10 @@ hfx3d-benchmark/
 
 ## Acknowledgements
 
+<div align="center"><img src="assets/SMU_SCIENCE_4C.png" height="70" alt="Saint Mary's University Faculty of Science"/></div>
+
+<br>
+
 This work was supported by the Natural Sciences and Engineering Research Council of Canada (NSERC). Computational resources were provided by the Digital Research Alliance of Canada. We gratefully acknowledge Saint Mary's University for institutional support. We thank the building owners and facility managers across Halifax for generously granting scanning access to their properties. The quality of the HFX3D annotations is owed to the dedication of our collection, curation and labelling team: Tooba Javed, Prachi Kudeshia, Jack Greenlaw, Avery Cao, and Khushal Das.
 
 ---
@@ -217,8 +221,6 @@ This work was supported by the Natural Sciences and Engineering Research Council
 ---
 
 ## Contact
-
-<img src="assets/SMU_SCIENCE_4C.png" height="60" alt="Saint Mary's University Faculty of Science"/>
 
 | | |
 |--|--|
