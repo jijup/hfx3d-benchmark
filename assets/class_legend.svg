@@ -1,37 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 766 22" width="766" height="22">
-  <rect x="4"   y="6" width="10" height="10" rx="2" fill="#FF2828"/>
-  <text x="17"  y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Wall</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 766 24" width="766" height="24">
+  <rect width="766" height="24" fill="white"/>
 
-  <rect x="59"  y="6" width="10" height="10" rx="2" fill="#00CCFF"/>
-  <text x="72"  y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Window</text>
+  <rect x="4"   y="6" width="12" height="12" rx="2" fill="#FF2828"/>
+  <text x="19"  y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Wall</text>
 
-  <rect x="124" y="6" width="10" height="10" rx="2" fill="#005449"/>
-  <text x="137" y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Door</text>
+  <rect x="61"  y="6" width="12" height="12" rx="2" fill="#00CCFF"/>
+  <text x="76"  y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Window</text>
 
-  <rect x="179" y="6" width="10" height="10" rx="2" fill="#FFEE00"/>
-  <text x="192" y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Balcony</text>
+  <rect x="130" y="6" width="12" height="12" rx="2" fill="#005449"/>
+  <text x="145" y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Door</text>
 
-  <rect x="250" y="6" width="10" height="10" rx="2" fill="#00FF50"/>
-  <text x="263" y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Vegetation</text>
+  <rect x="185" y="6" width="12" height="12" rx="2" fill="#FFEE00"/>
+  <text x="200" y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Balcony</text>
 
-  <rect x="340" y="6" width="10" height="10" rx="2" fill="#FF99FF"/>
-  <text x="353" y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Stairs</text>
+  <rect x="258" y="6" width="12" height="12" rx="2" fill="#00FF50"/>
+  <text x="273" y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Vegetation</text>
 
-  <rect x="405" y="6" width="10" height="10" rx="2" fill="#B84600"/>
-  <text x="418" y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Terrain</text>
+  <rect x="351" y="6" width="12" height="12" rx="2" fill="#FF99FF"/>
+  <text x="366" y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Stairs</text>
 
-  <rect x="476" y="6" width="10" height="10" rx="2" fill="#FF00B4"/>
-  <text x="489" y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Roof</text>
+  <rect x="417" y="6" width="12" height="12" rx="2" fill="#B84600"/>
+  <text x="432" y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Terrain</text>
 
-  <rect x="531" y="6" width="10" height="10" rx="2" fill="#7800FF"/>
-  <text x="544" y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Blinds</text>
+  <rect x="490" y="6" width="12" height="12" rx="2" fill="#FF00B4"/>
+  <text x="505" y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Roof</text>
 
-  <rect x="596" y="6" width="10" height="10" rx="2" fill="#A0A0A0"/>
-  <text x="609" y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Other</text>
+  <rect x="541" y="6" width="12" height="12" rx="2" fill="#7800FF"/>
+  <text x="556" y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Blinds</text>
 
-  <rect x="656" y="6" width="10" height="10" rx="2" fill="#4F0004"/>
-  <text x="669" y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Column</text>
+  <rect x="607" y="6" width="12" height="12" rx="2" fill="#A0A0A0"/>
+  <text x="622" y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Other</text>
 
-  <rect x="721" y="6" width="10" height="10" rx="2" fill="#111111" stroke="#999" stroke-width="0.5"/>
-  <text x="734" y="16" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="currentColor">Arch</text>
+  <rect x="663" y="6" width="12" height="12" rx="2" fill="#4F0004"/>
+  <text x="678" y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Column</text>
+
+  <rect x="732" y="6" width="12" height="12" rx="2" fill="#111111" stroke="#aaa" stroke-width="0.5"/>
+  <text x="747" y="17" font-family="system-ui,-apple-system,sans-serif" font-size="10.5" fill="#444">Arch</text>
 </svg>

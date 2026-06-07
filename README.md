@@ -194,7 +194,33 @@ hfx3d-benchmark/
 
 ## Infrastructure
 
-- **Cluster:** Alliance Canada — `fir.alliancecan.ca`
-- **GPUs:** NVIDIA H100 (80 GB)
+- **Cluster:** Alliance Canada — `nibi.alliancecan.ca`
+- **GPUs:** NVIDIA H100 80 GB (8 per node)
 - **Container:** Apptainer SIF (PyTorch 2.4.1, CUDA 12.1)
 - **Scheduler:** SLURM
+
+---
+
+## Acknowledgements
+
+This work was supported by the Natural Sciences and Engineering Research Council of Canada (NSERC). Computational resources were provided by the Digital Research Alliance of Canada. We thank the building owners and facility managers across Halifax for granting scanning access to their properties. The quality of the HFX3D annotations is owed to the dedication of our labelling team: Tooba Javed, Prachi Kudeshia, Jack Greenlaw, Avery Cao, and Khushal Das.
+
+---
+
+## License
+
+| Component | License |
+|-----------|---------|
+| Dataset (point clouds + labels) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Benchmark code | [MIT](LICENSE) |
+
+---
+
+## Contact
+
+**Saint Mary's University, Halifax, Nova Scotia**
+
+| | |
+|--|--|
+| Abdiaziz Muse | [Abdiaziz.Muse@smu.ca](mailto:Abdiaziz.Muse@smu.ca) |
+| Jiju Poovvancheri | [jiju.poovvancheri@smu.ca](mailto:jiju.poovvancheri@smu.ca) |
