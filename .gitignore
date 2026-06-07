@@ -1,0 +1,25 @@
+# Point clouds (hosted on Hugging Face)
+assets/pointclouds/
+
+# Raw dataset
+data/
+
+# Python
+*.py
+*.pyc
+__pycache__/
+.venv*/
+venv/
+env/
+
+# IDE / tools
+.idea/
+tools/
+utils/
+Output/
+
+# Logs / scratch
+*.jsonl
+*.log
+memory/
+configs/

@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 400" font-family="Inter, sans-serif">
+  <!-- Ocean / harbour background -->
+  <rect width="520" height="400" fill="#c8e6f0"/>
+
+  <!-- Halifax Harbour (east side) -->
+  <path d="M340,0 L520,0 L520,400 L340,400 Q380,300 370,200 Q360,100 340,0Z" fill="#a8d4e8" opacity="0.8"/>
+
+  <!-- Northwest Arm (west side) -->
+  <path d="M60,220 Q40,240 30,300 Q50,310 70,290 Q80,270 90,250Z" fill="#a8d4e8" opacity="0.8"/>
+
+  <!-- Halifax peninsula -->
+  <path d="M130,10 L340,10 L340,380 Q300,395 250,390 Q200,390 160,380 Q120,360 100,320 Q80,270 90,250 Q100,230 110,200 Q115,150 120,100 Q123,55 130,10Z" fill="#e8ede4"/>
+
+  <!-- Streets grid (downtown) -->
+  <g stroke="#d0d8c8" stroke-width="0.8" opacity="0.7">
+    <line x1="150" y1="200" x2="320" y2="200"/>
+    <line x1="150" y1="225" x2="320" y2="225"/>
+    <line x1="150" y1="250" x2="320" y2="250"/>
+    <line x1="150" y1="275" x2="310" y2="275"/>
+    <line x1="150" y1="300" x2="300" y2="300"/>
+    <line x1="170" y1="180" x2="170" y2="340"/>
+    <line x1="200" y1="170" x2="200" y2="350"/>
+    <line x1="230" y1="160" x2="230" y2="355"/>
+    <line x1="260" y1="160" x2="260" y2="360"/>
+    <line x1="290" y1="170" x2="290" y2="360"/>
+    <line x1="320" y1="180" x2="320" y2="340"/>
+  </g>
+
+  <!-- Citadel Hill -->
+  <circle cx="220" cy="210" r="18" fill="#c8d5b0" stroke="#aab88a" stroke-width="1.5"/>
+  <text x="220" y="214" text-anchor="middle" font-size="8" fill="#5a6a40" font-weight="600">Citadel</text>
+
+  <!-- Waterfront / harbour walk -->
+  <path d="M335,80 Q338,200 338,320" stroke="#7bb8d4" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+  <!-- University area label -->
+  <rect x="130" y="60" width="110" height="24" rx="5" fill="#dde8f4" stroke="#a8c4e8" stroke-width="1"/>
+  <text x="185" y="76" text-anchor="middle" font-size="9" fill="#2c5282" font-weight="600">Saint Mary's / Dal</text>
+
+  <!-- Downtown label -->
+  <text x="245" y="248" text-anchor="middle" font-size="9" fill="#4a5568" font-weight="500" opacity="0.8">Downtown</text>
+
+  <!-- Building markers — SMU/Dal area -->
+  <g id="uni-buildings">
+    <circle cx="150" cy="85" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="168" cy="92" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="160" cy="110" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="178" cy="105" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="194" cy="95" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="188" cy="115" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="205" cy="108" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="220" cy="100" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="215" cy="120" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+  </g>
+
+  <!-- Building markers — Downtown -->
+  <g id="downtown-buildings">
+    <circle cx="270" cy="260" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="290" cy="255" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="305" cy="268" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="310" cy="245" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+    <circle cx="285" cy="278" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+  </g>
+
+  <!-- BLD009 highlight -->
+  <circle cx="270" cy="260" r="10" fill="none" stroke="#6D28D9" stroke-width="2" stroke-dasharray="4,3"/>
+  <rect x="248" y="272" width="88" height="16" rx="4" fill="#6D28D9" opacity="0.9"/>
+  <text x="292" y="284" text-anchor="middle" font-size="8.5" fill="white" font-weight="700">BLD009 — Demo</text>
+
+  <!-- Legend -->
+  <rect x="10" y="310" width="140" height="74" rx="8" fill="white" opacity="0.9" stroke="#e2e8f0" stroke-width="1"/>
+  <circle cx="28" cy="328" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+  <text x="40" y="332" font-size="9" fill="#374151" font-weight="600">HFX3D Building</text>
+  <circle cx="28" cy="348" r="10" fill="none" stroke="#6D28D9" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <circle cx="28" cy="348" r="6" fill="#6D28D9" stroke="white" stroke-width="1.5"/>
+  <text x="40" y="352" font-size="9" fill="#374151" font-weight="600">Demo building</text>
+  <circle cx="28" cy="368" r="6" fill="#c8d5b0" stroke="#aab88a" stroke-width="1"/>
+  <text x="40" y="372" font-size="9" fill="#374151">Landmark</text>
+
+  <!-- North arrow -->
+  <g transform="translate(480,30)">
+    <circle r="16" fill="white" opacity="0.9" stroke="#e2e8f0" stroke-width="1"/>
+    <text y="-3" text-anchor="middle" font-size="8" font-weight="700" fill="#374151">N</text>
+    <polygon points="0,-12 4,-2 -4,-2" fill="#374151"/>
+  </g>
+
+  <!-- Title -->
+  <rect x="10" y="10" width="175" height="38" rx="7" fill="white" opacity="0.92" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="97" y="25" text-anchor="middle" font-size="11" font-weight="800" fill="#6D28D9">HFX3D</text>
+  <text x="97" y="40" text-anchor="middle" font-size="8.5" fill="#4b5563">Halifax, Nova Scotia, Canada</text>
+</svg>

@@ -1,3 +1,875 @@
-<!-- HFX3D Project Page — placeholder, full build in progress -->
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><title>HFX3D</title></head><body>Coming soon.</body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HFX3D: LiDAR Benchmark for Urban Building Facade Segmentation · WACV 2027</title>
+  <meta name="description" content="HFX3D: 3D semantic segmentation benchmark for urban building facades. 26 buildings, 12 classes, 492M points, Halifax NS.">
+  <meta property="og:title" content="HFX3D Benchmark · WACV 2027">
+  <meta property="og:description" content="HFX3D: 3D semantic segmentation benchmark for urban building facades. 26 buildings, 12 semantic classes, 492M LiDAR points, Halifax NS.">
+  <meta property="og:image" content="https://jijup.github.io/hfx3d-benchmark/assets/images/bld009_comparison.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://jijup.github.io/hfx3d-benchmark/assets/images/bld009_comparison.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+<button class="scroll-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></button>
+
+<!-- ══════════════════════════════════════════════════════════════ NAVBAR ══ -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#hero">HFX<span>3D</span></a>
+    <div class="nav-links">
+      <a href="#abstract">Abstract</a>
+      <a href="#dataset">Dataset</a>
+      <a href="#explorer">3D Explorer</a>
+      <a href="#benchmark">Benchmark</a>
+      <a href="#qualitative">Gallery</a>
+      <a href="#geospatial">Map</a>
+      <a href="#citation">Cite</a>
+    </div>
+    <div class="nav-actions">
+      <a href="https://github.com/jijup/hfx3d-benchmark" target="_blank" class="btn btn-outline" style="padding:7px 14px;font-size:.82rem">
+        <i class="fab fa-github"></i> Code
+      </a>
+    </div>
+    <button class="nav-burger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile nav -->
+<div class="nav-mobile" id="navMobile">
+  <a href="#abstract">Abstract</a>
+  <a href="#dataset">Dataset</a>
+  <a href="#explorer">3D Explorer</a>
+  <a href="#benchmark">Benchmark</a>
+  <a href="#qualitative">Gallery</a>
+  <a href="#geospatial">Map</a>
+  <a href="#citation">Cite</a>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ HERO ══ -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-badge fade-up">WACV 2027</div>
+    <h1 class="hero-title fade-up">
+      HFX3D: A LiDAR Benchmark for<br>
+      Semantic Segmentation of<br>
+      Urban Building Facades
+    </h1>
+    <p class="hero-sub fade-up">
+      A large-scale LiDAR facade dataset annotated for semantic, instance, and functional
+      understanding of real urban buildings.
+    </p>
+    <p class="hero-authors fade-up">
+      <a href="#">Author One</a><sup>†</sup>&ensp;·&ensp;
+      <a href="#">Author Two</a><sup>†</sup>&ensp;·&ensp;
+      <a href="#">Author Three</a><sup>‡</sup>
+    </p>
+    <p class="hero-affil fade-up">
+      <sup>†‡</sup>Saint Mary's University, Halifax, Nova Scotia
+    </p>
+    <div class="hero-btns fade-up">
+      <a href="#" class="btn btn-ghost-dark"><i class="fas fa-file-pdf"></i> Paper</a>
+      <a href="#download" class="btn btn-ghost-dark"><i class="fas fa-database"></i> Dataset</a>
+      <a href="https://github.com/jijup/hfx3d-benchmark" target="_blank" class="btn btn-ghost-dark">
+        <i class="fab fa-github"></i> Code
+      </a>
+      <a href="#explorer" class="btn btn-accent"><i class="fas fa-cube"></i> 3D Explorer</a>
+    </div>
+    <div class="hero-stats fade-up">
+      <div class="hero-stat">
+        <div class="hero-stat-num">26</div>
+        <div class="hero-stat-lbl">Buildings</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">12</div>
+        <div class="hero-stat-lbl">Classes</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">492M</div>
+        <div class="hero-stat-lbl">Points</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">5</div>
+        <div class="hero-stat-lbl">Neighbourhoods</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">4</div>
+        <div class="hero-stat-lbl">Seasons</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════ TEASER ══ -->
+<section id="teaser">
+  <div class="teaser-vid-pair fade-up">
+    <div class="teaser-vid-wrap">
+      <video autoplay muted loop playsinline>
+        <source src="assets/images/buildings/hfx004_wm.mp4" type="video/mp4">
+        <img src="assets/images/buildings/hfx004_gif.gif" alt="BLD004 semantic fly-through">
+      </video>
+      <span class="teaser-vid-lbl">BLD004 · Kenneth C. Rowe</span>
+    </div>
+    <div class="teaser-vid-wrap">
+      <video autoplay muted loop playsinline>
+        <source src="assets/images/buildings/hfx010_wm.mp4" type="video/mp4">
+        <img src="assets/images/buildings/hfx010_gif.gif" alt="BLD010 semantic fly-through">
+      </video>
+      <span class="teaser-vid-lbl">BLD010 · Emera Place</span>
+    </div>
+  </div>
+  <p class="teaser-caption fade-up">
+    Semantic-coloured 3D point cloud fly-throughs &nbsp;·&nbsp; Ground-truth annotation &nbsp;·&nbsp; 12 classes
+  </p>
+  <div class="teaser-legend fade-up">
+    <span class="tl-item"><span class="tl-dot" style="background:#FF2828"></span>Wall</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#00CCFF"></span>Window</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#005449"></span>Door</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#FFEE00"></span>Balcony</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#00FF50"></span>Vegetation</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#FF99FF"></span>Stairs</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#B84600"></span>Terrain</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#FF00B4"></span>Roof</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#7800FF"></span>Blinds</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#A0A0A0"></span>Other</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#4F0004"></span>Column</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#000000;border:1px solid #ccc"></span>Arch</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════ ABSTRACT ══ -->
+<section id="abstract">
+  <div class="container-sm">
+    <div class="section-head text-center fade-up">
+      <p class="section-label">Abstract</p>
+      <h2 class="section-title">A New Benchmark for Facade Segmentation</h2>
+    </div>
+    <div class="abstract-body fade-up">
+      <p>
+        We introduce <strong>HFX3D</strong>, a large-scale LiDAR benchmark for 3D semantic segmentation
+        of urban building facades in Halifax, Nova Scotia, Canada. The dataset comprises
+        <strong>26 buildings</strong> captured with a <strong>ZEB Horizon</strong> handheld scanner,
+        spanning commercial, residential, institutional, and waterfront contexts with facades ranging
+        from historical masonry to contemporary glass curtain walls, annotated across
+        <strong>12 semantic classes</strong> totalling over
+        <strong>492 million points</strong>. Each building is enriched with semantic, instance, and
+        functional labels, making HFX3D the first facade benchmark to provide all three annotation tiers.
+      </p>
+      <p>
+        Building facade segmentation is fundamental to urban digital twins, architectural surveying,
+        heritage preservation, and infrastructure inspection, yet existing benchmarks predominantly
+        target autonomous driving or indoor environments. We benchmark seven leading 3D segmentation
+        architectures: KPConv, PTv3, PTv2, DGCNN, RandLA-Net, PointNet++, and PointNet, establishing
+        strong baselines and revealing challenges unique to close range architectural LiDAR capture
+        across five urban neighbourhoods, four seasons, and varied lighting conditions.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════ DATASET ══ -->
+<section id="dataset">
+  <div class="container">
+    <div class="section-head text-center fade-up">
+      <p class="section-label">Dataset</p>
+      <h2 class="section-title">Data Collection and Annotation</h2>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="stats-grid fade-up">
+      <div class="stat-card">
+        <div class="stat-card-label">Split</div>
+        <div class="stat-card-value" style="font-size:.95rem">18 train · 4 val · 4 test</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Scanner</div>
+        <div class="stat-card-value" style="font-size:1.1rem">ZEB Horizon</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Features</div>
+        <div class="stat-card-value" style="font-size:1rem">XYZ · RGB · Int · GPS</div>
+      </div>
+    </div>
+
+    <!-- RGB vs Semantic annotation gallery -->
+    <div class="fade-up" style="margin-top:48px">
+      <p class="taxonomy-title">RGB &amp; Semantic Annotation</p>
+      <div class="annot-grid">
+        <div class="annot-card">
+          <div class="annot-bld-lbl">BLD006 · VIC Suites</div>
+          <div class="annot-pair">
+            <div class="annot-img-wrap">
+              <img src="assets/images/buildings/hfx006_rgb.png" alt="BLD006 RGB" loading="lazy">
+              <span class="annot-tag">RGB</span>
+            </div>
+            <div class="annot-img-wrap">
+              <img src="assets/images/buildings/hfx006_semantic.png" alt="BLD006 Semantic" loading="lazy">
+              <span class="annot-tag">Semantic</span>
+            </div>
+          </div>
+        </div>
+        <div class="annot-card">
+          <div class="annot-bld-lbl">BLD013 · 1801 Hollis #1</div>
+          <div class="annot-pair">
+            <div class="annot-img-wrap">
+              <img src="assets/images/buildings/hfx013_rgb.png" alt="BLD013 RGB" loading="lazy">
+              <span class="annot-tag">RGB</span>
+            </div>
+            <div class="annot-img-wrap">
+              <img src="assets/images/buildings/hfx013_semantic.png" alt="BLD013 Semantic" loading="lazy">
+              <span class="annot-tag">Semantic</span>
+            </div>
+          </div>
+        </div>
+        <div class="annot-card">
+          <div class="annot-bld-lbl">BLD022 · Steele Ocean 1</div>
+          <div class="annot-pair">
+            <div class="annot-img-wrap">
+              <img src="assets/images/buildings/hfx022_rgb.png" alt="BLD022 RGB" loading="lazy">
+              <span class="annot-tag">RGB</span>
+            </div>
+            <div class="annot-img-wrap">
+              <img src="assets/images/buildings/hfx022_semantic.png" alt="BLD022 Semantic" loading="lazy">
+              <span class="annot-tag">Semantic</span>
+            </div>
+          </div>
+        </div>
+        <div class="annot-card">
+          <div class="annot-bld-lbl">BLD024 · Sobeys Hub</div>
+          <div class="annot-pair">
+            <div class="annot-img-wrap">
+              <img src="assets/images/buildings/hfx024_rgb.png" alt="BLD024 RGB" loading="lazy">
+              <span class="annot-tag">RGB</span>
+            </div>
+            <div class="annot-img-wrap">
+              <img src="assets/images/buildings/hfx024_semantic.png" alt="BLD024 Semantic" loading="lazy">
+              <span class="annot-tag">Semantic</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Taxonomy -->
+    <div class="fade-up" style="margin-top:56px">
+      <p class="taxonomy-title">12-Class Taxonomy</p>
+      <div class="taxonomy-grid" id="classTaxonomy"></div>
+    </div>
+
+    <!-- Environmental diversity -->
+    <div class="fade-up" style="margin-top:56px">
+      <p class="taxonomy-title">Environmental Diversity</p>
+      <div class="cond-grid">
+        <div class="cond-card">
+          <img src="assets/images/conditions/cond_spring_front_face.png" alt="Spring" loading="lazy">
+          <div class="cond-label">Spring</div>
+        </div>
+        <div class="cond-card">
+          <img src="assets/images/conditions/cond_summer_front_face.png" alt="Summer" loading="lazy">
+          <div class="cond-label">Summer</div>
+        </div>
+        <div class="cond-card">
+          <img src="assets/images/conditions/cond_fall_front_face.png" alt="Fall" loading="lazy">
+          <div class="cond-label">Fall</div>
+        </div>
+        <div class="cond-card">
+          <img src="assets/images/conditions/cond_winter_front_face.png" alt="Winter" loading="lazy">
+          <div class="cond-label">Winter</div>
+        </div>
+        <div class="cond-card">
+          <img src="assets/images/conditions/cond_day_front_face.png" alt="Daytime" loading="lazy">
+          <div class="cond-label">Daytime</div>
+        </div>
+        <div class="cond-card">
+          <img src="assets/images/conditions/cond_night_front_face.png" alt="Night" loading="lazy">
+          <div class="cond-label">Night</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dataset comparison -->
+    <div class="fade-up" style="margin-top:56px">
+      <p class="taxonomy-title">Dataset Comparison</p>
+      <p style="color:var(--text-3);font-size:.8rem;margin:6px 0 16px;text-align:center">
+        Pts&nbsp;= total points (M) &nbsp;·&nbsp; Cls&nbsp;= semantic classes &nbsp;·&nbsp; Inst.&nbsp;= instance labels &nbsp;·&nbsp; Func.&nbsp;= functional attributes &nbsp;·&nbsp; Seas&nbsp;= seasons captured
+      </p>
+      <div class="table-wrap">
+        <table style="font-size:.8rem">
+          <thead>
+            <tr>
+              <th style="text-align:left;min-width:130px">Dataset</th>
+              <th>Year</th><th>Sensor</th><th>Scenes</th>
+              <th>Pts (M)</th><th>Cls</th>
+              <th>Inst.</th><th>Func.</th><th>Seas</th><th>Facade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="cmp-group-hdr"><td colspan="10">General outdoor / indoor benchmarks</td></tr>
+            <tr>
+              <td class="td-left">S3DIS</td>
+              <td>2016</td><td>RGB-D</td><td>272 rooms</td><td>696</td><td>13</td>
+              <td>✓</td><td>N/A</td><td>N/A</td><td>N/A</td>
+            </tr>
+            <tr>
+              <td class="td-left">Semantic3D</td>
+              <td>2017</td><td>TLS</td><td>~30</td><td>4,000</td><td>8</td>
+              <td>N/A</td><td>N/A</td><td>1</td><td>N/A</td>
+            </tr>
+            <tr>
+              <td class="td-left">Paris-Lille-3D</td>
+              <td>2018</td><td>MLS</td><td>2 km</td><td>143</td><td>50</td>
+              <td>N/A</td><td>N/A</td><td>1</td><td>N/A</td>
+            </tr>
+            <tr>
+              <td class="td-left">Toronto-3D</td>
+              <td>2020</td><td>MLS</td><td>1 km</td><td>78</td><td>8</td>
+              <td>N/A</td><td>N/A</td><td>1</td><td>N/A</td>
+            </tr>
+            <tr>
+              <td class="td-left">SensatUrban</td>
+              <td>2021</td><td>UAV</td><td>3 cities</td><td>3,000</td><td>13</td>
+              <td>N/A</td><td>N/A</td><td>1</td><td>N/A</td>
+            </tr>
+            <tr>
+              <td class="td-left">KITTI-360</td>
+              <td>2022</td><td>MLS</td><td>73 km</td><td>N/A</td><td>13</td>
+              <td>✓</td><td>N/A</td><td>1</td><td>N/A</td>
+            </tr>
+            <tr class="cmp-group-hdr"><td colspan="10">Façade-specific benchmarks</td></tr>
+            <tr>
+              <td class="td-left">ArCH</td>
+              <td>2020</td><td>TLS</td><td>17 bldgs</td><td>102</td><td>10</td>
+              <td>N/A</td><td>N/A</td><td>N/A</td><td>✓</td>
+            </tr>
+            <tr>
+              <td class="td-left">TUM-FAÇADE</td>
+              <td>2022</td><td>MLS</td><td>14 bldgs</td><td>118</td><td>17</td>
+              <td>N/A</td><td>N/A</td><td>1</td><td>✓</td>
+            </tr>
+            <tr>
+              <td class="td-left">ZAHA</td>
+              <td>2024</td><td>MLS</td><td>66 bldgs</td><td>601</td><td>15</td>
+              <td>N/A</td><td>N/A</td><td>1</td><td>✓</td>
+            </tr>
+            <tr>
+              <td class="td-left">City-Facade</td>
+              <td>2026</td><td>MLS</td><td>N/A</td><td>200</td><td>9</td>
+              <td>✓</td><td>N/A</td><td>N/A</td><td>✓</td>
+            </tr>
+            <tr class="row-ours">
+              <td class="td-left"><strong>HFX3D (ours)</strong></td>
+              <td><strong>2026</strong></td><td><strong>Handheld</strong></td><td><strong>26 bldgs</strong></td>
+              <td><strong>492</strong></td><td><strong>12</strong></td>
+              <td><strong>✓</strong></td><td><strong>✓</strong></td><td><strong>4</strong></td><td><strong>✓</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ INTERACTIVE 3D EXPLORER ══ -->
+<section id="explorer">
+  <div class="explorer-wrap">
+    <div class="section-head dark-head fade-up">
+      <p class="section-label">Interactive 3D Explorer</p>
+      <h2 class="section-title">Explore the Dataset in 3D</h2>
+      <p class="section-sub">Select a building to explore its point cloud · RGB and semantic side by side</p>
+    </div>
+
+    <!-- Building ribbon -->
+    <div class="bsl-outer">
+      <div id="bslTrack">
+        <div class="bsl-item" data-bld="BLD009">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD009_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Halifax Lib.</div>
+          <div class="bsl-id">BLD009</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD001">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD001_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Goldberg</div>
+          <div class="bsl-id">BLD001</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD002">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD002_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Mona Camp. A</div>
+          <div class="bsl-id">BLD002</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD003">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD003_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Mona Camp. B</div>
+          <div class="bsl-id">BLD003</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD004">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD004_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Kenneth Rowe</div>
+          <div class="bsl-id">BLD004</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD005">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD005_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Schulich Law</div>
+          <div class="bsl-id">BLD005</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD006">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD006_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">VIC Suites</div>
+          <div class="bsl-id">BLD006</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD007">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD007_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Engineering</div>
+          <div class="bsl-id">BLD007</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD008">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD008_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Mona Camp. C</div>
+          <div class="bsl-id">BLD008</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD010">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD010_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Emera Place</div>
+          <div class="bsl-id">BLD010</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD011">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD011_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Gerard Hall</div>
+          <div class="bsl-id">BLD011</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD012">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD012_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">The Margarita</div>
+          <div class="bsl-id">BLD012</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD013">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD013_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">1801 Hollis #1</div>
+          <div class="bsl-id">BLD013</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD014">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD014_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Summit Place</div>
+          <div class="bsl-id">BLD014</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD015">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD015_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">1801 Hollis #2</div>
+          <div class="bsl-id">BLD015</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD016">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD016_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">1801 Hollis #3</div>
+          <div class="bsl-id">BLD016</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD017">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD017_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">1801 Hollis #4</div>
+          <div class="bsl-id">BLD017</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD018">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD018_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">The Exchange</div>
+          <div class="bsl-id">BLD018</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD019">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD019_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Sexton Camp. 1</div>
+          <div class="bsl-id">BLD019</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD020">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD020_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Sexton Camp. 2</div>
+          <div class="bsl-id">BLD020</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD021">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD021_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">TD Building</div>
+          <div class="bsl-id">BLD021</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD022">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD022_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Steele Ocean 1</div>
+          <div class="bsl-id">BLD022</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD023">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD023_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Steele Ocean 2</div>
+          <div class="bsl-id">BLD023</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD024">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD024_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Sobeys Hub</div>
+          <div class="bsl-id">BLD024</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD025">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD025_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">Belmont House</div>
+          <div class="bsl-id">BLD025</div>
+        </div>
+        <div class="bsl-item" data-bld="BLD026">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD026_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <div class="bsl-label">The Avery</div>
+          <div class="bsl-id">BLD026</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dual-viewport frame -->
+    <div class="dv-frame">
+      <div class="dv-canvases">
+        <div id="dvLeft" class="dv-half">
+          <div class="dv-vp-label dv-vp-label-left">RGB</div>
+        </div>
+        <div id="dvRight" class="dv-half">
+          <div class="dv-vp-label dv-vp-label-right" id="dvRightLabel">Semantic</div>
+        </div>
+
+        <!-- Right mode buttons -->
+        <div class="dv-mode-bar">
+          <button class="dv-mode-btn active" data-mode="semantic">
+            <i class="fas fa-tags"></i><span class="dv-mode-text">Semantic</span>
+          </button>
+          <button class="dv-mode-btn" data-mode="intensity">
+            <i class="fas fa-sun"></i><span class="dv-mode-text">Intensity</span>
+          </button>
+          <button class="dv-mode-btn" data-mode="time">
+            <i class="fas fa-clock"></i><span class="dv-mode-text">GPS Time</span>
+          </button>
+        </div>
+
+        <!-- Overlays -->
+        <div id="dvLoading">
+          <div class="spinner" style="border-top-color:#2563eb"></div>
+          <span>Loading point cloud…</span>
+        </div>
+        <div id="dvPlaceholder">
+          <i class="fas fa-cube"></i>
+          <span>PLY preview not found</span>
+          <code id="dvPlaceholderCmd"></code>
+          <small>Generate: <code>python tools/export_ply.py --all</code></small>
+        </div>
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="dv-bar">
+        <div id="dvTitle">Loading…</div>
+        <div class="dv-toolbar">
+          <button class="dv-btn active" id="dvAutoRotate" title="Auto Rotate">
+            <i class="fas fa-rotate"></i>
+          </button>
+          <button class="dv-btn active" id="dvSync" title="Sync cameras">
+            <i class="fas fa-link"></i>
+          </button>
+          <button class="dv-btn" id="dvReset" title="Reset camera">
+            <i class="fas fa-expand"></i>
+          </button>
+          <button class="dv-zoom-btn" data-dir="+">+</button>
+          <button class="dv-zoom-btn" data-dir="−">−</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Class legend (populated by viewer.js after PLY load) -->
+    <div id="dvLegend"></div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════ BENCHMARK ══ -->
+<section id="benchmark">
+  <div class="container">
+    <div class="section-head text-center fade-up">
+      <p class="section-label">Benchmark Results</p>
+      <h2 class="section-title">Baseline Performance</h2>
+    </div>
+
+    <h3 class="bm-tbl-title fade-up">Overall Metrics</h3>
+    <div class="table-wrap fade-up">
+      <table>
+        <thead>
+          <tr>
+            <th class="th-rank">#</th>
+            <th style="text-align:left">Model</th>
+            <th>OA</th><th>μP</th><th>μR</th><th>μF1</th>
+            <th class="th-sep">mIoU ↓</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-rank1">
+            <td class="td-rank"><span class="rank-badge rk1">1</span></td>
+            <td class="td-left">KPConv</td>
+            <td class="td-best">82.2%</td><td class="td-best">49.7%</td>
+            <td class="td-best">42.4%</td><td class="td-best">43.2%</td>
+            <td class="td-high th-sep">34.08%</td>
+          </tr>
+          <tr>
+            <td class="td-rank"><span class="rank-badge rk2">2</span></td>
+            <td class="td-left">PointNet++ (SSG)</td>
+            <td>78.3%</td><td>39.1%</td><td>34.3%</td><td>34.8%</td>
+            <td class="td-mid th-sep">28.47%</td>
+          </tr>
+          <tr>
+            <td class="td-rank"><span class="rank-badge rk3">3</span></td>
+            <td class="td-left">PointNet</td>
+            <td>74.4%</td><td>39.0%</td><td>31.9%</td><td>32.1%</td>
+            <td class="td-mid th-sep">25.34%</td>
+          </tr>
+          <tr>
+            <td class="td-rank"><span class="rank-badge rkn">4</span></td>
+            <td class="td-left">PTv2 (Point Transformer V2)</td>
+            <td>78.8%</td><td>24.1%</td><td>24.7%</td><td>23.6%</td>
+            <td class="td-low th-sep">19.90%</td>
+          </tr>
+          <tr>
+            <td class="td-rank"><span class="rank-badge rkn">5</span></td>
+            <td class="td-left">PTv3 (Point Transformer V3)</td>
+            <td>69.5%</td><td>28.2%</td><td>20.9%</td><td>19.4%</td>
+            <td class="td-low th-sep">15.79%</td>
+          </tr>
+          <tr>
+            <td class="td-rank"><span class="rank-badge rkn">6</span></td>
+            <td class="td-left">DGCNN</td>
+            <td>69.3%</td><td>31.3%</td><td>16.6%</td><td>15.7%</td>
+            <td class="td-low th-sep">13.04%</td>
+          </tr>
+          <tr>
+            <td class="td-rank"><span class="rank-badge rkn">7</span></td>
+            <td class="td-left">RandLA-Net</td>
+            <td>41.5%</td><td>9.9%</td><td>10.8%</td><td>9.0%</td>
+            <td class="td-low th-sep">5.91%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="bm-tbl-title fade-up" style="margin-top:44px">Per-Class IoU</h3>
+    <p class="bm-tbl-note fade-up">Bold = best per class</p>
+    <div class="table-wrap fade-up">
+      <table style="font-size:.78rem">
+        <thead>
+          <tr>
+            <th style="text-align:left;min-width:120px">Model</th>
+            <th>Wall</th><th>Win.</th><th>Door</th><th>Balc.</th>
+            <th>Veg.</th><th>Stairs</th><th>Terr.</th><th>Roof</th>
+            <th>Blinds</th><th>Other</th><th>Col.</th><th>Arch</th>
+            <th class="th-sep">mIoU</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-rank1">
+            <td class="td-left">KPConv</td>
+            <td class="td-best">77.5</td><td class="td-best">28.5</td><td>0</td><td class="td-best">19.6</td>
+            <td class="td-best">91.2</td><td>9.7</td><td class="td-best">87.4</td><td class="td-best">6.6</td>
+            <td class="td-best">41.0</td><td class="td-best">23.5</td><td class="td-best">23.9</td><td>0</td>
+            <td class="td-miou th-sep">34.08%</td>
+          </tr>
+          <tr>
+            <td class="td-left">PointNet++ (SSG)</td>
+            <td>72.7</td><td>21.8</td><td>0</td><td>0</td>
+            <td>83.8</td><td class="td-best">56.6</td><td>82.5</td><td>0.04</td>
+            <td>8.4</td><td>15.1</td><td>0.7</td><td>0</td>
+            <td class="td-miou th-sep">28.47%</td>
+          </tr>
+          <tr>
+            <td class="td-left">PointNet</td>
+            <td>67.9</td><td>16.8</td><td class="td-best">0.2</td><td>0</td>
+            <td>81.0</td><td>40.5</td><td>72.4</td><td>0.4</td>
+            <td>2.8</td><td>20.3</td><td>1.8</td><td>0</td>
+            <td class="td-miou th-sep">25.34%</td>
+          </tr>
+          <tr>
+            <td class="td-left">PTv2</td>
+            <td>75.4</td><td>16.8</td><td>0</td><td>0</td>
+            <td>62.5</td><td>0</td><td>84.1</td><td>0</td>
+            <td>0</td><td>0</td><td>0</td><td>0</td>
+            <td class="td-miou th-sep">19.90%</td>
+          </tr>
+          <tr>
+            <td class="td-left">PTv3</td>
+            <td>73.5</td><td>11.5</td><td>0</td><td>8.9</td>
+            <td>0.1</td><td>9.0</td><td>85.5</td><td>0</td>
+            <td>0</td><td>1.0</td><td>0</td><td>0</td>
+            <td class="td-miou th-sep">15.79%</td>
+          </tr>
+          <tr>
+            <td class="td-left">DGCNN</td>
+            <td>61.6</td><td>4.3</td><td>0</td><td>0</td>
+            <td>6.9</td><td>0</td><td>83.8</td><td>0</td>
+            <td>0</td><td>0</td><td>0</td><td>0</td>
+            <td class="td-miou th-sep">13.04%</td>
+          </tr>
+          <tr>
+            <td class="td-left">RandLA-Net</td>
+            <td>41.2</td><td>6.7</td><td>0</td><td>0</td>
+            <td>0</td><td>0</td><td>23.0</td><td>0</td>
+            <td>0</td><td>0</td><td>0</td><td>0</td>
+            <td class="td-miou th-sep">5.91%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ QUALITATIVE RESULTS ══ -->
+<section id="qualitative">
+  <div class="container">
+    <div class="section-head text-center fade-up">
+      <p class="section-label">Qualitative Results</p>
+      <h2 class="section-title">Predictions vs. Ground Truth</h2>
+    </div>
+    <div class="qual-placeholder fade-up">
+      <i class="fas fa-images"></i>
+      <span>Per-building comparisons of model predictions against ground-truth labels, coming once baselines are finalised.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ GEOSPATIAL ══ -->
+<section id="geospatial">
+  <div class="geo-inner">
+    <div class="section-head dark-head fade-up">
+      <p class="section-label">Geospatial Coverage</p>
+      <h2 class="section-title">Halifax, Nova Scotia</h2>
+      <p class="section-sub">Click any pin to preview the point cloud · Mapbox satellite imagery</p>
+    </div>
+  </div>
+  <div class="geo-layout">
+    <div id="coverageMap"></div>
+    <div class="geo-panel">
+      <div class="gp-top">
+        <div class="gp-id-badge" id="gpId">...</div>
+        <div>
+          <div id="gpName">Select a building</div>
+          <div id="gpUni"></div>
+        </div>
+      </div>
+      <div class="gp-stats">
+        <div class="gp-stat">Points <span id="gpPts">...</span></div>
+        <div class="gp-stat">Classes <span id="gpCls">...</span></div>
+      </div>
+      <div class="gp-canvas-wrap">
+        <canvas id="gpCanvas"></canvas>
+        <div id="gpLoading"><div class="spinner"></div><span>Loading…</span></div>
+        <div id="gpNoVideo">
+          <i class="fas fa-cloud" style="font-size:1.4rem;opacity:.3"></i>
+          <span>PLY not found</span>
+        </div>
+      </div>
+      <div id="gpModes">
+        <button class="gp-mode active" data-mode="rgb">RGB</button>
+        <button class="gp-mode" data-mode="semantic">Semantic</button>
+      </div>
+      <div id="gpLegend"></div>
+      <button id="gpCta"><i class="fas fa-cube" style="margin-right:6px"></i>Open in 3D Explorer</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ DOWNLOAD ══ -->
+<section id="download">
+  <div class="container-sm">
+    <div class="section-head text-center fade-up">
+      <p class="section-label">Dataset Access</p>
+      <h2 class="section-title">Download HFX3D</h2>
+      <p class="section-sub">Coming soon</p>
+    </div>
+    <div class="download-box fade-up">
+      <a href="#" class="btn btn-primary btn-lg">
+        <i class="fas fa-database"></i>&ensp;Request Access on HuggingFace
+      </a>
+      <p class="download-note">
+        Contact:
+        <a href="mailto:abdiaziz.muse@smu.ca">abdiaziz.muse@smu.ca</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ ACKNOWLEDGMENTS ══ -->
+<section id="acknowledgments">
+  <div class="container-sm">
+    <div class="section-head text-center fade-up">
+      <p class="section-label">Acknowledgments</p>
+      <h2 class="section-title">Support &amp; Resources</h2>
+    </div>
+    <div class="ack-body fade-up">
+      <p>
+        The early phase of this work was supported by the Natural Sciences and Engineering Research Council of Canada (NSERC).
+        Compute resources were provided by the Digital Research Alliance of Canada.
+        The authors thank the building owners and facility managers who granted scanning access,
+        and the annotation team for their meticulous labelling work.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ CITATION ══ -->
+<section id="citation">
+  <div class="container-sm">
+    <div class="section-head text-center fade-up">
+      <p class="section-label">Citation</p>
+      <h2 class="section-title">BibTeX</h2>
+      <p class="section-sub">If you use HFX3D in your research, please cite:</p>
+    </div>
+    <div class="citation-box fade-up">
+      <div class="citation-hdr">
+        <span>BibTeX</span>
+        <button class="copy-btn" onclick="copyCitation(this)">
+          <i class="fas fa-copy"></i> Copy
+        </button>
+      </div>
+      <div class="citation-body">
+        <pre id="citationText">@inproceedings{hfx3d2027,
+  title     = {{HFX3D}: A {LiDAR} Benchmark for Semantic Segmentation
+               of Urban Building Facades},
+  author    = {Author One and Author Two and Author Three},
+  booktitle = {Proceedings of the IEEE/CVF Winter Conference on
+               Applications of Computer Vision (WACV)},
+  year      = {2027},
+}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ FOOTER ══ -->
+<footer>
+  <div class="footer-brand">HFX<span>3D</span></div>
+  <div class="footer-links">
+    <a href="https://github.com/jijup/hfx3d-benchmark" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+    <a href="#abstract">Abstract</a>
+    <a href="#dataset">Dataset</a>
+    <a href="#explorer">3D Explorer</a>
+    <a href="#benchmark">Results</a>
+  </div>
+  <p class="footer-copy">
+    HFX3D · WACV 2027 · Halifax, Nova Scotia &nbsp;·&nbsp;
+    Page inspired by <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>
+  </p>
+</footer>
+
+<!-- ════════════════════════════════════════════════════ SCRIPTS ══ -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/deck.gl@8.9.35/dist.min.js"></script>
+
+<script src="static/js/main.js"></script>
+<script src="static/js/viewer.js"></script>
+<script src="static/js/map.js"></script>
+
+</body>
+</html>
