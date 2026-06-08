@@ -1019,24 +1019,40 @@
         })
         .catch(function() {});
 
-      // Geolocate current visitor
-      fetch('https://ipapi.co/json/')
+      // Geolocate current visitor — CF Worker primary (no rate limits), ipapi.co fallback
+      function recordVisitor(lat, lon, city, country) {
+        if (!validCoord(lat, lon)) return;
+        addPin(lon, lat, true);
+        if (!alreadyRecorded) {
+          fetch(SB_URL + '/rest/v1/visitors', {
+            method: 'POST',
+            headers: sbHeaders({ 'Prefer': 'return=minimal' }),
+            body: JSON.stringify({ lat: lat, lon: lon, city: city, country: country })
+          }).then(function() {
+            try { localStorage.setItem(VISIT_KEY, String(Date.now())); } catch (e) {}
+          }).catch(function() {});
+        }
+      }
+
+      fetch('https://hfx3d-ply.zazukhan58.workers.dev/locate')
         .then(function(r) { return r.json(); })
         .then(function(d) {
-          var lat = d.latitude, lon = d.longitude;
-          if (!validCoord(lat, lon)) return;
-          addPin(lon, lat, true);  // always show blue pin for current visitor
-          if (!alreadyRecorded) {
-            fetch(SB_URL + '/rest/v1/visitors', {
-              method: 'POST',
-              headers: sbHeaders({ 'Prefer': 'return=minimal' }),
-              body: JSON.stringify({ lat: lat, lon: lon, city: d.city, country: d.country_name })
-            }).then(function() {
-              try { localStorage.setItem(VISIT_KEY, String(Date.now())); } catch (e) {}
-            }).catch(function() {});
-          }
+          // CF returns latitude/longitude as strings — coerce to number
+          var lat = d.latitude != null ? parseFloat(d.latitude) : null;
+          var lon = d.longitude != null ? parseFloat(d.longitude) : null;
+          if (!validCoord(lat, lon)) throw new Error('no coords');
+          recordVisitor(lat, lon, d.city, d.country);
         })
-        .catch(function() {});
+        .catch(function() {
+          // Fallback: ipapi.co (1000 req/day free tier)
+          fetch('https://ipapi.co/json/')
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+              if (d.error || d.latitude == null || d.longitude == null) return;
+              recordVisitor(d.latitude, d.longitude, d.city, d.country_name);
+            })
+            .catch(function() {});
+        });
     });
   }
 
