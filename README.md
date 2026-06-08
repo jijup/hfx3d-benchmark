@@ -38,8 +38,14 @@ Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 <br>
 
 <div align="center">
-<img src="assets/class_distribution.png" width="55%" alt="Long-tail class distribution"/>
-<img src="assets/split_distribution.png" width="43%" alt="Per-class split breakdown"/>
+<img src="assets/class_balance_metrics.png" width="55%" alt="Class balance — proportions and counts"/>
+<img src="assets/split_analysis.png" width="43%" alt="Per-class train / val / test split"/>
+</div>
+
+<br>
+
+<div align="center">
+<img src="assets/distribution_heatmap.png" width="92%" alt="Point distribution heatmap — building × class"/>
 </div>
 
 <br>
