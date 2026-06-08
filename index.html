@@ -34,6 +34,7 @@
       <a href="#benchmark">Benchmark</a>
       <a href="#qualitative">Gallery</a>
       <a href="#geospatial">Map</a>
+      <a href="#visitors">Visitors</a>
       <a href="#citation">Cite</a>
     </div>
     <div class="nav-actions">
@@ -55,6 +56,7 @@
   <a href="#benchmark">Benchmark</a>
   <a href="#qualitative">Gallery</a>
   <a href="#geospatial">Map</a>
+  <a href="#visitors">Visitors</a>
   <a href="#citation">Cite</a>
 </div>
 
@@ -198,12 +200,34 @@
       </div>
     </div>
 
-    <!-- Class distribution charts -->
+    <!-- Dataset statistics -->
     <div class="fade-up" style="margin-top:48px">
-      <p class="taxonomy-title">Class &amp; Split Distribution</p>
-      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
-        <img src="assets/images/class_distribution.png" alt="Class distribution (log scale)" style="flex:1 1 55%;min-width:280px;border-radius:8px">
-        <img src="assets/images/split_distribution.png" alt="Per-class split breakdown" style="flex:1 1 38%;min-width:240px;border-radius:8px">
+      <p class="taxonomy-title">Dataset Statistics</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px">
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px">
+          <p style="margin:0 0 10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)">Class Balance</p>
+          <div style="height:460px;display:flex;align-items:center;justify-content:center">
+            <img src="assets/images/class_balance_metrics.png" alt="Class proportions and balance" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:4px">
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px">
+          <p style="margin:0 0 10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)">Per-Class Split</p>
+          <div style="height:360px;display:flex;align-items:center;justify-content:center">
+            <img src="assets/images/split_analysis.png" alt="Train / Val / Test per class" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:4px">
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px">
+          <p style="margin:0 0 10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)">Building × Class Heatmap</p>
+          <div style="height:360px;display:flex;align-items:center;justify-content:center">
+            <img src="assets/images/distribution_heatmap.png" alt="Point distribution heatmap" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:4px">
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px">
+          <p style="margin:0 0 10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)">Points &amp; Classes per Building</p>
+          <div style="height:460px;display:flex;align-items:center;justify-content:center">
+            <img src="assets/images/file_statistics.png" alt="Points and classes per building" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:4px">
+          </div>
+        </div>
       </div>
     </div>
 
@@ -225,14 +249,14 @@
           </div>
         </div>
         <div class="annot-card">
-          <div class="annot-bld-lbl">BLD013 · 1801 Hollis #1</div>
+          <div class="annot-bld-lbl">BLD017 · 1801 Hollis (Sidewalk)</div>
           <div class="annot-pair">
             <div class="annot-img-wrap">
-              <img src="assets/images/buildings/hfx013_rgb.png" alt="BLD013 RGB" loading="lazy">
+              <img src="assets/images/buildings/hfx017_rgb_sidewalk.png" alt="BLD017 RGB sidewalk" loading="lazy">
               <span class="annot-tag">RGB</span>
             </div>
             <div class="annot-img-wrap">
-              <img src="assets/images/buildings/hfx013_semantic.png" alt="BLD013 Semantic" loading="lazy">
+              <img src="assets/images/buildings/hfx017_semantic_sidewalk.png" alt="BLD017 Semantic sidewalk" loading="lazy">
               <span class="annot-tag">Semantic</span>
             </div>
           </div>
@@ -299,6 +323,37 @@
         <div class="cond-card">
           <img src="assets/images/conditions/cond_night_front_face.png" alt="Night" loading="lazy">
           <div class="cond-label">Night</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scanner perspective -->
+    <div class="fade-up" style="margin-top:32px">
+      <p class="taxonomy-title">ZEB Horizon Scanner View</p>
+      <div style="display:flex;gap:28px;justify-content:center;flex-wrap:wrap;margin-top:20px">
+        <div style="text-align:center">
+          <div style="width:170px;height:170px;border-radius:50%;overflow:hidden;margin:0 auto 10px;background:#000;box-shadow:0 4px 16px rgba(0,0,0,.4)">
+            <img src="assets/images/conditions/fisheye_winter.png" alt="Winter scan" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+          </div>
+          <div class="cond-label">Winter</div>
+        </div>
+        <div style="text-align:center">
+          <div style="width:170px;height:170px;border-radius:50%;overflow:hidden;margin:0 auto 10px;background:#000;box-shadow:0 4px 16px rgba(0,0,0,.4)">
+            <img src="assets/images/conditions/fisheye_fall.png" alt="Fall scan" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+          </div>
+          <div class="cond-label">Fall</div>
+        </div>
+        <div style="text-align:center">
+          <div style="width:170px;height:170px;border-radius:50%;overflow:hidden;margin:0 auto 10px;background:#000;box-shadow:0 4px 16px rgba(0,0,0,.4)">
+            <img src="assets/images/conditions/fisheye_waterfront.png" alt="Waterfront scan" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+          </div>
+          <div class="cond-label">Summer</div>
+        </div>
+        <div style="text-align:center">
+          <div style="width:170px;height:170px;border-radius:50%;overflow:hidden;margin:0 auto 10px;background:#000;box-shadow:0 4px 16px rgba(0,0,0,.4)">
+            <img src="assets/images/conditions/fisheye_urban.png" alt="Urban scan" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+          </div>
+          <div class="cond-label">Urban</div>
         </div>
       </div>
     </div>
@@ -859,8 +914,8 @@
 <section id="visitors" style="background:var(--dark-bg);padding:100px 0 0">
   <div style="padding:0 24px 48px">
     <div class="section-head dark-head fade-up">
-      <p class="section-label">Visitor Map</p>
-      <h2 class="section-title">Where Our Visitors Come From</h2>
+      <p class="section-label">Visitors</p>
+      <h2 class="section-title">Who's Exploring HFX3D?</h2>
     </div>
   </div>
   <div style="max-width:1440px;margin:0 auto;padding:0 16px 48px">

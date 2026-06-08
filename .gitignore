@@ -2,7 +2,7 @@
 assets/pointclouds/
 
 # Raw dataset
-data/
+/data/
 
 # Python
 *.py
