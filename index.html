@@ -955,6 +955,22 @@
     return Object.assign({ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' }, extra || {});
   }
 
+  // Reject null-island (0,0), out-of-range, NaN, and non-numeric coords
+  function validCoord(lat, lon) {
+    return typeof lat === 'number' && typeof lon === 'number' &&
+           isFinite(lat) && isFinite(lon) &&
+           lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180 &&
+           !(lat === 0 && lon === 0);
+  }
+
+  // Only record each browser once per 24 h — prevents duplicate rows on every page visit
+  var VISIT_KEY = 'hfx3d_visit_ts';
+  var alreadyRecorded = false;
+  try {
+    var _last = parseInt(localStorage.getItem(VISIT_KEY) || '0', 10);
+    alreadyRecorded = (Date.now() - _last) < 86400000;
+  } catch (e) {}
+
   function initVisitorMap() {
     if (initialized) return;
     initialized = true;
@@ -984,6 +1000,7 @@
     }
 
     function addPin(lon, lat, isCurrent) {
+      if (!validCoord(lat, lon)) return;  // drop bad coords silently
       var el = isCurrent ? makePinEl('#2563eb', 28) : makePinEl('#f97316', 20);
       new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([lon, lat])
@@ -993,6 +1010,7 @@
     vmap.on('load', function () {
       vmap.resize();
 
+      // Load existing visitors — addPin validates each coord, so old junk rows are skipped
       fetch(SB_URL + '/rest/v1/visitors?select=lat,lon', { headers: sbHeaders() })
         .then(function(r) { return r.json(); })
         .then(function(rows) {
@@ -1001,16 +1019,22 @@
         })
         .catch(function() {});
 
+      // Geolocate current visitor
       fetch('https://ipapi.co/json/')
         .then(function(r) { return r.json(); })
         .then(function(d) {
-          if (!d.latitude || !d.longitude) return;
-          fetch(SB_URL + '/rest/v1/visitors', {
-            method: 'POST',
-            headers: sbHeaders({ 'Prefer': 'return=minimal' }),
-            body: JSON.stringify({ lat: d.latitude, lon: d.longitude, city: d.city, country: d.country_name })
-          }).catch(function() {});
-          addPin(d.longitude, d.latitude, true);
+          var lat = d.latitude, lon = d.longitude;
+          if (!validCoord(lat, lon)) return;
+          addPin(lon, lat, true);  // always show blue pin for current visitor
+          if (!alreadyRecorded) {
+            fetch(SB_URL + '/rest/v1/visitors', {
+              method: 'POST',
+              headers: sbHeaders({ 'Prefer': 'return=minimal' }),
+              body: JSON.stringify({ lat: lat, lon: lon, city: d.city, country: d.country_name })
+            }).then(function() {
+              try { localStorage.setItem(VISIT_KEY, String(Date.now())); } catch (e) {}
+            }).catch(function() {});
+          }
         })
         .catch(function() {});
     });
