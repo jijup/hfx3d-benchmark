@@ -38,14 +38,15 @@ Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 <br>
 
 <div align="center">
-<img src="assets/class_balance_metrics.png" width="55%" alt="Class balance — proportions and counts"/>
-<img src="assets/split_analysis.png" width="43%" alt="Per-class train / val / test split"/>
+<img src="assets/class_balance_metrics.png" width="48%" alt="Class balance — proportions and counts"/>
+<img src="assets/file_statistics.png" width="48%" alt="Points and classes per building"/>
 </div>
 
 <br>
 
 <div align="center">
-<img src="assets/distribution_heatmap.png" width="92%" alt="Point distribution heatmap — building × class"/>
+<img src="assets/split_analysis.png" width="48%" alt="Per-class train / val / test split"/>
+<img src="assets/distribution_heatmap.png" width="48%" alt="Point distribution heatmap — building × class"/>
 </div>
 
 <br>
@@ -200,8 +201,8 @@ hfx3d-benchmark/
 
 ## Infrastructure
 
-- **Cluster:** Alliance Canada — `nibi.alliancecan.ca`
-- **GPUs:** NVIDIA H100 80 GB (8 per node)
+- **Cluster:** [Alliance Canada](https://docs.alliancecan.ca/wiki/Nibi) — `nibi.alliancecan.ca`
+- **GPUs:** NVIDIA H100 80 GB · 1 GPU per job (2 for RandLA-Net)
 - **Container:** Apptainer SIF (PyTorch 2.4.1, CUDA 12.1)
 - **Scheduler:** SLURM
 
@@ -213,7 +214,7 @@ hfx3d-benchmark/
 
 <br>
 
-This work was supported by the Natural Sciences and Engineering Research Council of Canada (NSERC). Computational resources were provided by the Digital Research Alliance of Canada. We gratefully acknowledge Saint Mary's University for institutional support. We thank the building owners and facility managers across Halifax for generously granting scanning access to their properties. The quality of the HFX3D annotations is owed to the dedication of our collection, curation and labelling team: Tooba Javed, Prachi Kudeshia, Jack Greenlaw, Avery Cao, and Khushal Das.
+This work was supported by the [Natural Sciences and Engineering Research Council of Canada (NSERC)](https://www.nserc-crsng.gc.ca/). Computational resources were provided by the [Digital Research Alliance of Canada](https://alliancecan.ca/). We gratefully acknowledge [Saint Mary's University](https://www.smu.ca/) for institutional support. We thank the building owners and facility managers across Halifax for generously granting scanning access to their properties. The quality of the HFX3D annotations is owed to the dedication of our collection, curation and labelling team: Tooba Javed, Prachi Kudeshia, Jack Greenlaw, Avery Cao, and Khushal Das.
 
 ---
 
