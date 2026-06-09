@@ -1,5 +1,4 @@
 # DGCNN hyperparameters — HFX3D benchmark
-# Full run: 200 epochs, 2×H100, best test mIoU 18.31% (ep162)
 
 model:
   name: DGCNN_semseg_hfx3d

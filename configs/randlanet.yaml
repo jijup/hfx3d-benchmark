@@ -1,5 +1,4 @@
-# RandLA-Net hyperparameters used for HFX3D benchmark
-# Full run: 100 epochs, 2×H100 — in progress
+# RandLA-Net hyperparameters — HFX3D benchmark
 
 model:
   name: RandLANet
@@ -9,10 +8,10 @@ model:
   knn: 16
 
 training:
-  epochs: 100
+  epochs: 200
   optimizer: Adam
-  subsampling: random    # ~40k–65k points per building per iteration
-  knn_backend: scipy.cKDTree   # C++ ops replaced for Apptainer compatibility
+  subsampling: random
+  knn_backend: scipy.cKDTree
 
 data:
   num_classes: 12

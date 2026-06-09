@@ -1,20 +1,24 @@
-# PointNet++ SSG hyperparameters used for HFX3D benchmark
-# Full run: 64 epochs, 2×H100 — in progress
+# PointNet / PointNet++ hyperparameters — HFX3D benchmark
 
-model:
+pointnet:
+  name: PointNet
+  num_classes: 12
+  in_channels: 7         # xyz(3) + rgb(3) + intensity(1)
+
+pointnet2_ssg:
   name: PointNet2_SSG
   num_classes: 12
   in_channels: 7         # xyz(3) + rgb(3) + intensity(1)
-  grouping: SSG          # Single-Scale Grouping
+  grouping: SSG
 
 training:
-  epochs: 64
+  epochs: 200
   optimizer: Adam
   lr: 0.001
   lr_decay: 0.7
-  lr_decay_every: 10     # epochs
-  num_points: 4096       # points per sample
-  sample_rate: 1.0       # fraction of chunks drawn per epoch (~65k samples)
+  lr_decay_every: 10
+  num_points: 4096
+  sample_rate: 1.0
   batch_size: 8
 
 data:
