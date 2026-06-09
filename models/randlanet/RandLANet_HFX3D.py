@@ -1,5 +1,6 @@
 """
 RandLA-Net model adapted for HFX3D.
+Adapted from QingyongHu/RandLA-Net (https://github.com/QingyongHu/RandLA-Net), RandLANet.py
 
 Changes vs original RandLANet.py
 ---------------------------------

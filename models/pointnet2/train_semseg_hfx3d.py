@@ -1,5 +1,6 @@
 """
 PointNet++ semantic segmentation training on HFX3D dataset.
+Adapted from yanx27/Pointnet_Pointnet2_pytorch (https://github.com/yanx27/Pointnet_Pointnet2_pytorch), train_semseg.py
 
 Usage (inside SIF):
   python train_semseg_hfx3d.py \

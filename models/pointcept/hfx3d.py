@@ -5,6 +5,8 @@ Urban building facades point cloud dataset for semantic segmentation.
 12 classes: wall, window, door, balcony, vegetation, stairs, terrain, roof, blinds, other, column, arch
 
 Author: Abdiaziz
+Uses Pointcept's dataset API (DefaultDataset, DATASETS registry):
+https://github.com/Pointcept/Pointcept
 """
 
 import os

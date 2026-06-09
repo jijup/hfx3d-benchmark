@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 DGCNN semantic segmentation on HFX3D urban facade dataset.
-Adapted from AnTao97/dgcnn.pytorch main_semseg_s3dis.py
+Adapted from AnTao97/dgcnn.pytorch (https://github.com/AnTao97/dgcnn.pytorch), main_semseg_s3dis.py
 Features: xyz (3) + rgb (3) + intensity (1) = 7 channels, 12 classes
 """
 

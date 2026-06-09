@@ -1,3 +1,7 @@
+# Adapted from Pointcept (https://github.com/Pointcept/Pointcept)
+# Config structure and PTv2 hyperparameters derived from their ScanNet/S3DIS configs.
+# Modified for HFX3D: in_channels=7, num_classes=12, HFX3DDataset loader.
+
 import os
 _base_ = ["../_base_/default_runtime.py"]
 
