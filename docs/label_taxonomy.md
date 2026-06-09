@@ -4,30 +4,19 @@
 
 | ID | Class | Description | Frequency |
 |----|-------|-------------|-----------|
-| 0 | wall | Exterior building walls — the dominant class | Very high |
-| 1 | window | Glass window panes, frames, and surrounding structure | High |
-| 2 | door | Building entrance and exit doors, including frames | Low |
-| 3 | balcony | Protruding balcony structures, railings, and floor slabs | Low |
-| 4 | vegetation | Trees, shrubs, hedges, and grass near the building | Medium |
-| 5 | stairs | Exterior stairways and steps | Rare |
-| 6 | terrain | Ground surface — sidewalks, pavement, soil | Medium |
-| 7 | roof | Roof surfaces, overhangs, eaves, and gutters | Low |
-| 8 | blinds | Window blinds, shutters, and sun-shading elements | Low |
-| 9 | other | Miscellaneous facade elements not covered by other classes | Medium |
-| 10 | column | Structural columns, pillars, and vertical supports | Rare |
-| 11 | arch | Archways, curved openings, and vaulted structures | Rare |
-
-## Notes
-
-- **Class imbalance is severe**: wall and terrain dominate; door, stairs, column, and arch are rare
-- All current baseline models score 0% IoU on column and arch
-- RGB colour is unreliable (~70% of points have near-black RGB due to the ZEB scanner)
-- Models relying heavily on colour should be expected to underperform
+| 0 | wall | Exterior facade surfaces visible from outside; excludes openings | Very high |
+| 1 | window | Openings in a wall or roof for light and ventilation; includes glazing, frames, and any transparent or translucent glass surface on the facade | High |
+| 2 | door | Openings for access or egress; includes door panels and frames | Low |
+| 3 | balcony | Protruding slabs, floors, and railings; excludes supporting columns | Low |
+| 4 | vegetation | Trees, shrubs, hedges, and grass in the building vicinity | Medium |
+| 5 | stairs | Exterior steps and stairways; excludes support poles and handrails | Rare |
+| 6 | terrain | Ground surfaces outside a building — sidewalks, pavement, soil | Medium |
+| 7 | roof | Roof surfaces and associated structures, including dormers | Low |
+| 8 | blinds | Window closures (blinds, shutters) — labelled whether open or closed | Low |
+| 9 | other | Building-related elements not covered above (e.g. bins, poles) | Medium |
+| 10 | column | Structural vertical supports — columns, pillars, and balcony supports | Rare |
+| 11 | arch | Downward-facing building surfaces and attached elements (e.g. cameras, lights) | Rare |
 
 ## Label Map
 
-```json
-{"wall": 0, "window": 1, "door": 2, "balcony": 3, "vegetation": 4,
- "stairs": 5, "terrain": 6, "roof": 7, "blinds": 8, "other": 9,
- "column": 10, "arch": 11}
-```
+See [`configs/label_map.json`](../configs/label_map.json) for the canonical class-name → ID mapping.

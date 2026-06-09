@@ -23,7 +23,7 @@ Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 
 ## Dataset
 
-26 buildings scanned across Halifax, NS, split at the building level: **18 train / 4 val / 4 test**. Each building is one HDF5 file. All models receive the same 7D input: `[x, y, z, r, g, b, intensity]`.
+The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon handheld LiDAR, split at the building level: **18 train / 4 val / 4 test**. Each building is one LAS file; each point carries 7 attributes: `[x, y, z, r, g, b, intensity]`.
 
 | Property | Value |
 |----------|-------|
@@ -50,8 +50,6 @@ Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 </div>
 
 <br>
-
-**Class imbalance is severe** — wall and terrain together account for over 70% of all points; door, column, and arch are rare. RGB is unreliable (~70% of points are near-black from the ZEB scanner).
 
 - Building index and naming → [`docs/HFX3D_README.md`](docs/HFX3D_README.md)
 - 12-class taxonomy and imbalance notes → [`docs/label_taxonomy.md`](docs/label_taxonomy.md)

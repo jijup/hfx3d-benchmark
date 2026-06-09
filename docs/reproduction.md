@@ -1,6 +1,6 @@
 # Reproducing Benchmark Results
 
-All experiments run on Alliance Canada `fir.alliancecan.ca` using SLURM + Apptainer.
+All experiments run on the Nibi cluster (`nibi.alliancecan.ca`) using SLURM + Apptainer.
 
 ## Prerequisites
 

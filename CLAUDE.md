@@ -8,7 +8,7 @@ HFX3D Benchmark is a semantic segmentation benchmark for urban building facade L
 
 ## Infrastructure
 
-- **Cluster:** Alliance Canada — `fir.alliancecan.ca`
+- **Cluster:** Alliance Canada — `nibi.alliancecan.ca` (Nibi)
 - **Scheduler:** SLURM (`sbatch`)
 - **Container:** Apptainer SIF at `/home/<user>/pointcept.sif` (PyTorch 2.4.1, CUDA 12.1)
 - **Dataset on cluster:** `/home/<user>/projects/def-<pi>/<user>/HFX3D_Splits/` with `train/`, `val/`, and `test/` subdirs
@@ -79,8 +79,6 @@ metadata/centroid      (3,)    float64   original centroid before centering
 | 9 | other | medium |
 | 10 | column | rare |
 | 11 | arch | rare |
-
-**Class imbalance is severe.** RGB is unreliable — ~70 % of points have near-black values from the ZEB scanner. Models relying heavily on colour underperform. `door`, `column`, and `arch` deviate from the 80/20 split target because their points concentrate in few buildings.
 
 ## Design System & Color Protocol
 
