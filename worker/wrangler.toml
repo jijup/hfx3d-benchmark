@@ -1,0 +1,8 @@
+name = "hfx3d-visits"
+main = "visits-worker.js"
+compatibility_date = "2026-01-01"
+
+# Secrets (set once, never committed):
+#   wrangler secret put SUPABASE_URL
+#   wrangler secret put SUPABASE_SERVICE_KEY
+#   wrangler secret put HASH_SALT

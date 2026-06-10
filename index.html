@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous">
 
-  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" integrity="sha384-u+wVUwl2ZXoPOrUMU3wYTEFmS6t764q435vp50Tj0SzRboIuzorj6aGCzOsK/YyR" crossorigin="anonymous">
   <link rel="stylesheet" href="static/css/style.css">
 </head>
 <body>
@@ -911,6 +911,7 @@
     <div class="section-head dark-head fade-up">
       <p class="section-label">Visitors</p>
       <h2 class="section-title">Who's Exploring HFX3D?</h2>
+      <p id="visitorStats" class="section-sub" style="min-height:1.4em"></p>
     </div>
   </div>
   <div style="max-width:1440px;margin:0 auto;padding:0 16px 48px">
@@ -932,10 +933,10 @@
 </footer>
 
 <!-- ════════════════════════════════════════════════════ SCRIPTS ══ -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/deck.gl@8.9.35/dist.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js" integrity="sha384-9EQoUIJYrv09/oYhSxnw1VpLcfPw3BM9dE7+D/3wGUPeLLa7F9Z6OAoD+i/M6FK9" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js" integrity="sha384-aizNATw2wQruqMN04RDyo9uvO1pHrWXvhHJ8u9R8f5ws1mnKzmVJQUYeBxByY7Gs" crossorigin="anonymous"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js" integrity="sha384-QhDWlNe46CZbFQWy0V1TD9TYGDGWBqSUyafVPJPqsUSkdANBOblLBczmDJcLlqwL" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/deck.gl@8.9.35/dist.min.js" integrity="sha384-3nvwSk2Fxpw61RPr5Tnc6mHNuWAxEppaSbRUJe1Y+Qeggt50+j9Qvcxw0kCBYWD5" crossorigin="anonymous"></script>
 
 <script src="static/js/main.js"></script>
 <script src="static/js/viewer.js"></script>
@@ -943,19 +944,48 @@
 
 <script>
 (function () {
+  /* ── Visitor tracking ── */
+
+  var WORKER = 'https://hfx3d-visits.zazukhan58.workers.dev';
+
+  var me = null;
+
+  // per-browser id keeps one pin per visitor even when their ISP rotates IPs
+  var cid = null;
+  try {
+    cid = localStorage.getItem('hfx3d_cid');
+    if (!cid && window.crypto && crypto.randomUUID) {
+      cid = crypto.randomUUID();
+      localStorage.setItem('hfx3d_cid', cid);
+    }
+  } catch (e) {}
+
+  var visitPromise = fetch(WORKER + '/visit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cid: cid })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (d) { me = (d && d.you) || null; })
+    .catch(function () {});
+
   if (typeof mapboxgl === 'undefined') return;
   var container = document.getElementById('visitorMap');
   if (!container) return;
 
   var initialized = false;
-  var SB_URL = 'https://yruxlnnjprgzoazyklsw.supabase.co';
-  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlydXhsbm5qcHJnem9henlrbHN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NDA0NDYsImV4cCI6MjA5NjQxNjQ0Nn0.EwnEzH_Opta8a09IIVIFT2_ACeGA45UkeFoseVkMKW0';
 
-  function sbHeaders(extra) {
-    return Object.assign({ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' }, extra || {});
+  function makePinEl(color, size) {
+    var w = size || 22, h = Math.round(w * 1.4);
+    var el = document.createElement('div');
+    el.style.cssText = 'width:' + w + 'px;height:' + h + 'px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))';
+    el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 22 31">' +
+      '<path d="M11 0C4.9 0 0 4.9 0 11c0 8.3 11 20 11 20S22 19.3 22 11C22 4.9 17.1 0 11 0z" fill="' + color + '"/>' +
+      '<circle cx="11" cy="11" r="4.5" fill="rgba(255,255,255,0.85)"/>' +
+      '</svg>';
+    return el;
   }
 
-  // Reject null-island (0,0), out-of-range, NaN, and non-numeric coords
   function validCoord(lat, lon) {
     return typeof lat === 'number' && typeof lon === 'number' &&
            isFinite(lat) && isFinite(lon) &&
@@ -963,19 +993,11 @@
            !(lat === 0 && lon === 0);
   }
 
-  // Only record each browser once per 24 h — prevents duplicate rows on every page visit
-  var VISIT_KEY = 'hfx3d_visit_ts';
-  var alreadyRecorded = false;
-  try {
-    var _last = parseInt(localStorage.getItem(VISIT_KEY) || '0', 10);
-    alreadyRecorded = (Date.now() - _last) < 86400000;
-  } catch (e) {}
-
   function initVisitorMap() {
     if (initialized) return;
     initialized = true;
 
-    mapboxgl.accessToken = 'pk.eyJ1IjoiYWJkaTEyMyIsImEiOiJjbXE0MHBtOXQxeGIxMnNwc3lnZmpyemhvIn0.wf9REvjcKczyyjsF6kiBJA';
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYWJkaTEyMyIsImEiOiJjbXE3Y2d0czEwNXM1MnVxNWpoOWdlaGc4In0.4Bhdi3xKXTnopmel4diuKQ';
     var vmap = new mapboxgl.Map({
       container: 'visitorMap',
       style: 'mapbox://styles/mapbox/standard',
@@ -988,75 +1010,76 @@
     vmap.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'top-right');
     vmap.keyboard.enable();
 
-    function makePinEl(color, size) {
-      var w = size || 22, h = Math.round(w * 1.4);
-      var el = document.createElement('div');
-      el.style.cssText = 'width:' + w + 'px;height:' + h + 'px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))';
-      el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 22 31">' +
-        '<path d="M11 0C4.9 0 0 4.9 0 11c0 8.3 11 20 11 20S22 19.3 22 11C22 4.9 17.1 0 11 0z" fill="' + color + '"/>' +
-        '<circle cx="11" cy="11" r="4.5" fill="rgba(255,255,255,0.85)"/>' +
-        '</svg>';
-      return el;
-    }
+    var seenCoords = {};
 
-    function addPin(lon, lat, isCurrent) {
-      if (!validCoord(lat, lon)) return;  // drop bad coords silently
-      var el = isCurrent ? makePinEl('#2563eb', 28) : makePinEl('#f97316', 20);
+    function addVisitorPin(v) {
+      if (!validCoord(v.lat, v.lon)) return;
+      var el = makePinEl('#f97316', 20);
+      var label = (v.city || 'Unknown') + (v.country ? ', ' + v.country : '');
+      // colliding pins fan out in a ~400 m ring; offset must stay small so
+      // coastal city centroids don't land in the water
+      var key = v.lat.toFixed(2) + ',' + v.lon.toFixed(2);
+      var n = seenCoords[key] || 0;
+      seenCoords[key] = n + 1;
+      var lat = v.lat, lon = v.lon;
+      if (n > 0) {
+        var angle = n * 2.39996;
+        lat += Math.sin(angle) * 0.004;
+        lon += Math.cos(angle) * 0.004;
+      }
       new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([lon, lat])
+        .setPopup(new mapboxgl.Popup({ offset: 18, closeButton: false }).setText(label))
+        .addTo(vmap);
+    }
+
+    function addMePin() {
+      if (!me || !validCoord(me.lat, me.lon)) return;
+      var el = makePinEl('#2563eb', 28);
+      new mapboxgl.Marker({ element: el, anchor: 'bottom' })
+        .setLngLat([me.lon, me.lat])
         .addTo(vmap);
     }
 
     vmap.on('load', function () {
       vmap.resize();
 
-      // Load existing visitors — addPin validates each coord, so old junk rows are skipped
-      fetch(SB_URL + '/rest/v1/visitors?select=lat,lon', { headers: sbHeaders() })
-        .then(function(r) { return r.json(); })
-        .then(function(rows) {
-          if (!Array.isArray(rows)) return;
-          rows.forEach(function(v) { addPin(v.lon, v.lat, false); });
-        })
-        .catch(function() {});
+      // own row renders as the blue pin only — skip its orange duplicate
+      visitPromise.then(function () {
+        fetch(WORKER + '/visitors')
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (!d || !Array.isArray(d.visitors)) return;
 
-      // Geolocate current visitor — CF Worker primary (no rate limits), ipapi.co fallback
-      function recordVisitor(lat, lon, city, country) {
-        if (!validCoord(lat, lon)) return;
-        addPin(lon, lat, true);
-        if (!alreadyRecorded) {
-          fetch(SB_URL + '/rest/v1/visitors', {
-            method: 'POST',
-            headers: sbHeaders({ 'Prefer': 'return=minimal' }),
-            body: JSON.stringify({ lat: lat, lon: lon, city: city, country: country })
-          }).then(function() {
-            try { localStorage.setItem(VISIT_KEY, String(Date.now())); } catch (e) {}
-          }).catch(function() {});
-        }
-      }
+            var skippedSelf = false;
+            d.visitors.forEach(function (v) {
+              if (!skippedSelf && me &&
+                  Math.abs(v.lat - me.lat) < 0.03 && Math.abs(v.lon - me.lon) < 0.03) {
+                skippedSelf = true;
+                return;
+              }
+              addVisitorPin(v);
+            });
 
-      fetch('https://hfx3d-ply.zazukhan58.workers.dev/locate')
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-          // CF returns latitude/longitude as strings — coerce to number
-          var lat = d.latitude != null ? parseFloat(d.latitude) : null;
-          var lon = d.longitude != null ? parseFloat(d.longitude) : null;
-          if (!validCoord(lat, lon)) throw new Error('no coords');
-          recordVisitor(lat, lon, d.city, d.country);
-        })
-        .catch(function() {
-          // Fallback: ipapi.co (1000 req/day free tier)
-          fetch('https://ipapi.co/json/')
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-              if (d.error || d.latitude == null || d.longitude == null) return;
-              recordVisitor(d.latitude, d.longitude, d.city, d.country_name);
-            })
-            .catch(function() {});
-        });
+            var stats = document.getElementById('visitorStats');
+            if (stats) {
+              var cities = {}, countries = {};
+              d.visitors.forEach(function (v) {
+                if (v.city) cities[v.city + '|' + (v.country || '')] = 1;
+                if (v.country) countries[v.country] = 1;
+              });
+              stats.textContent = d.total + ' visitors · ' + Object.keys(cities).length + ' cities · ' +
+                                  Object.keys(countries).length + ' countries';
+            }
+          })
+          .catch(function () {});
+
+        addMePin();
+      });
     });
   }
 
-  var observer = new IntersectionObserver(function(entries) {
+  var observer = new IntersectionObserver(function (entries) {
     if (entries[0].isIntersecting) { observer.disconnect(); initVisitorMap(); }
   }, { threshold: 0.1 });
   observer.observe(container);
