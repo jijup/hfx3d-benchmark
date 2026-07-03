@@ -27,7 +27,11 @@ Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 
 ---
 
+<div align="center">
+
 [Dataset](#dataset) · [Download](#download) · [Tasks](#tasks) · [Benchmark](#benchmark-results) · [Reproducing](#reproducing-results) · [Annotation](#annotation-pipeline) · [Citation](#citation)
+
+</div>
 
 ---
 
