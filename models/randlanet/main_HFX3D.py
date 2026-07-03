@@ -32,7 +32,7 @@ parser.add_argument('--checkpoint_path', default=None)
 parser.add_argument('--log_dir', default='output_hfx3d')
 parser.add_argument('--max_epoch', type=int, default=cfg.max_epoch)
 parser.add_argument('--batch_size', type=int, default=cfg.batch_size)
-parser.add_argument('--data_root', default='/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits')
+parser.add_argument('--data_root', default='/project/6118401/abdiaziz/data/HFX3D_Splits')
 parser.add_argument('--gpus', type=int, default=1)
 parser.add_argument('--seed', type=int, default=42, help='Random seed')  # _RANDLA_SEED_
 FLAGS = parser.parse_args()

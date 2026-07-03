@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-HFX3D Benchmark is a semantic segmentation benchmark for urban building facade LiDAR point clouds. The dataset covers 25 Halifax, NS buildings scanned with a ZEB Horizon handheld LiDAR. Models are trained and evaluated on a cluster; this repo contains dataset adapters, model configs, SLURM scripts, and preprocessing tools — not the training frameworks themselves.
+HFX3D Benchmark covers three tasks on urban building facade LiDAR point clouds: **semantic segmentation** (available), **instance segmentation**, and **functional-attribute prediction** (both in progress). The dataset covers 26 Halifax, NS buildings scanned with a ZEB Horizon handheld LiDAR. Models are trained and evaluated on a cluster; this repo contains dataset adapters, model configs, SLURM scripts, preprocessing tools, and the annotation pipeline (`scripts/`) — not the training frameworks themselves.
 
 ## Infrastructure
 
-- **Cluster:** Alliance Canada — `nibi.alliancecan.ca` (Nibi)
-- **Scheduler:** SLURM (`sbatch`)
+- **Cluster:** Alliance Canada — `tamia.alliancecan.ca` (Tamia); allocation account `aip-jijup`
+- **Scheduler:** SLURM (`sbatch`) — jobs request a full 4×H100 node (tamia node policy): PTv2/PTv3 use 2 GPUs (`--num-gpus 2`), all other models use 1 (`CUDA_VISIBLE_DEVICES=0`)
 - **Container:** Apptainer SIF at `/home/<user>/pointcept.sif` (PyTorch 2.4.1, CUDA 12.1)
-- **Dataset on cluster:** `/home/<user>/projects/def-<pi>/<user>/HFX3D_Splits/` with `train/`, `val/`, and `test/` subdirs
+- **Dataset on cluster:** `/project/<rap>/<user>/data/HFX3D_Splits/` (e.g. `/project/6118401/abdiaziz/data/HFX3D_Splits/`) with `train/`, `val/`, and `test/` subdirs
 - Models are **not cloned into this repo** — files from `models/<framework>/` are copied into separate framework checkouts
 - **`HFX3D_DATA_ROOT`** — set this env var to your `HFX3D_Splits/` path before training; all dataset loaders and Pointcept configs read it, falling back to the committed cluster path if unset
 
@@ -33,11 +33,13 @@ python preprocessing/analyse_dataset.py <las_dir> [--output_dir <out>]
 
 # Submit a training job (on cluster, after copying model files)
 # All SLURM scripts live in slurm/<framework>/
-sbatch slurm/pointcept/submit_job_hfx3d.sh      # PTv2
-sbatch slurm/pointcept/submit_ptv3_hfx3d.sh     # PTv3
-sbatch slurm/dgcnn/submit_dgcnn_hfx3d.sh        # DGCNN
-sbatch slurm/randlanet/submit_randlanet_hfx3d_v4.sh
-sbatch slurm/pointnet2/submit_pointnet2_hfx3d.sh
+sbatch slurm/pointcept/submit_ptv2.sh      # PTv2
+sbatch slurm/pointcept/submit_ptv3.sh      # PTv3
+sbatch slurm/dgcnn/submit_dgcnn.sh         # DGCNN
+sbatch slurm/randlanet/submit_randla.sh    # RandLA-Net
+sbatch slurm/pointnet2/submit_pn2.sh       # PointNet++
+sbatch slurm/pointnet2/submit_pn.sh        # PointNet
+sbatch slurm/kpconv/submit_kpconv.sh       # KPConv
 ```
 
 There are no unit tests and no lint configuration in this repo.
@@ -52,7 +54,11 @@ point_cloud/rgb        (N, 3)  float32   [0, 1]  (divided by 65535.0)
 point_cloud/intensity  (N,)    float32   [0, 1]  global p1/p99 normalization (train-split stats)
 labels/semantic        (N,)    uint8     0–11
 metadata/centroid      (3,)    float64   original centroid before centering
+metadata/num_points    ()      int32     point count
+metadata/split         ()      S10       "train" | "val" | "test"
 ```
+
+**Instance & functional tasks (in progress):** the released splits currently ship `labels/semantic` only. The `scripts/` annotation pipeline adds `labels/instance` (scene-local IDs, `0` = no instance) into a separate working dataset (`Output/{train,val,test}/*.h5`), and temporarily freezes `labels/semantic_original` during class review. Per-instance **functional attributes** (multi-label) are planned and not yet in the repo tooling. See `scripts/README.md`.
 
 **Normalization rules (locked — apply identically to every model):**
 - **XYZ:** `xyz - building_centroid` — metric scale preserved, do NOT unit-sphere normalize
@@ -144,7 +150,7 @@ Three scripts, run in order:
 
 ### Configs (`configs/`)
 
-`label_map.json` is the canonical class-name → ID mapping. `scalar_fields.xml` is the CloudCompare color scale for visualizing the 12 classes. YAML files (`default.yaml`, `dgcnn.yaml`, etc.) are placeholders/templates for experiment configuration — contents vary; check before use.
+`label_map.json` is the canonical class-name → ID mapping. `scalar_fields.xml` is the CloudCompare color scale for visualizing the 12 classes. `palette.py` is the single source of truth for all class/split colours. The per-model YAMLs (`dgcnn.yaml`, `pointnet2.yaml`, `pointtransformer.yaml`, `randlanet.yaml`) are **reference summaries** of each model's hyperparameters — the authoritative source is the SLURM script in `slurm/<framework>/` and, for Pointcept, the `models/pointcept/semseg-pt-v*.py` config. Keep the YAML in sync when you change a run.
 
 ## Dataset Split
 
@@ -162,4 +168,4 @@ Three scripts, run in order:
 HFX_<BuildingID>_ZEB_CLEAN.las   →   e.g. HFX_BLD002_ZEB_CLEAN.las
 ```
 
-`BLD001`–`BLD025` (with gaps). Full name-to-ID mapping is in `data/HFX3D/HFX3D_README.md` and `docs/HFX3D_README.md`.
+`BLD001`–`BLD026` (with gaps). Full name-to-ID mapping is in `data/HFX3D/HFX3D_README.md` and `docs/HFX3D_README.md`.

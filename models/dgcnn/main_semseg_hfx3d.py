@@ -12,6 +12,7 @@ import time
 import argparse
 import numpy as np
 import h5py
+from scipy.spatial import cKDTree
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -62,6 +63,9 @@ class HFX3D(Dataset):
             self.points.append(feats)
             self.labels.append(lbl)
 
+        # KD-tree per building for spatial (local) crop sampling — see __getitem__.
+        self.trees = [cKDTree(pts[:, :3]) for pts in self.points]
+
         spb = samples_per_building if split == 'train' else 20
         self.index = [(bi, si) for bi in range(len(self.points)) for si in range(spb)]
         print('HFX3D %s: %d buildings, %d samples/epoch, %d pts/sample' % (
@@ -74,6 +78,7 @@ class HFX3D(Dataset):
         bi, si = self.index[idx]
         pts = self.points[bi]
         lbl = self.labels[bi]
+        tree = self.trees[bi]
         N = pts.shape[0]
 
         if self.split == 'train':
@@ -81,8 +86,20 @@ class HFX3D(Dataset):
         else:
             rng = np.random.default_rng(bi * 1000 + si)
 
-        chosen = rng.choice(N, self.num_points, replace=(N < self.num_points))
-        return pts[chosen], torch.LongTensor(lbl[chosen])
+        # Spatial local crop: pick a random centre point, take its num_points
+        # nearest neighbours. This matches the test-time KNN crops in
+        # full_scene_infer.py, so the k-NN EdgeConv graph sees genuine local
+        # geometry. The old code sampled num_points scattered across the whole
+        # ~19M-point building (k-NN neighbours metres apart → no local structure,
+        # and rare classes almost never sampled).
+        k = min(self.num_points, N)
+        center = pts[rng.integers(N), :3]
+        _, nn = tree.query(center, k=k)
+        nn = np.asarray(nn).reshape(-1)
+        if k < self.num_points:
+            pad = rng.choice(k, self.num_points - k, replace=True)
+            nn = np.concatenate([nn, nn[pad]])
+        return pts[nn], torch.LongTensor(lbl[nn])
 
 
 class DGCNN_semseg_hfx3d(nn.Module):
@@ -301,7 +318,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp_name', type=str, default='dgcnn_hfx3d')
     parser.add_argument('--data_root', type=str,
-        default='/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits')
+        default=os.environ.get("HFX3D_DATA_ROOT", "/project/6118401/abdiaziz/data/HFX3D_Splits"))
     parser.add_argument('--num_points', type=int, default=4096)
     parser.add_argument('--samples_per_building', type=int, default=100)
     parser.add_argument('--k', type=int, default=20)

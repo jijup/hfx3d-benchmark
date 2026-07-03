@@ -1,13 +1,14 @@
 # Reproducing Benchmark Results
 
-All experiments run on the Nibi cluster (`nibi.alliancecan.ca`) using SLURM + Apptainer.
+All experiments run on the Tamia cluster (`tamia.alliancecan.ca`) using SLURM + Apptainer.
 
 ## Prerequisites
 
-- Alliance Canada account
+- Alliance Canada account with a resource allocation (the committed scripts use account `aip-jijup`)
 - Apptainer SIF at `/home/<user>/pointcept.sif` (PyTorch 2.4.1, CUDA 12.1, h5py, scipy, torch_geometric)
   - Build from: https://github.com/Pointcept/Pointcept?tab=readme-ov-file#docker-image
-- Dataset at `/home/<user>/projects/def-<pi>/<user>/HFX3D_Splits/` with `train/`, `val/`, and `test/` subdirs
+- Dataset at `/project/<rap>/<user>/data/HFX3D_Splits/` with `train/`, `val/`, and `test/` subdirs
+- Set `HFX3D_DATA_ROOT` to that path (the SLURM scripts fall back to the committed tamia path if unset)
 
 ## PTv2m2 and PTv3 (Pointcept)
 
@@ -29,12 +30,12 @@ cp models/pointcept/semseg-pt-v3m1-0-base.py /home/<user>/Pointcept/configs/hfx3
 # 4. Update data_root in configs to your dataset path
 
 # 5. Copy and update SLURM scripts (replace <user>, <pi>, <pointcept_dir>)
-cp slurm/pointcept/submit_job_hfx3d.sh  /home/<user>/Pointcept/
-cp slurm/pointcept/submit_ptv3_hfx3d.sh /home/<user>/Pointcept/
+cp slurm/pointcept/submit_ptv2.sh /home/<user>/Pointcept/
+cp slurm/pointcept/submit_ptv3.sh /home/<user>/Pointcept/
 
 # 6. Submit
-sbatch submit_job_hfx3d.sh      # PTv2 full run (~24h, 800 epochs)
-sbatch submit_ptv3_hfx3d.sh     # PTv3 full run (~24h, 800 epochs)
+sbatch submit_ptv2.sh    # PTv2 full run (~24h, 200 epochs)
+sbatch submit_ptv3.sh    # PTv3 full run (~24h, 200 epochs)
 ```
 
 ## DGCNN
@@ -51,12 +52,10 @@ cp models/dgcnn/test_semseg_hfx3d.py      /home/<user>/DGCNN/
 cp models/dgcnn/validate_inference_hfx3d.py /home/<user>/DGCNN/
 
 # 3. Copy and update SLURM scripts (replace <user>, <pi>, <dgcnn_dir>)
-cp slurm/dgcnn/submit_dgcnn_hfx3d.sh /home/<user>/DGCNN/
-cp slurm/dgcnn/submit_dgcnn_smoke.sh  /home/<user>/DGCNN/
+cp slurm/dgcnn/submit_dgcnn.sh /home/<user>/DGCNN/
 
 # 4. Submit
-sbatch submit_dgcnn_smoke.sh    # verify pipeline (~15 min)
-sbatch submit_dgcnn_hfx3d.sh   # full run (~15 min, 200 epochs)
+sbatch submit_dgcnn.sh   # full run (~15 min, 200 epochs)
 ```
 
 ## RandLA-Net
@@ -76,12 +75,11 @@ cp models/randlanet/eval_hfx3d.py      /home/<user>/RandLA-Net/
 cp models/randlanet/eval_fullscene_hfx3d.py /home/<user>/RandLA-Net/
 
 # 3. Copy and update SLURM scripts (replace <user>, <pi>, <randlanet_dir>)
-cp slurm/randlanet/submit_randlanet_hfx3d_v4.sh /home/<user>/RandLA-Net/
-cp slurm/randlanet/submit_randlanet_smoke.sh     /home/<user>/RandLA-Net/
+cp slurm/randlanet/submit_randla.sh                   /home/<user>/RandLA-Net/
+cp slurm/randlanet/submit_randlanet_eval_fullscene.sh /home/<user>/RandLA-Net/
 
 # 4. Submit
-sbatch submit_randlanet_smoke.sh       # verify pipeline (~10 min)
-sbatch submit_randlanet_hfx3d_v4.sh   # full run (~24h, 100 epochs)
+sbatch submit_randla.sh   # full run (~24h, 200 epochs)
 ```
 
 ## PointNet++
@@ -96,12 +94,12 @@ cp models/pointnet2/train_semseg_hfx3d.py  /home/<user>/PointNet2/
 cp models/pointnet2/test_semseg_hfx3d.py   /home/<user>/PointNet2/
 
 # 3. Copy and update SLURM scripts (replace <user>, <pi>, <pointnet2_dir>)
-cp slurm/pointnet2/submit_pointnet2_hfx3d.sh /home/<user>/PointNet2/
-cp slurm/pointnet2/submit_pointnet2_smoke.sh  /home/<user>/PointNet2/
+cp slurm/pointnet2/submit_pn2.sh /home/<user>/PointNet2/   # PointNet++
+cp slurm/pointnet2/submit_pn.sh  /home/<user>/PointNet2/   # PointNet
 
 # 4. Submit
-sbatch submit_pointnet2_smoke.sh    # verify pipeline (~20 min)
-sbatch submit_pointnet2_hfx3d.sh   # full run (~24h, 64 epochs)
+sbatch submit_pn2.sh   # PointNet++ full run (~24h, 200 epochs)
+sbatch submit_pn.sh    # PointNet   full run (~24h, 200 epochs)
 ```
 
 ## Adapting to a New Dataset

@@ -2,9 +2,15 @@
 
 <div align="center">
 
-Semantic segmentation benchmark for urban building facade LiDAR point clouds.<br>
+A benchmark for **semantic segmentation, instance segmentation, and functional-attribute prediction** of urban building facade LiDAR point clouds.<br>
 **26 buildings · ~491.9 M points · 12 semantic classes · 4 seasons · 5 neighbourhoods**<br>
 Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
+
+<sub>Semantic segmentation is available now; instance & functional-attribute annotations and baselines are in progress.</sub>
+
+<br>
+
+[**🌐 Project Page**](https://jijup.github.io/hfx3d-benchmark/)
 
 <br>
 
@@ -17,6 +23,31 @@ Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 
 <img src="assets/class_legend.svg" alt="Class colour legend"/>
 
+</div>
+
+---
+
+**[Dataset](#dataset)** · [Walkthroughs](#walkthroughs) · [Download](#download) · [Tasks](#tasks) · [Benchmark Results](#benchmark-results) · [Reproducing](#reproducing-results) · [Preprocessing](#preprocessing) · [Annotation Pipeline](#annotation-pipeline) · [Repository Structure](#repository-structure) · [Infrastructure](#infrastructure) · [Citation](#citation)
+
+---
+
+## Walkthroughs
+
+Full-building point cloud flythrough animations (semantic colours as in the legend above). Click **MP4** for the full-quality version.
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="assets/hfx004.gif" width="100%" alt="BLD004 walkthrough"/>
+      <br><sub><b>BLD004</b> &nbsp;·&nbsp; <a href="assets/hfx004.mp4">↓ MP4</a></sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="assets/hfx010.gif" width="100%" alt="BLD010 walkthrough"/>
+      <br><sub><b>BLD010</b> &nbsp;·&nbsp; <a href="assets/hfx010.mp4">↓ MP4</a></sub>
+    </td>
+  </tr>
+</table>
 </div>
 
 ---
@@ -52,37 +83,44 @@ The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon hand
 <br>
 
 - Building index and naming → [`docs/HFX3D_README.md`](docs/HFX3D_README.md)
-- 12-class taxonomy and imbalance notes → [`docs/label_taxonomy.md`](docs/label_taxonomy.md)
-- Split assignments and point counts → [`data/splits/split.md`](data/splits/split.md)
+- 12-class taxonomy and imbalance notes → [`docs/LABEL_TAXONOMY.md`](docs/LABEL_TAXONOMY.md)
+- Split assignments and point counts → [`data/splits/SPLITS.md`](data/splits/SPLITS.md)
 
 ---
 
-## Walkthroughs
+## Download
 
-Full-building point cloud flythrough animations. Click **MP4** for the full-quality version.
+📦 **Coming soon.** The dataset (per-building HDF5 files with the official normalization) will be released on **[Hugging Face](https://huggingface.co/)**. Until then, contact the authors (see [Contact](#contact)) for access.
 
-<div align="center">
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="assets/hfx004.gif" width="100%" alt="BLD004 walkthrough"/>
-      <br><sub><b>BLD004</b> &nbsp;·&nbsp; <a href="assets/hfx004.mp4">↓ MP4</a></sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="assets/hfx010.gif" width="100%" alt="BLD010 walkthrough"/>
-      <br><sub><b>BLD010</b> &nbsp;·&nbsp; <a href="assets/hfx010.mp4">↓ MP4</a></sub>
-    </td>
-  </tr>
-</table>
-</div>
+```bash
+# once released (example):
+# huggingface-cli download <org>/HFX3D --repo-type dataset --local-dir HFX3D_Splits
+export HFX3D_DATA_ROOT=/path/to/HFX3D_Splits
+```
+
+---
+
+## Tasks
+
+HFX3D targets three tasks of increasing difficulty on the same point clouds:
+
+| Task | Description | Status |
+|------|-------------|:------:|
+| **Semantic segmentation** | Per-point label over 12 facade classes | ✅ Baselines below |
+| **Instance segmentation** | Separating discrete/repeated facade elements (e.g. individual windows) | 🚧 In progress |
+| **Functional-attribute prediction** | Per-instance functional attribute tagging | 🚧 In progress |
+
+Instance and functional labels are produced with the semi-automatic annotation pipeline in [`scripts/`](scripts/README.md) (geometry-based clustering + CloudCompare review). They are being finalised and are not yet part of the released splits, which currently ship semantic labels.
 
 ---
 
 ## Benchmark Results
 
-**Protocol:** seed 42, 200 epochs, unweighted cross-entropy, 7-channel input (xyz+rgb+intensity), full-scene 100%-coverage inference (possibility-guided KNN-crop voting). Checkpoint selected on val set.
+### Semantic Segmentation
 
-### Summary — Phase 1 (seed 42)
+**Protocol:** 200 epochs, unweighted cross-entropy, 7-channel input (xyz+rgb+intensity), full-scene 100%-coverage inference (possibility-guided KNN-crop voting). Checkpoint selected on val set.
+
+#### Summary
 
 | Model | OA | mIoU | mP | mR | mF1 |
 |-------|:---:|:----:|:--:|:--:|:---:|
@@ -94,7 +132,7 @@ Full-building point cloud flythrough animations. Click **MP4** for the full-qual
 | RandLA-Net | 72.6% | **16.94%** | 24.9% | 21.4% | 21.4% |
 | DGCNN | 71.9% | **15.37%** | 25.7% | 18.9% | 18.9% |
 
-### Per-class IoU — Phase 1 (seed 42)
+#### Per-class IoU
 
 | Class | KPConv | PointNet++ | PTv3 | PointNet | PTv2 | RandLA-Net | DGCNN |
 |-------|:------:|:----------:|:----:|:--------:|:----:|:----------:|:-----:|
@@ -112,24 +150,32 @@ Full-building point cloud flythrough animations. Click **MP4** for the full-qual
 | arch | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% |
 | **mIoU** | **34.08%** | **29.19%** | **28.18%** | **26.30%** | **20.65%** | **16.94%** | **15.37%** |
 
+### Instance Segmentation
+
+🚧 **In progress.** Instance labels are generated with the annotation pipeline in [`scripts/`](scripts/README.md) (planar region-growing + DBSCAN, then CloudCompare review). Learned baselines and metrics will be added here.
+
+### Functional-Attribute Prediction
+
+🚧 **In progress.** Per-instance functional attribute tagging. Details and baselines will be added here.
+
 ---
 
 ## Reproducing Results
 
-Full setup instructions (framework cloning, file placement, cluster config) are in [`docs/reproduction.md`](docs/reproduction.md).
+Full setup instructions (framework cloning, file placement, cluster config) are in [`docs/REPRODUCTION.md`](docs/REPRODUCTION.md).
 
 ```bash
-# Submit all seed-42 jobs at once
+# Submit all baseline training jobs at once
 bash slurm/run_all_baselines.sh
 
-# Or individually — seed123/456 variants exist for all models
-sbatch slurm/kpconv/submit_kpconv_seed42.sh    # KPConv      (~24h, 200 epochs)
-sbatch slurm/pointnet2/submit_pn2_seed42.sh    # PointNet++  (~24h, 64 epochs)
-sbatch slurm/pointnet2/submit_pn_seed42.sh     # PointNet    (~24h, 64 epochs)
-sbatch slurm/pointcept/submit_ptv2_seed42.sh   # PTv2        (~24h, 800 epochs)
-sbatch slurm/pointcept/submit_ptv3_seed42.sh   # PTv3        (~24h, 800 epochs)
-sbatch slurm/dgcnn/submit_dgcnn_seed42.sh      # DGCNN       (~15 min, 200 epochs)
-sbatch slurm/randlanet/submit_randla_seed42.sh # RandLA-Net  (~24h, 100 epochs)
+# Or individually
+sbatch slurm/kpconv/submit_kpconv.sh    # KPConv      (~24h, 200 epochs)
+sbatch slurm/pointnet2/submit_pn2.sh    # PointNet++  (~24h, 200 epochs)
+sbatch slurm/pointnet2/submit_pn.sh     # PointNet    (~24h, 200 epochs)
+sbatch slurm/pointcept/submit_ptv2.sh   # PTv2        (~24h, 200 epochs)
+sbatch slurm/pointcept/submit_ptv3.sh   # PTv3        (~24h, 200 epochs)
+sbatch slurm/dgcnn/submit_dgcnn.sh      # DGCNN       (~15 min, 200 epochs)
+sbatch slurm/randlanet/submit_randla.sh # RandLA-Net  (~24h, 200 epochs)
 ```
 
 Set `HFX3D_DATA_ROOT` to your `HFX3D_Splits/` path before training; all dataset loaders read this env var.
@@ -159,6 +205,20 @@ python preprocessing/las_to_hdf5.py <input_dir> <output_dir>
 
 ---
 
+## Annotation Pipeline
+
+The semi-automatic pipeline used to add **instance IDs** and to **review/correct** class labels lives in [`scripts/`](scripts/README.md). It clusters points into objects (planar region-growing + DBSCAN), exports an editable PLY for CloudCompare, and imports hand edits back into the HDF5 — the HDF5 is the source of truth, the PLY is a disposable view.
+
+```bash
+python scripts/generate_instances.py --only BLD003 --eps 0.20   # draft instances → editable PLY
+python scripts/import_instances.py <edited.ply> --root Output    # pull CloudCompare edits back
+python scripts/review_metrics.py --root Output                   # original-vs-reviewed report
+```
+
+Full workflow, options, and the CloudCompare guide are in [`scripts/README.md`](scripts/README.md).
+
+---
+
 ## Repository Structure
 
 ```
@@ -171,13 +231,14 @@ hfx3d-benchmark/
 │   ├── pointnet2/       # dataset loader + training/eval scripts (PointNet & PointNet++)
 │   └── kpconv/          # dataset adapter + training/eval scripts
 ├── slurm/
-│   ├── pointcept/       # PTv2/PTv3 SLURM scripts (seed 42/123/456)
-│   ├── dgcnn/           # DGCNN SLURM scripts (seed 42/123/456)
-│   ├── randlanet/       # RandLA-Net SLURM scripts (seed 42/123/456) + eval
-│   ├── pointnet2/       # PointNet/PointNet++ SLURM scripts (seed 42/123/456)
-│   ├── kpconv/          # KPConv SLURM scripts (seed 42/123/456)
+│   ├── pointcept/       # PTv2/PTv3 SLURM scripts
+│   ├── dgcnn/           # DGCNN SLURM script
+│   ├── randlanet/       # RandLA-Net SLURM script + eval
+│   ├── pointnet2/       # PointNet/PointNet++ SLURM scripts
+│   ├── kpconv/          # KPConv SLURM script
 │   ├── run_all_baselines.sh
 │   └── evaluate_all_baselines.sh
+├── scripts/             # instance + classification annotation pipeline (see scripts/README.md)
 ├── preprocessing/
 │   ├── preprocess.py    # strip label-0 points, shift labels
 │   ├── las_to_hdf5.py   # LAS → HDF5 with official normalization
@@ -188,15 +249,17 @@ hfx3d-benchmark/
 │   └── scalar_fields.xml
 ├── data/splits/         # train.txt / val.txt / test.txt
 └── docs/
-    ├── reproduction.md
+    ├── REPRODUCTION.md
     ├── HFX3D_README.md  # building index + naming convention
-    └── label_taxonomy.md
+    └── LABEL_TAXONOMY.md
 ```
+
+---
 
 ## Infrastructure
 
-- **Cluster:** [Alliance Canada](https://docs.alliancecan.ca/wiki/Nibi) — `nibi.alliancecan.ca`
-- **GPUs:** NVIDIA H100 80 GB · 1 GPU per job (2 for RandLA-Net)
+- **Cluster:** [Alliance Canada](https://docs.alliancecan.ca/wiki/Tamia) — `tamia.alliancecan.ca`
+- **GPUs:** NVIDIA H100 · a full 4-GPU node per job (tamia policy); PTv2/PTv3 use 2 GPUs, all other models 1
 - **Container:** Apptainer SIF (PyTorch 2.4.1, CUDA 12.1)
 - **Scheduler:** SLURM
 
@@ -209,6 +272,22 @@ hfx3d-benchmark/
 <br>
 
 This work was supported by the [Natural Sciences and Engineering Research Council of Canada (NSERC)](https://www.nserc-crsng.gc.ca/) and the [Canada Foundation for Innovation (CFI)](https://www.innovation.ca/). Computational resources were provided by the [Digital Research Alliance of Canada](https://alliancecan.ca/). We gratefully acknowledge [Saint Mary's University](https://www.smu.ca/) for institutional support. We thank the building owners and facility managers across Halifax for generously granting scanning access to their properties. The quality of the HFX3D annotations is owed to the dedication of our collection, curation and labelling team: Tooba Javed, Prachi Kudeshia, Jack Greenlaw, Avery Cao, and Khushal Das.
+
+---
+
+## Citation
+
+If you use HFX3D in your research, please cite:
+
+```bibtex
+@inproceedings{hfx3d2026,
+  title     = {{HFX3D}: A {LiDAR} Benchmark for Semantic Segmentation
+               of Urban Building Facades},
+  author    = {Author One and Author Two and Author Three},
+  booktitle = {TBD},
+  year      = {2026},
+}
+```
 
 ---
 

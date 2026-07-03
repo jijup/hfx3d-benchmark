@@ -53,7 +53,7 @@ N_PTS = cfg.num_points  # 45056 — points per crop
 # ---------------------------------------------------------------------------
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_root',
-                    default='/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits')
+                    default='/project/6118401/abdiaziz/data/HFX3D_Splits')
 parser.add_argument('--checkpoint',
                     required=True,
                     help='Path to checkpoint_best.tar')

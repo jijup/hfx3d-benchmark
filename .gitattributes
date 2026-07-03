@@ -1,0 +1,26 @@
+# Keep line endings sane across Windows dev and the Linux cluster.
+
+# Shell scripts MUST be LF — CRLF breaks them under bash/SLURM on the cluster.
+*.sh    text eol=lf
+
+# Normalize other text sources to LF in the repository.
+*.py    text eol=lf
+*.md    text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.json  text eol=lf
+*.txt   text eol=lf
+*.cff   text eol=lf
+*.xml   text eol=lf
+
+# Binary assets — never apply EOL conversion.
+*.png   binary
+*.gif   binary
+*.mp4   binary
+*.pdf   binary
+*.svg   binary
+*.h5    binary
+*.hdf5  binary
+*.las   binary
+*.laz   binary
+*.xlsx  binary

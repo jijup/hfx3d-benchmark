@@ -15,10 +15,18 @@ data/HFX3D_Splits/
 
 # Generated outputs
 Output/
+Output_Copy/
 viz/
 viz_output/
 preprocessing/analysis_output/
 split_analysis_output/
+
+# Bulk media / data — release via Zenodo/HuggingFace, not git
+assets/pointclouds/
+assets/videos/
+
+# Stray dependency freeze (see requirements.txt)
+instance_reqs.text
 
 # Not yet ready for release
 tools/

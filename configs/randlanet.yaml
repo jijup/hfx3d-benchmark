@@ -1,4 +1,6 @@
-# RandLA-Net hyperparameters — HFX3D benchmark
+# RandLA-Net — HFX3D benchmark hyperparameters (reference).
+# Authoritative source: slurm/randlanet/submit_randla.sh
+# (this file documents those flags; keep the two in sync).
 
 model:
   name: RandLANet
@@ -6,12 +8,14 @@ model:
   num_classes: 12
   in_channels: 7         # xyz(3) + rgb(3) + intensity(1)
   knn: 16
+  knn_backend: scipy.cKDTree   # C++ KNN extension replaced with scipy
 
 training:
-  epochs: 200
+  epochs: 200            # --max_epoch
   optimizer: Adam
   subsampling: random
-  knn_backend: scipy.cKDTree
+  batch_size: 4
+  gpus: 2
 
 data:
   num_classes: 12

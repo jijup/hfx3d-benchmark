@@ -35,7 +35,7 @@ def parse_args():
     parser = argparse.ArgumentParser("DGCNN HFX3D Full-Scene Test")
     parser.add_argument("--exp_name", type=str, default="dgcnn_hfx3d")
     parser.add_argument("--data_root", type=str,
-                        default="/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits")
+                        default="/project/6118401/abdiaziz/data/HFX3D_Splits")
     parser.add_argument("--k", type=int, default=20)
     parser.add_argument("--emb_dims", type=int, default=1024)
     parser.add_argument("--dropout", type=float, default=0.5)

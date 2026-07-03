@@ -31,7 +31,7 @@ from RandLANet_HFX3D import Network, compute_loss
 CLASS_NAMES = [LABEL_TO_NAMES[i] for i in range(NUM_CLASSES)]
 N_PTS     = cfg.num_points        # 45056
 MIN_VOTES = 1
-BUILDING  = '/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits/test/HFX_BLD015_ZEB_CLEAN.h5'
+BUILDING  = '/project/6118401/abdiaziz/data/HFX3D_Splits/test/HFX_BLD015_ZEB_CLEAN.h5'
 
 PASS = '✓ PASS'
 FAIL = '✗ FAIL'

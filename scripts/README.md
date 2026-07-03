@@ -154,8 +154,8 @@ and set its `scalar_Classification` to the correct id:
 `0 wall · 1 window · 2 door · 3 balcony · 4 vegetation · 5 stairs · 6 terrain · 7 roof · 8 blinds · 9 other · 10 column · 11 arch`
 
 ### Saving
-**File → Save → Polygon File Format (*.ply).** Binary or ASCII both work — the
-importer reads either. CloudCompare exports all scalar fields automatically.
+**File → Save → Polygon File Format (*.ply)** and choose **binary**.
+CloudCompare exports all scalar fields automatically.
 
 ---
 
@@ -168,7 +168,7 @@ in a single CloudCompare session:
 # 1. class-colored review PLY
 python scripts\generate_instances.py --only BLD003 --from-h5 --color class
 # 2. in CC: fix classes (edit scalar_Classification) AND instances
-#    (switch coloring to scalar_Instance, edit it). Save as PLY (binary or ASCII).
+#    (switch coloring to scalar_Instance, edit it). Save as PLY (binary).
 # 3. import BOTH:
 python scripts\import_instances.py "Output\instances_vis\train\HFX_BLD003_ZEB_CLEAN_instances_vis.ply" --root Output --classification
 ```
@@ -310,7 +310,7 @@ Open `Output\instances_vis\train\HFX_BLD016_ZEB_CLEAN_instances_vis.ply` in Clou
 ### Step 3 — Edit in CloudCompare
 - **Classification (review 2):** color by `scalar_Classification`; segment a wrong region, set it to the right class id.
 - **Instances:** color by `scalar_Instance`; merge (target's id) / split (any unused number above current max) / delete (`0`).
-- Never touch `scalar_PointIndex`. **File → Save → .ply (binary preferred)**, same name.
+- Never touch `scalar_PointIndex`. **File → Save → .ply (binary)**, same name.
 
 ### Step 4 — Import edits
 ```powershell
@@ -354,4 +354,4 @@ Repacks instance ids to gap-free `1..K` and drops `labels/semantic_original`. �
 3. **`0` is reserved** for "no instance" — never assign it to a real object.
 4. **Split → use a number above the current max** so it doesn't merge by accident.
 5. **`--repack` is a one-time final step**, not part of the editing loop.
-6. **Save as PLY** (binary or ASCII) from CloudCompare and keep the scalar fields.
+6. **Save as PLY** (binary) from CloudCompare and keep the scalar fields.
