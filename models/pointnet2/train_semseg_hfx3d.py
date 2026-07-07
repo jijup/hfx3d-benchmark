@@ -5,7 +5,7 @@ Adapted from yanx27/Pointnet_Pointnet2_pytorch (https://github.com/yanx27/Pointn
 Usage (inside SIF):
   python train_semseg_hfx3d.py \
       --model pointnet2_sem_seg \
-      --data_root /home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits \
+      --data_root /project/6118401/abdiaziz/data/HFX3D_Splits \
       --epoch 64 \
       --batch_size 16 \
       --npoint 4096 \
@@ -48,7 +48,7 @@ def parse_args():
     parser.add_argument("--model", type=str, default="pointnet2_sem_seg",
                         help="model name [default: pointnet2_sem_seg]")
     parser.add_argument("--data_root", type=str,
-                        default="/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits",
+                        default="/project/6118401/abdiaziz/data/HFX3D_Splits",
                         help="Path to HFX3D_Splits directory")
     parser.add_argument("--batch_size", type=int, default=16,
                         help="Batch size during training [default: 16]")

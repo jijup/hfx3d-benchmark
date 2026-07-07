@@ -1,25 +1,33 @@
-# Point Transformer hyperparameters — HFX3D benchmark
+# Point Transformer V2 / V3 (Pointcept) — HFX3D benchmark hyperparameters (reference).
+# Authoritative source: models/pointcept/semseg-pt-v2m2-0-base.py
+#                       models/pointcept/semseg-pt-v3m1-0-base.py
+# (this file summarises those configs; edit the .py configs to actually change a run).
 
-ptv2m2:
-  model: DefaultSegmentor
-  in_channels: 7         # xyz(3) + rgb(3) + intensity(1)
+common:
+  epoch: 200
   num_classes: 12
-  epochs: 200
   optimizer: AdamW
-  lr: 0.006
-  batch_size: 6
+  scheduler: OneCycleLR   # cosine annealing
+  grid_size: 0.02         # GridSample voxelisation inside each crop (2 cm)
+  sphere_crop_points: 100000
+  criteria: CrossEntropyLoss   # unweighted
+  classes: [wall, window, door, balcony, vegetation, stairs, terrain, roof, blinds, other, column, arch]
+  # Feature note: Pointcept uses xyz as point coordinates (position) and feeds
+  # feat_keys=(color, intensity) as the learnable feature vector, so in_channels=4
+  # while the model still consumes 7 input signals total (xyz + rgb + intensity).
+
+ptv2:
+  backbone: PT-v2m2
+  in_channels: 4          # rgb(3) + intensity(1) as features; xyz used as coords → 7 signals total
+  batch_size: 6           # total across 4x H100 node, --num-gpus 2 (3/GPU)
+  learning_rate: 0.005
+  weight_decay: 0.02
+  drop_path_rate: 0.3
+  grid_sizes: [0.06, 0.15, 0.375, 0.9375]   # per-stage, metric scale
 
 ptv3:
-  model: DefaultSegmentorV2
-  in_channels: 4         # rgb(3) + intensity(1)
-  num_classes: 12
-  epochs: 200
-  return_grid_coord: true
-  flash_attention: true
-  optimizer: AdamW
-  lr: 0.006
-  batch_size: 6
-
-data:
-  classes: [wall, window, door, balcony, vegetation, stairs, terrain, roof, blinds, other, column, arch]
-  voxel_size: 0.04
+  backbone: PT-v3m1
+  in_channels: 4          # rgb(3) + intensity(1) as features; xyz used as coords → 7 signals total
+  batch_size: 6           # total across 4x H100 node, --num-gpus 2 (3/GPU)
+  learning_rate: 0.006
+  weight_decay: 0.05

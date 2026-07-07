@@ -2,9 +2,9 @@
 HFX3D dataset adapter for RandLA-Net (PyTorch).
 
 Each building is an HDF5 file with:
-  point_cloud/xyz        (N, 3) float32  -- unit-sphere normalised
+  point_cloud/xyz        (N, 3) float32  -- mean-centred, metric scale preserved
   point_cloud/rgb        (N, 3) float32  -- [0, 1]
-  point_cloud/intensity  (N,)   float32  -- [0, 1]
+  point_cloud/intensity  (N,)   float32  -- [0, 1]  (global p1/p99 normalisation)
   labels/semantic        (N,)   uint8    -- 0-11
 
 12 classes
@@ -74,19 +74,19 @@ class HFX3DDataset(torch_data.Dataset):
 
     Parameters
     ----------
-    mode : 'training' | 'validation'
+    mode : 'training' | 'val' | 'test'
     data_root : str   path to HFX3D_Splits/
     num_points : int  points per crop (default cfg.num_points)
     """
 
     def __init__(self, mode,
-                 data_root=os.environ.get("HFX3D_DATA_ROOT", "/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits"),
+                 data_root=os.environ.get("HFX3D_DATA_ROOT", "/project/6118401/abdiaziz/data/HFX3D_Splits"),
                  num_points=None):
         self.name = 'HFX3D'
         self.mode = mode
         self.num_points = num_points or cfg.num_points
 
-        split = {'training': 'train', 'validation': 'val', 'test': 'test'}.get(mode, 'test')
+        split = {'training': 'train', 'val': 'val', 'validation': 'val', 'test': 'test'}.get(mode, mode)
         split_dir = os.path.join(data_root, split)
         self.data_list = sorted(glob.glob(os.path.join(split_dir, '*.h5')))
         assert len(self.data_list) > 0, \
@@ -97,7 +97,7 @@ class HFX3DDataset(torch_data.Dataset):
 
         # Class weights from prior counts
         cfg.ignored_label_inds = []
-        cfg.class_weights = DP.get_class_weights(PRIOR_COUNTS)
+        cfg.class_weights = None  # unweighted CE for benchmark consistency
 
         # For test-time possibility sampling
         if mode != 'training':
@@ -198,6 +198,14 @@ class HFX3DDataset(torch_data.Dataset):
     # ------------------------------------------------------------------
     # Collate + tf_map
     # ------------------------------------------------------------------
+
+
+    def reset_possibilities(self):
+        """Reset possibility arrays so each eval epoch gets a fresh spatial sweep."""
+        for i in range(len(self.data_list)):
+            N = self.possibility[i].shape[0]
+            self.possibility[i] = np.random.rand(N) * 1e-3
+            self.min_possibility[i] = float(np.min(self.possibility[i]))
 
     def tf_map(self, batch_xyz, batch_feats, batch_label,
                batch_pc_idx, batch_cloud_idx):

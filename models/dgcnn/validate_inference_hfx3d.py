@@ -27,7 +27,7 @@ CLASS_NAMES = [
     "wall", "window", "door", "balcony", "vegetation", "stairs",
     "terrain", "roof", "blinds", "other", "column", "arch",
 ]
-BUILDING  = '/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits/test/HFX_BLD015_ZEB_CLEAN.h5'
+BUILDING  = '/project/6118401/abdiaziz/data/HFX3D_Splits/test/HFX_BLD015_ZEB_CLEAN.h5'
 CROP_SIZE = 4096
 BATCH_SIZE = 16
 

@@ -1,6 +1,6 @@
 # Adapted from Pointcept (https://github.com/Pointcept/Pointcept)
 # Config structure and PTv2 hyperparameters derived from their ScanNet/S3DIS configs.
-# Modified for HFX3D: in_channels=7, num_classes=12, HFX3DDataset loader.
+# Modified for HFX3D: in_channels=4, num_classes=12, HFX3DDataset loader.
 
 import os
 _base_ = ["../_base_/default_runtime.py"]
@@ -16,7 +16,7 @@ model = dict(
     type="DefaultSegmentor",
     backbone=dict(
         type="PT-v2m2",
-        in_channels=7,  # xyz (3) + rgb (3) + intensity (1) = 7
+        in_channels=4,  # rgb (3) + intensity (1); xyz is used as point coordinates, so 7 input signals total
         num_classes=12,  # HFX3D has 12 classes
         patch_embed_depth=1,
         patch_embed_channels=48,
@@ -97,7 +97,7 @@ data = dict(
             dict(type="SphereCrop", point_max=100000, mode="random"),
             dict(type="ShufflePoint"),
             dict(type="ToTensor"),
-            dict(type="Collect", keys=("coord", "segment"), feat_keys=("coord", "color", "intensity")),
+            dict(type="Collect", keys=("coord", "segment"), feat_keys=("color", "intensity")),
         ],
         test_mode=False,
     ),
@@ -115,7 +115,7 @@ data = dict(
             dict(type="GridSample", grid_size=0.02, hash_type="fnv", mode="train"),
             dict(type="SphereCrop", point_max=100000, mode="random"),
             dict(type="ToTensor"),
-            dict(type="Collect", keys=("coord", "segment"), feat_keys=("coord", "color", "intensity")),
+            dict(type="Collect", keys=("coord", "segment"), feat_keys=("color", "intensity")),
         ],
         test_mode=False,
     ),
@@ -133,7 +133,7 @@ data = dict(
             crop=None,
             post_transform=[
                 dict(type="ToTensor"),
-                dict(type="Collect", keys=("coord", "index"), feat_keys=("coord", "color", "intensity")),
+                dict(type="Collect", keys=("coord", "index"), feat_keys=("color", "intensity")),
             ],
             aug_transform=[
                 [dict(type="RandomRotateTargetAngle", angle=[0], axis="z", center=[0, 0, 0], p=1)],

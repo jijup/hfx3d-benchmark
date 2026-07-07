@@ -33,7 +33,7 @@ class ConfigHFX3D:
     d_out = [16, 64, 128, 256, 512]         # feature dims per layer
 
     noise_init = 3.5
-    max_epoch = 100
+    max_epoch = 200
     learning_rate = 1e-2
     lr_decays = {i: 0.95 for i in range(0, 500)}
 

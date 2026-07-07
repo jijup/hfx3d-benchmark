@@ -1,21 +1,27 @@
-# DGCNN hyperparameters — HFX3D benchmark
+# DGCNN — HFX3D benchmark hyperparameters (reference).
+# Authoritative source: slurm/dgcnn/submit_dgcnn.sh
+# (this file documents those flags; keep the two in sync).
 
 model:
-  name: DGCNN_semseg_hfx3d
-  k: 20
+  name: DGCNN
+  k: 20                  # k-NN graph size
   emb_dims: 1024
   dropout: 0.5
-  in_channels: 7        # xyz(3) + rgb(3) + intensity(1)
   num_classes: 12
+  in_channels: 7         # xyz(3) + rgb(3) + intensity(1)
 
 training:
   epochs: 200
-  batch_size: 8
-  optimizer: AdamW
-  lr: 0.001
-  lr_scheduler: cosine_annealing
-  num_points: 4096
+  optimizer: SGD         # --use_sgd
+  momentum: 0.9
+  learning_rate: 0.001
+  scheduler: cos
+  batch_size: 16
+  test_batch_size: 16
+  num_points: 4096       # points per crop
+  samples_per_building: 100
 
 data:
+  num_classes: 12
   classes: [wall, window, door, balcony, vegetation, stairs, terrain, roof, blinds, other, column, arch]
   features: [xyz, rgb, intensity]

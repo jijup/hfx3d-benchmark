@@ -21,7 +21,7 @@ from hfx3d_dataset import HFX3DDataset
 from RandLANet_HFX3D import Network, compute_loss, compute_acc, IoUCalculator
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_root', default='/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits')
+parser.add_argument('--data_root', default='/project/6118401/abdiaziz/data/HFX3D_Splits')
 parser.add_argument('--checkpoint', default='output_hfx3d_v4/checkpoint_best.tar')
 parser.add_argument('--batch_size', type=int, default=4)
 FLAGS = parser.parse_args()

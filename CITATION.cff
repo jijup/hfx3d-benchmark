@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use HFX3D in your research, please cite:"
+title: "HFX3D Benchmark"
+authors:
+  - name: "Author One"
+  - name: "Author Two"
+  - name: "Author Three"
+preferred-citation:
+  type: conference-paper
+  title: "HFX3D: A LiDAR Benchmark for Semantic Segmentation of Urban Building Facades"
+  authors:
+    - name: "Author One"
+    - name: "Author Two"
+    - name: "Author Three"
+  collection-title: "TBD"
+  year: 2026

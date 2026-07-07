@@ -36,7 +36,7 @@ def parse_args():
     parser.add_argument("--log_dir", type=str, required=True,
                         help="Subdir under log/sem_seg_hfx3d/ containing checkpoints/")
     parser.add_argument("--data_root", type=str,
-                        default="/home/abdiaziz/projects/def-jijup/abdiaziz/HFX3D_Splits")
+                        default="/project/6118401/abdiaziz/data/HFX3D_Splits")
     parser.add_argument("--crop_size", type=int, default=4096,
                         help="Points per crop [default: 4096]")
     parser.add_argument("--batch_size", type=int, default=32)

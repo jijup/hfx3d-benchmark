@@ -1,25 +1,27 @@
-# PointNet / PointNet++ hyperparameters — HFX3D benchmark
+# PointNet / PointNet++ — HFX3D benchmark hyperparameters (reference).
+# Authoritative source:
+#   PointNet++ : slurm/pointnet2/submit_pn2.sh  (--model pointnet2_sem_seg)
+#   PointNet   : slurm/pointnet2/submit_pn.sh   (--model pointnet_sem_seg)
+# (this file documents those flags; keep them in sync).
 
-pointnet:
-  name: PointNet
+model:
+  pointnetpp: pointnet2_sem_seg
+  pointnet: pointnet_sem_seg
   num_classes: 12
-  in_channels: 7         # xyz(3) + rgb(3) + intensity(1)
-
-pointnet2_ssg:
-  name: PointNet2_SSG
-  num_classes: 12
-  in_channels: 7         # xyz(3) + rgb(3) + intensity(1)
-  grouping: SSG
+  # Loader feeds 7-D per point: centred xyz(3) + rgb(3) + intensity(1).
+  # Samples are spatial local crops (cKDTree: random centre + k nearest neighbours),
+  # matching the test-time KNN crops so ball-query grouping sees real local geometry.
+  in_channels: 7
 
 training:
   epochs: 200
   optimizer: Adam
-  lr: 0.001
+  learning_rate: 0.001
+  step_size: 10          # LR decay step
   lr_decay: 0.7
-  lr_decay_every: 10
-  num_points: 4096
-  sample_rate: 1.0
-  batch_size: 8
+  batch_size: 16
+  npoint: 4096           # points per crop
+  sample_rate: 0.1
 
 data:
   num_classes: 12
