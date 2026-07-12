@@ -286,6 +286,7 @@
       el.classList.toggle('bsl-active', el.dataset.bld === bldId);
     });
 
+    _updateLegend();
     _showLoading(true);
 
     if (!_worker) { _showPlaceholder(bldId); return; }
@@ -357,7 +358,7 @@
     if ((_rightMode === 'intensity' && !d.hI) || (_rightMode === 'time' && !d.hG))
       _rightMode = 'semantic';
 
-    _updateLegend(d.pres);
+    _updateLegend();
     _showLoading(false);
     _mark();
   }
@@ -440,15 +441,14 @@
     if (code) code.textContent = 'python tools/export_ply.py data/hfx3d/HFX_' + bldId + '_ZEB_CLEAN.las';
   }
 
-  function _updateLegend(pres) {
+  function _updateLegend() {
     var el = document.getElementById('dvLegend');
     if (!el) return;
     el.innerHTML = '';
-    pres.slice().sort(function(a,b){return a-b;}).forEach(function(l) {
-      if (l >= CLS_NAMES.length) return;
+    CLS_NAMES.forEach(function(name, l) {
       var item = document.createElement('div');
       item.className = 'dv-legend-item';
-      item.innerHTML = '<span class="dv-lc" style="background:' + CLS_HEX[l] + '"></span>' + CLS_NAMES[l];
+      item.innerHTML = '<span class="dv-lc" style="background:' + CLS_HEX[l] + '"></span>' + name;
       el.appendChild(item);
     });
   }
