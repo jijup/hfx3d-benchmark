@@ -8,6 +8,7 @@ __pycache__/
 
 # Claude Code session data
 .claude/
+CLAUDE.md
 
 # Dataset files
 data/HFX3D/

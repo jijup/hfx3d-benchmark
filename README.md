@@ -154,6 +154,10 @@ Instance and functional labels are produced with the semi-automatic annotation p
 | arch | **0.02%** | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% |
 | **mIoU** | **47.69%** | **29.19%** | **28.18%** | **26.30%** | **20.65%** | **16.94%** | **15.37%** |
 
+#### Qualitative Results
+
+Per-building predictions vs. ground truth across all seven baseline models are on the [**project page qualitative gallery**](https://jijup.github.io/hfx3d-benchmark/#qualitative).
+
 ### Instance Segmentation
 
 🚧 **In progress.** Instance labels are generated with the annotation pipeline in [`scripts/`](scripts/README.md) (planar region-growing + DBSCAN, then CloudCompare review). Learned baselines and metrics will be added here.
