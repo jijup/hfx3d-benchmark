@@ -156,7 +156,7 @@ Instance and functional labels are produced with the semi-automatic annotation p
 
 #### Qualitative Results
 
-Per-building predictions vs. ground truth across all seven baseline models are on the [**project page qualitative gallery**](https://jijup.github.io/hfx3d-benchmark/#qualitative).
+Per-building predictions vs. ground truth visualizations across all seven baseline models are on the [**project page qualitative gallery**](https://jijup.github.io/hfx3d-benchmark/#qualitative).
 
 ### Instance Segmentation
 
