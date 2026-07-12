@@ -482,15 +482,52 @@ footer { background: var(--hero-bg); border-top: 1px solid rgba(255,255,255,.06)
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 14px; border-top: 1px solid var(--border);
 }
-.qual-placeholder {
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
-  padding: 64px 24px; color: var(--text-3); text-align: center;
-  border: 2px dashed var(--border); border-radius: var(--radius); margin-top: 40px;
-}
-.qual-placeholder i { font-size: 2rem; opacity: .4; }
-.qual-placeholder span { font-size: .9rem; max-width: 480px; line-height: 1.6; }
 .qual-name { font-size: .84rem; font-weight: 600; color: var(--text-1); }
 .qual-id   { font-size: .75rem; color: var(--text-3); font-family: 'JetBrains Mono', monospace; }
+
+/* Qualitative results: single aligned table, rows = building, columns = RGB/GT/model.
+   Full-bleed width (breaks out of .container) so 9 columns stay legible with no horizontal scroll;
+   every image cell is a fixed height (object-fit: cover) so row height — and row-label sizing — is uniform. */
+.qual-full {
+  max-width: 1800px; margin: 40px auto 0; padding: 0 24px;
+}
+.qual-grid {
+  display: grid;
+  grid-template-columns: 84px repeat(9, 1fr);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); overflow: hidden;
+}
+.qual-head {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--text-3); background: var(--surface-2);
+  padding: 10px 6px; text-align: center;
+  display: flex; align-items: center; justify-content: center;
+  border-bottom: 1px solid var(--border);
+}
+.qual-row-label {
+  font-size: .74rem; font-weight: 700; color: var(--text-1);
+  font-family: 'JetBrains Mono', monospace; background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  border-bottom: 1px solid var(--border);
+}
+.qual-cell {
+  border-left: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.qual-cell a { display: block; }
+.qual-cell img {
+  width: 100%; height: clamp(90px, 13vw, 190px); object-fit: cover; display: block;
+  transition: transform .2s ease;
+}
+.qual-cell:hover img { transform: scale(1.06); }
+.qual-cell:nth-child(10n+2) { border-left: none; }
+.qual-grid > div:nth-last-child(-n+10) { border-bottom: none; }
+@media(max-width: 768px) {
+  .qual-full { padding: 0 12px; }
+  .qual-grid { grid-template-columns: 52px repeat(9, 1fr); }
+  .qual-head, .qual-row-label { font-size: .58rem; padding: 6px 2px; letter-spacing: 0; }
+  .qual-cell img { height: clamp(48px, 11vw, 100px); }
+}
 
 /* RGB + Semantic annotation gallery */
 .annot-grid {
