@@ -6,7 +6,7 @@ instances in HFX3D point clouds.
 ## 1. Overview
 
 This module assigns a **15-dimensional functional confidence vector** to each
-semantic instance. The pipeline is **deterministic and non-learning**.
+semantic instance.
 
 ```text
 semantic instance
