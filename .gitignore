@@ -35,3 +35,9 @@ static/
 inspect_hdf5.py
 utils/create_viz.py
 utils/VIZ_README.md
+
+# Functional attribute pipeline outputs (do not commit generated results)
+results/functional_labels/
+results/functional_labels_csv/
+**/functional_labels/
+**/functional_labels_csv/
