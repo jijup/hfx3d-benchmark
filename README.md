@@ -166,6 +166,9 @@ Per-building predictions vs. ground truth visualizations across all seven baseli
 
 🚧 **In progress.** Per-instance functional attribute tagging. Details and baselines will be added here.
 
+The functional attribute annotation and refinement pipeline is available in
+[`scripts/functional_attributes/`](scripts/functional_attributes/).
+
 ---
 
 ## Reproducing Results

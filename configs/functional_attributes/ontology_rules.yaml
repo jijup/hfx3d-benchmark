@@ -1,0 +1,264 @@
+version: 2.0
+
+wall:
+  ifc_anchor: IfcWall
+  rules:
+    - attribute: load_bearing
+      value: true
+      condition: wall_ground_and_upper_support_contact_detected
+      # wall base/ground relation and upper structural support relation
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/LoadBearing.htm"
+
+    - attribute: thermal_envelope
+      value: true
+      condition: always
+      # facade-dataset semantic prior; IsExternal is used as an IFC-aligned exterior-envelope proxy
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/IsExternal.htm"
+
+    - attribute: vegetation_support
+      value: true
+      condition: vegetation_wall_proximity_and_overlap_detected
+      # climbing / side-contact vegetation
+      source: "https://vocab.getty.edu/page/aat/300132406"
+
+    - attribute: vegetation_support
+      value: true
+      condition: vegetation_instance_rests_on_top_of_wall_upper_surface
+      # vegetation physically supported by the wall upper surface
+      source: "internal definition - no dedicated AAT/IFC term identified"
+
+
+window:
+  ifc_anchor: IfcWindow
+  rules:
+    - attribute: thermal_envelope
+      value: true
+      condition: always
+      # facade-dataset semantic prior
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/IsExternal.htm"
+
+    - attribute: operable
+      value: true
+      condition: window_surface_articulation_and_depth_variation_detected
+      # separable window-panel geometry, surface articulation, or depth variation
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcWindowPanelOperationEnum.htm"
+
+    - attribute: operable
+      value: true
+      condition: window_handle_like_small_protrusion_detected
+      # small local protrusion on the window surface used as a handle-like geometric proxy
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcWindowPanelOperationEnum.htm"
+
+    - attribute: solar_shading
+      value: true
+      condition: blind_window_facade_projection_overlap_detected
+      # spatial association between blind/shading device and window
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/ShadingDeviceType.htm"
+
+    - attribute: ventilation
+      value: true
+      condition: window_operable_evidence_supports_ventilation
+      # ventilation is inferred from the operability evidence of the same window instance
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcWindow.htm"
+
+    - attribute: natural_lighting
+      value: true
+      condition: always
+      # semantic prior
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcWindow.htm"
+
+
+door:
+  ifc_anchor: IfcDoor
+  rules:
+    - attribute: access
+      value: true
+      condition: always
+      # semantic prior
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcDoor.htm"
+
+    - attribute: operable
+      value: true
+      condition: always
+      # semantic prior
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcDoorTypeOperationEnum.htm"
+
+    - attribute: thermal_envelope
+      value: true
+      condition: door_exterior_wall_relation_detected
+      # exterior position and host-wall relation
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/IsExternal.htm"
+
+
+balcony:
+  ifc_anchor: "IfcSlab + IfcRailing"
+  rules:
+    - attribute: load_bearing
+      value: true
+      condition: balcony_wall_or_lower_support_relation_detected
+      # rear-wall attachment or structural support from below
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/LoadBearing.htm"
+
+    - attribute: access
+      value: true
+      condition: always
+      # semantic prior
+      source: "https://vocab.getty.edu/page/aat/300002588"
+
+    - attribute: vegetation_support
+      value: true
+      condition: vegetation_balcony_proximity_and_overlap_detected
+      # climbing / side-contact vegetation
+      source: "https://vocab.getty.edu/page/aat/300132406"
+
+    - attribute: vegetation_support
+      value: true
+      condition: vegetation_instance_rests_on_top_of_balcony_surface
+      # vegetation physically supported by balcony upper surface
+      source: "internal definition - no dedicated AAT/IFC term identified"
+
+    - attribute: fall_protection
+      value: true
+      condition: always
+      # semantic prior associated with balcony/railing configuration
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcRailing.htm"
+
+
+vegetation:
+  ifc_anchor: IfcGeographicElement
+  rules:
+    - attribute: aesthetic
+      value: true
+      condition: always
+      # semantic prior
+      source: "https://vocab.getty.edu/page/aat/300054708"
+
+
+stairs:
+  ifc_anchor: IfcStair
+  rules:
+    - attribute: circulation
+      value: true
+      condition: always
+      # semantic prior
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcStair.htm"
+
+    - attribute: fall_protection
+      value: true
+      condition: elevated_stair_open_boundary_and_barrier_relation_detected
+      # fall-protection evidence depends on stair elevation, exposed boundary,
+      # and nearby protective barrier; ground-level stairs receive weak fall-protection evidence
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcRailing.htm"
+
+
+terrain:
+  ifc_anchor: IfcGeographicElement
+  rules:
+    - attribute: circulation
+      value: true
+      condition: terrain_low_slope_and_access_connection_detected
+      # low-slope surface connected to door or stairs
+      source: "https://vocab.getty.edu/page/aat/300008312"
+
+
+roof:
+  ifc_anchor: IfcRoof
+  rules:
+    - attribute: thermal_envelope
+      value: true
+      condition: always
+      # facade-dataset semantic prior
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/IsExternal.htm"
+
+    - attribute: load_bearing
+      value: true
+      condition: roof_lower_support_relation_detected
+      # wall/column support below the roof
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/LoadBearing.htm"
+
+    - attribute: drainage
+      value: true
+      condition: roof_slope_and_drainage_relation_detected
+      # surface slope and downhill drainage-edge relation
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/PitchAngle.htm"
+
+    - attribute: fall_protection
+      value: true
+      condition: roof_accessible_boundary_and_barrier_relation_detected
+      # accessible/open roof boundary and protective barrier relation
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcRailing.htm"
+
+
+blinds:
+  ifc_anchor: IfcShadingDevice
+  rules:
+    - attribute: solar_shading
+      value: true
+      condition: always
+      # semantic prior
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/ShadingDeviceType.htm"
+
+    - attribute: operable
+      value: true
+      condition: blind_depth_articulation_relative_to_window_detected
+      # multi-depth / articulated geometry associated with a window
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/MechanicalOperated.htm"
+
+    - attribute: privacy_screening
+      value: true
+      condition: blind_window_projection_coverage_detected
+      # projected coverage of associated window
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcShadingDevice.htm"
+
+
+column:
+  ifc_anchor: IfcColumn
+  rules:
+    - attribute: load_bearing
+      value: true
+      condition: column_ground_and_upper_support_contact_detected
+      # base/ground continuity and upper structural support
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/LoadBearing.htm"
+
+    - attribute: aesthetic
+      value: true
+      condition: column_top_shape_articulation_detected
+      # enlarged / articulated column-top geometry
+      source: "https://vocab.getty.edu/page/aat/300001571"
+
+
+arch:
+  ifc_anchor: "varies per instance/rule below - IfcMember (structural), IfcCovering (decorative), IfcLightFixture (illumination), or IfcAudioVisualAppliance/CAMERA (surveillance)"
+  rules:
+    - attribute: load_bearing
+      value: true
+      ifc_anchor: IfcMember
+      condition: arch_host_support_and_upper_load_path_detected
+      # bilateral geometry and structural host/support relation
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/property/LoadBearing.htm"
+
+    - attribute: aesthetic
+      value: true
+      ifc_anchor: IfcCovering
+      condition: arch_shallow_wall_relief_detected
+      # shallow decorative relief associated with wall surface
+      source: "https://vocab.getty.edu/page/aat/300000994"
+
+    - attribute: illumination
+      value: true
+      ifc_anchor: IfcLightFixture
+      condition: arch_downward_fixture_proxy_detected
+      # compact downward-oriented surface-mounted fixture proxy
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcLightFixture.htm"
+
+    - attribute: surveillance
+      value: true
+      ifc_anchor: IfcAudioVisualAppliance/CAMERA
+      condition: arch_high_mounted_oblique_fixture_proxy_detected
+      # compact high-mounted oblique/outward-oriented camera proxy
+      source: "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/Pset_AudioVisualApplianceTypeCamera.htm"
+
+
+other:
+  ifc_anchor: IfcBuildingElementProxy
+  rules: []

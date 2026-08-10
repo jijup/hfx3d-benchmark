@@ -1,0 +1,141 @@
+software_version: 1.0.0
+
+# Base infrastructure parameters (data access, sampling, frame, graph construction).
+# None of these are evidence-scoring thresholds: they are efficiency / geometry
+# measurement settings shared by the whole pipeline.
+
+io:
+  chunk_points: 500000
+
+filtering:
+  minimum_instance_points: 1
+
+sampling:
+  max_points_per_instance: 12000
+
+local_frame:
+  facade_reference_class: wall
+  max_reference_points: 100000
+  ground_percentile: 1.0
+
+geometry:
+  spacing_sample_points: 1500
+  minimum_top_surface_points: 30
+  top_surface_percentile: 82.0
+  top_low_percentile: 25.0
+  boundary_band_fraction: 0.16
+
+plane_extraction:
+  minimum_neighbors: 16
+  normal_neighbors: 24
+  max_normal_queries: 128
+  distinct_plane_angle_degrees: 12.0
+
+instance_graph:
+  centroid_nearest_k: 12
+  candidate_minimum_distance: 1.5
+  distance_sample_points: 512
+
+# Semantic roles used only to select candidate neighbors by class.
+semantic_roles:
+  host_surface:
+  - wall
+  vegetation:
+  - vegetation
+  blind:
+  - blinds
+  window:
+  - window
+  upper_building:
+  - wall
+  - roof
+  - balcony
+  - column
+  - arch
+  lower_support:
+  - wall
+  - column
+  access_connector:
+  - door
+  - stairs
+  barrier_proxy:
+  - wall
+  - column
+  - other
+  - blinds
+  drainage_neighbor:
+  - other
+
+# Semantic-class prior table. Values are used only when every ontology rule for
+# the class-attribute pair has condition: always. Instance-dependent candidate
+# attributes use the neutral refinement prior P = 0.5.
+semantic_priors:
+  by_class:
+    wall:
+      load_bearing: 0.42
+      thermal_envelope: 0.86
+      vegetation_support: 0.12
+    window:
+      thermal_envelope: 0.86
+      operable: 0.32
+      solar_shading: 0.18
+      ventilation: 0.24
+      natural_lighting: 0.86
+    door:
+      access: 0.88
+      operable: 0.88
+      thermal_envelope: 0.44
+    balcony:
+      load_bearing: 0.46
+      access: 0.84
+      vegetation_support: 0.12
+      fall_protection: 0.84
+    vegetation:
+      aesthetic: 0.82
+    stairs:
+      circulation: 0.84
+      fall_protection: 0.25
+    terrain:
+      circulation: 0.3
+    roof:
+      thermal_envelope: 0.86
+      load_bearing: 0.48
+      drainage: 0.46
+      fall_protection: 0.22
+    blinds:
+      solar_shading: 0.86
+      operable: 0.3
+      privacy_screening: 0.22
+    column:
+      load_bearing: 0.4
+      aesthetic: 0.16
+    arch:
+      load_bearing: 0.36
+      aesthetic: 0.14
+      illumination: 0.08
+      surveillance: 0.08
+
+# Continuous normalization scales (single shared values, not per-condition
+# thresholds). Angles are normalized by 30 degrees; distances are normalized
+# by instance-local point spacing.
+scoring:
+  slope_full_scale_degrees: 30.0
+  spacing_multiplier_protrusion: 4.0
+  contact_radius_multiplier: 3.0
+  ground_gap_spacing_multiplier: 4.0
+  ground_gap_building_fraction: 0.1
+  barrier_min_verticality: 0.55
+  building_height_floor: 1.0
+  cluster_radius_multiplier: 2.0
+  handle_min_points: 6
+  device_min_points: 6
+  device_min_compactness: 0.4
+
+numerical:
+  epsilon: 1.0e-9
+  odds_epsilon: 1.0e-6
+
+output:
+  compression: gzip
+  compression_level: 4
+  deterministic_creation_time: '2026-08-09T00:00:00+08:00'
