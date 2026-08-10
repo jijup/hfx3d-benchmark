@@ -18,9 +18,7 @@ semantic instance
 → automatic functional attribute suggestion
 ```
 
-Outputs are instance-level HDF5 and CSV files. Original point coordinates,
-semantic labels, and instance IDs are not modified.
-
+Outputs are instance-level HDF5 and CSV files.
 ## 2. Method
 
 For each instance \(I\) and each applicable functional attribute \(a\):
