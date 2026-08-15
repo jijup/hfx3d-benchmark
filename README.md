@@ -14,10 +14,9 @@ Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 
 <br>
 
-<img src="assets/hfx022_rgb_diag.png" width="49%" alt="BLD022 RGB point cloud"/>
-<img src="assets/hfx022_semantic_diag.png" width="49%" alt="BLD022 semantic labels"/>
+<img src="assets/teaser_figure.png" width="100%" alt="HFX3D pipeline: RGB scan, semantic segmentation, instance segmentation, and per-instance functional attributes"/>
 
-<sub>BLD022 — raw RGB point cloud (left) &nbsp;·&nbsp; ground-truth semantic labels (right)</sub>
+<sub>From a raw RGB LiDAR scan to semantic and instance segmentation, and per-instance functional attributes</sub>
 
 <br>
 
@@ -37,18 +36,34 @@ Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 
 ## Walkthroughs
 
-Full-building point cloud flythrough animations (semantic colours as in the legend above). Click **MP4** for the full-quality version.
+Full-building point cloud fly-through animations, in **semantic** and **instance** colours. Click **MP4** for the full-quality version.
 
 <div align="center">
 <table>
   <tr>
+    <td colspan="2" align="center"><sub><b>Semantic colours</b> — 12 classes as in the legend above</sub></td>
+  </tr>
+  <tr>
     <td align="center" width="50%">
-      <img src="assets/hfx004.gif" width="100%" alt="BLD004 walkthrough"/>
+      <img src="assets/hfx004.gif" width="100%" alt="BLD004 semantic walkthrough"/>
       <br><sub><b>BLD004</b> &nbsp;·&nbsp; <a href="assets/hfx004.mp4">↓ MP4</a></sub>
     </td>
     <td align="center" width="50%">
-      <img src="assets/hfx010.gif" width="100%" alt="BLD010 walkthrough"/>
+      <img src="assets/hfx010.gif" width="100%" alt="BLD010 semantic walkthrough"/>
       <br><sub><b>BLD010</b> &nbsp;·&nbsp; <a href="assets/hfx010.mp4">↓ MP4</a></sub>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><sub><b>Instance colours</b> — each object a distinct colour</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="assets/hfx004_instance.gif" width="100%" alt="BLD004 instance walkthrough"/>
+      <br><sub><b>BLD004</b> &nbsp;·&nbsp; <a href="assets/hfx004_instance.mp4">↓ MP4</a></sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="assets/hfx010_instance.gif" width="100%" alt="BLD010 instance walkthrough"/>
+      <br><sub><b>BLD010</b> &nbsp;·&nbsp; <a href="assets/hfx010_instance.mp4">↓ MP4</a></sub>
     </td>
   </tr>
 </table>
