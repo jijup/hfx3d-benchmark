@@ -111,39 +111,11 @@
 
 <!-- ══════════════════════════════════════════════════════════════ TEASER ══ -->
 <section id="teaser">
-  <div class="teaser-vid-pair fade-up">
-    <div class="teaser-vid-wrap">
-      <video autoplay muted loop playsinline>
-        <source src="assets/images/buildings/hfx004_wm.mp4" type="video/mp4">
-        <img src="assets/images/buildings/hfx004_gif.gif" alt="BLD004 semantic fly-through">
-      </video>
-      <span class="teaser-vid-lbl">BLD004 · Kenneth C. Rowe</span>
-    </div>
-    <div class="teaser-vid-wrap">
-      <video autoplay muted loop playsinline>
-        <source src="assets/images/buildings/hfx010_wm.mp4" type="video/mp4">
-        <img src="assets/images/buildings/hfx010_gif.gif" alt="BLD010 semantic fly-through">
-      </video>
-      <span class="teaser-vid-lbl">BLD010 · Emera Place</span>
-    </div>
-  </div>
-  <p class="teaser-caption fade-up">
-    Semantic-coloured 3D point cloud fly-throughs &nbsp;·&nbsp; Ground-truth annotation &nbsp;·&nbsp; 12 classes
-  </p>
-  <div class="teaser-legend fade-up">
-    <span class="tl-item"><span class="tl-dot" style="background:#FF2828"></span>Wall</span>
-    <span class="tl-item"><span class="tl-dot" style="background:#00CCFF"></span>Window</span>
-    <span class="tl-item"><span class="tl-dot" style="background:#005449"></span>Door</span>
-    <span class="tl-item"><span class="tl-dot" style="background:#FFEE00"></span>Balcony</span>
-    <span class="tl-item"><span class="tl-dot" style="background:#00FF50"></span>Vegetation</span>
-    <span class="tl-item"><span class="tl-dot" style="background:#FF99FF"></span>Stairs</span>
-    <span class="tl-item"><span class="tl-dot" style="background:#B84600"></span>Terrain</span>
-    <span class="tl-item"><span class="tl-dot" style="background:#FF00B4"></span>Roof</span>
-    <span class="tl-item"><span class="tl-dot" style="background:#7800FF"></span>Blinds</span>
-    <span class="tl-item"><span class="tl-dot" style="background:#A0A0A0"></span>Other</span>
-    <span class="tl-item"><span class="tl-dot" style="background:#4F0004"></span>Column</span>
-    <span class="tl-item"><span class="tl-dot" style="background:#000000;border:1px solid #ccc"></span>Arch</span>
-  </div>
+  <figure class="teaser-figure fade-up">
+    <img src="assets/images/teaser_figure.png"
+         alt="HFX3D pipeline: RGB scan, semantic segmentation, instance segmentation, and per-instance functional attributes">
+    <figcaption>From a raw RGB LiDAR scan to semantic and instance segmentation, and per-instance functional attributes.</figcaption>
+  </figure>
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════ ABSTRACT ══ -->
@@ -174,6 +146,94 @@
       </p>
     </div>
   </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ WALKTHROUGHS ══ -->
+<section id="walkthroughs">
+  <div class="teaser-toggle fade-up" role="group" aria-label="Fly-through colour mode">
+    <button type="button" class="tt-btn active" data-mode="semantic" aria-pressed="true">Semantic</button>
+    <button type="button" class="tt-btn" data-mode="instance" aria-pressed="false">Instance</button>
+  </div>
+  <div class="teaser-vid-pair fade-up">
+    <div class="teaser-vid-wrap">
+      <video autoplay muted loop playsinline
+             data-sem="assets/images/buildings/hfx004_wm.mp4"
+             data-inst="assets/images/buildings/hfx004_instance_wm.mp4"
+             data-sem-gif="assets/images/buildings/hfx004_gif.gif"
+             data-inst-gif="assets/images/buildings/hfx004_instance_gif.gif">
+        <source src="assets/images/buildings/hfx004_wm.mp4" type="video/mp4">
+        <img src="assets/images/buildings/hfx004_gif.gif" alt="BLD004 fly-through">
+      </video>
+      <span class="teaser-vid-lbl">BLD004 · Kenneth C. Rowe</span>
+    </div>
+    <div class="teaser-vid-wrap">
+      <video autoplay muted loop playsinline
+             data-sem="assets/images/buildings/hfx010_wm.mp4"
+             data-inst="assets/images/buildings/hfx010_instance_wm.mp4"
+             data-sem-gif="assets/images/buildings/hfx010_gif.gif"
+             data-inst-gif="assets/images/buildings/hfx010_instance_gif.gif">
+        <source src="assets/images/buildings/hfx010_wm.mp4" type="video/mp4">
+        <img src="assets/images/buildings/hfx010_gif.gif" alt="BLD010 fly-through">
+      </video>
+      <span class="teaser-vid-lbl">BLD010 · Emera Place</span>
+    </div>
+  </div>
+  <p class="teaser-caption fade-up" id="teaser-caption">
+    Semantic-coloured 3D point cloud fly-throughs &nbsp;·&nbsp; Ground-truth annotation &nbsp;·&nbsp; 12 classes
+  </p>
+  <div class="teaser-legend fade-up" id="teaser-legend">
+    <span class="tl-item"><span class="tl-dot" style="background:#FF2828"></span>Wall</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#00CCFF"></span>Window</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#005449"></span>Door</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#FFEE00"></span>Balcony</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#00FF50"></span>Vegetation</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#FF99FF"></span>Stairs</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#B84600"></span>Terrain</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#FF00B4"></span>Roof</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#7800FF"></span>Blinds</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#A0A0A0"></span>Other</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#4F0004"></span>Column</span>
+    <span class="tl-item"><span class="tl-dot" style="background:#000000;border:1px solid #ccc"></span>Arch</span>
+  </div>
+  <script>
+  (function () {
+    var root = document.getElementById('walkthroughs');
+    if (!root) return;
+    var btns    = root.querySelectorAll('.tt-btn');
+    var vids    = root.querySelectorAll('video[data-sem]');
+    var caption = document.getElementById('teaser-caption');
+    var legend  = document.getElementById('teaser-legend');
+    var CAP = {
+      semantic: 'Semantic-coloured 3D point cloud fly-throughs &nbsp;·&nbsp; Ground-truth annotation &nbsp;·&nbsp; 12 classes',
+      instance: 'Instance-coloured fly-throughs &nbsp;·&nbsp; each object a distinct colour'
+    };
+    function setMode(mode) {
+      btns.forEach(function (b) {
+        var on = b.dataset.mode === mode;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      vids.forEach(function (v) {
+        var src = mode === 'instance' ? v.dataset.inst : v.dataset.sem;
+        var gif = mode === 'instance' ? v.dataset.instGif : v.dataset.semGif;
+        var source = v.querySelector('source');
+        var img = v.querySelector('img');
+        if (source && source.getAttribute('src') !== src) {
+          source.setAttribute('src', src);
+          if (img && gif) img.setAttribute('src', gif);
+          v.load();
+          var p = v.play();
+          if (p && p.catch) p.catch(function () {});
+        }
+      });
+      if (caption) caption.innerHTML = CAP[mode];
+      if (legend) legend.style.display = mode === 'instance' ? 'none' : '';
+    }
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () { setMode(b.dataset.mode); });
+    });
+  })();
+  </script>
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════ DATASET ══ -->
