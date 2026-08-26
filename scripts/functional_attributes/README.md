@@ -32,11 +32,6 @@ For each instance \(I\) and each applicable functional attribute \(a\):
 f = P G C / [P G C + (1-P)(1-G)(1-C)]
 ```
 
-Attributes that do not require refinement use neutral geometric and contextual
-evidence, \(G=C=0.5\), which preserves their configured semantic prior.
-The binary automatic suggestion is derived with the shared threshold \(0.5\) on
-the continuous confidence for applicable attributes.
-
 ## 3. Functional attributes
 
 Fixed 15-dimensional order (column index in every output matrix):
