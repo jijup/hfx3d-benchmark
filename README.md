@@ -327,6 +327,43 @@ Full workflow, options, and the CloudCompare guide are in [`scripts/README.md`](
 
 ---
 
+## Repository Structure
+
+```
+hfx3d-benchmark/
+├── assets/              # figures, walkthroughs, and other media
+├── models/
+│   ├── pointcept/       # HFX3DDataset class + PTv2/PTv3 configs
+│   ├── dgcnn/           # training, eval, and full-scene inference scripts
+│   ├── randlanet/       # dataset adapter, model, training, and eval scripts
+│   ├── pointnet2/       # dataset loader + training/eval scripts (PointNet & PointNet++)
+│   └── kpconv/          # dataset adapter + training/eval scripts
+├── slurm/
+│   ├── pointcept/       # PTv2/PTv3 SLURM scripts
+│   ├── dgcnn/           # DGCNN SLURM script
+│   ├── randlanet/       # RandLA-Net SLURM script + eval
+│   ├── pointnet2/       # PointNet/PointNet++ SLURM scripts
+│   ├── kpconv/          # KPConv SLURM script
+│   ├── run_all_baselines.sh
+│   └── evaluate_all_baselines.sh
+├── scripts/             # instance + classification annotation pipeline (see scripts/README.md)
+├── preprocessing/
+│   ├── preprocess.py    # strip label-0 points, shift labels
+│   ├── las_to_hdf5.py   # LAS → HDF5 with official normalization
+│   └── analyse_dataset.py
+├── configs/
+│   ├── palette.py       # single source of truth for all class/split colours
+│   ├── label_map.json
+│   └── scalar_fields.xml
+├── data/splits/         # train.txt / val.txt / test.txt
+└── docs/
+    ├── REPRODUCTION.md
+    ├── HFX3D_README.md  # building index + naming convention
+    └── LABEL_TAXONOMY.md
+```
+
+---
+
 ## Acknowledgements
 
 <div align="center"><img src="assets/SMU_SCIENCE_4C.png" height="70" alt="Saint Mary's University Faculty of Science"/></div>
@@ -368,40 +405,3 @@ If you use HFX3D in your research, please cite:
 |--|--|
 | Abdiaziz Muse | [Abdiaziz.Muse@smu.ca](mailto:Abdiaziz.Muse@smu.ca) |
 | Jiju Poovvancheri | [jiju.poovvancheri@smu.ca](mailto:jiju.poovvancheri@smu.ca) |
-
----
-
-## Repository Structure
-
-```
-hfx3d-benchmark/
-├── assets/              # figures, walkthroughs, and other media
-├── models/
-│   ├── pointcept/       # HFX3DDataset class + PTv2/PTv3 configs
-│   ├── dgcnn/           # training, eval, and full-scene inference scripts
-│   ├── randlanet/       # dataset adapter, model, training, and eval scripts
-│   ├── pointnet2/       # dataset loader + training/eval scripts (PointNet & PointNet++)
-│   └── kpconv/          # dataset adapter + training/eval scripts
-├── slurm/
-│   ├── pointcept/       # PTv2/PTv3 SLURM scripts
-│   ├── dgcnn/           # DGCNN SLURM script
-│   ├── randlanet/       # RandLA-Net SLURM script + eval
-│   ├── pointnet2/       # PointNet/PointNet++ SLURM scripts
-│   ├── kpconv/          # KPConv SLURM script
-│   ├── run_all_baselines.sh
-│   └── evaluate_all_baselines.sh
-├── scripts/             # instance + classification annotation pipeline (see scripts/README.md)
-├── preprocessing/
-│   ├── preprocess.py    # strip label-0 points, shift labels
-│   ├── las_to_hdf5.py   # LAS → HDF5 with official normalization
-│   └── analyse_dataset.py
-├── configs/
-│   ├── palette.py       # single source of truth for all class/split colours
-│   ├── label_map.json
-│   └── scalar_fields.xml
-├── data/splits/         # train.txt / val.txt / test.txt
-└── docs/
-    ├── REPRODUCTION.md
-    ├── HFX3D_README.md  # building index + naming convention
-    └── LABEL_TAXONOMY.md
-```
