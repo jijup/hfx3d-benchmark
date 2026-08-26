@@ -6,7 +6,7 @@ A benchmark for **semantic segmentation, instance segmentation, and functional-a
 **26 buildings · ~492 M points · 12 semantic classes · 4 seasons · 5 neighbourhoods**<br>
 Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 
-<sub>Semantic and instance baselines are reported below; functional-attribute annotations are being finalised. Released splits currently ship semantic labels.</sub>
+<sub>Semantic, instance, and functional-attribute baselines are reported below. Released splits currently ship semantic labels.</sub>
 
 <br>
 
@@ -223,10 +223,33 @@ Learned methods struggle on repetitive facade elements (best 0.006 AP50); with g
 
 ### Functional-Attribute Prediction
 
-🚧 **In progress.** Per-instance functional attribute tagging. Details and baselines will be added here.
+Each instance carries a **15-dimensional multi-label functional attribute vector**. Attributes are auto-suggested from a semantic→function ontology (IFC 4.3 + Getty AAT), refined with instance geometry and graph context (log-odds fusion), then human-validated. Pipeline: [`scripts/functional_attributes/`](scripts/functional_attributes/).
 
-The functional attribute annotation and refinement pipeline is available in
-[`scripts/functional_attributes/`](scripts/functional_attributes/).
+**Attributes (15):** load-bearing (LB), thermal envelope (TE), access (AC), operable (OP), solar shading (SS), ventilation (VE), natural lighting (NL), drainage (DR), fall protection (FP), circulation (CI), privacy screening (PS), vegetation support (VS), aesthetic (AE), illumination (IL), surveillance (SU).
+
+**Semantic → candidate attributes:**
+
+| Class | Candidates | Class | Candidates |
+|-------|------------|-------|------------|
+| wall | LB, TE, VS | window | TE, OP, SS, VE, NL |
+| roof | LB, TE, DR, FP | door | AC, OP, TE |
+| column | LB, AE | blinds | SS, OP, PS |
+| arch | LB, AE, IL, SU | balcony | LB, AC, VS, FP |
+| terrain | CI | stairs | CI, FP |
+| vegetation | AE | other | (varies) |
+
+**Evidence ablation** — macro-F1 / exact-set-match, on all test instances and the class-ambiguous subset (S = semantic prior, G = geometry, C = context):
+
+| Evidence | mF1 (All) | ESM (All) | mF1 (Amb) | ESM (Amb) |
+|----------|:---------:|:---------:|:---------:|:---------:|
+| S only | 0.6367 | **0.6905** | 0.4808 | 0.5378 |
+| G only | **0.8071** | 0.5880 | **0.7039** | 0.5280 |
+| C only | 0.7449 | 0.5420 | 0.6746 | 0.4958 |
+| S + G | 0.7458 | 0.6888 | 0.5928 | **0.5434** |
+| S + C | 0.7145 | 0.6676 | 0.6072 | 0.5224 |
+| S + G + C | 0.7691 | 0.6799 | 0.6606 | **0.5434** |
+
+Evaluated on 1,131 test instances (714 in the ambiguous subset, where semantic class alone doesn't fix the attributes — e.g. operable vs fixed windows, structural vs decorative columns).
 
 ---
 
