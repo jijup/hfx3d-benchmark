@@ -23,17 +23,19 @@ Outputs are instance-level HDF5 and CSV files.
 
 For each instance \(I\) and each applicable functional attribute \(a\):
 
-- **P** — semantic prior (ontology + purity; instance-dependent attributes use neutral \(P = 0.5\))
-- **G** — geometric evidence in \([0, 1]\)
-- **C** — graph / contextual evidence in \([0, 1]\)
-- **f** — fused confidence via parameter-free odds fusion:
+- **P** — configured semantic prior for each semantic class–attribute pair
+- **G** — instance-level geometric evidence in \([0, 1]\)
+- **C** — instance-level contextual evidence in \([0, 1]\)
+- **f** — confidence obtained through parameter-free odds fusion:
 
 ```text
 f = P G C / [P G C + (1-P)(1-G)(1-C)]
 ```
 
-Neutral evidence is \(0.5\). The binary automatic suggestion is derived with the
-shared threshold \(0.5\) on the continuous confidence for applicable attributes.
+Attributes that do not require refinement use neutral geometric and contextual
+evidence, \(G=C=0.5\), which preserves their configured semantic prior.
+The binary automatic suggestion is derived with the shared threshold \(0.5\) on
+the continuous confidence for applicable attributes.
 
 ## 3. Functional attributes
 
