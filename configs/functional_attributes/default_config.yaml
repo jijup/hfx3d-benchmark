@@ -1,8 +1,3 @@
-software_version: 1.0.0
-
-# Base infrastructure parameters (data access, sampling, frame, graph construction).
-# None of these are evidence-scoring thresholds: they are efficiency / geometry
-# measurement settings shared by the whole pipeline.
 
 io:
   chunk_points: 500000
