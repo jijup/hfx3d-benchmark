@@ -831,6 +831,64 @@
         </tbody>
       </table>
     </div>
+
+    <h3 class="bm-tbl-title fade-up" style="margin-top:44px">Instance Segmentation — Learned Methods</h3>
+    <p class="bm-tbl-note fade-up">Trained end-to-end from raw points, no semantics supplied · AP over IoU 0.50–0.95, plus AP50/AP25</p>
+    <div class="table-wrap fade-up">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left">Method</th>
+            <th>mAP</th><th>AP50</th><th class="th-sep">AP25</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-rank1">
+            <td class="td-left">SoftGroup</td>
+            <td class="td-best">0.0030</td><td class="td-best">0.0060</td><td class="td-high th-sep">0.0270</td>
+          </tr>
+          <tr>
+            <td class="td-left">PointGroup</td>
+            <td>0.0003</td><td>0.0013</td><td class="th-sep">0.0215</td>
+          </tr>
+          <tr>
+            <td class="td-left">ISBNet</td>
+            <td>0.0000</td><td>0.0000</td><td class="th-sep">0.0093</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="bm-tbl-title fade-up" style="margin-top:44px">Instance Segmentation — Geometry Clustering (GT semantics)</h3>
+    <p class="bm-tbl-note fade-up">Oracle ceiling: clustering given ground-truth semantic labels</p>
+    <div class="table-wrap fade-up">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left">Method</th>
+            <th>mAP</th><th>AP50</th><th class="th-sep">AP25</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-rank1">
+            <td class="td-left">DBSCAN</td>
+            <td class="td-best">0.2247</td><td class="td-best">0.3906</td><td class="td-high th-sep">0.4749</td>
+          </tr>
+          <tr>
+            <td class="td-left">HDBSCAN</td>
+            <td>0.0700</td><td>0.1226</td><td class="th-sep">0.1928</td>
+          </tr>
+          <tr>
+            <td class="td-left">MeanShift</td>
+            <td>0.0607</td><td>0.0652</td><td class="th-sep">0.1206</td>
+          </tr>
+          <tr>
+            <td class="td-left">KMeans</td>
+            <td>0.0166</td><td>0.0564</td><td class="th-sep">0.1498</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </section>
 
