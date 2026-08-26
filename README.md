@@ -154,7 +154,7 @@ HFX3D targets three tasks of increasing difficulty on the same point clouds:
 | **Instance segmentation** | Separating discrete/repeated facade elements (e.g. individual windows) |
 | **Functional-attribute prediction** | Per-instance functional attribute tagging |
 
-Instance and functional labels are produced with the semi-automatic annotation pipeline in [`scripts/`](scripts/README.md) (geometry-based clustering + CloudCompare review). They are being finalised and are not yet part of the released splits, which currently ship semantic labels.
+Instance and functional labels are produced with the semi-automatic annotation pipeline in [`scripts/`](scripts/README.md) (geometry-based clustering + CloudCompare review).
 
 ---
 
