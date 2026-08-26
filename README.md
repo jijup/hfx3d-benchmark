@@ -148,11 +148,11 @@ export HFX3D_DATA_ROOT=/path/to/HFX3D_Splits
 
 HFX3D targets three tasks of increasing difficulty on the same point clouds:
 
-| Task | Description | Status |
-|------|-------------|:------:|
-| **Semantic segmentation** | Per-point label over 12 facade classes | ✅ Baselines below |
-| **Instance segmentation** | Separating discrete/repeated facade elements (e.g. individual windows) | ✅ Baselines below |
-| **Functional-attribute prediction** | Per-instance functional attribute tagging | 🚧 In progress |
+| Task | Description |
+|------|-------------|
+| **Semantic segmentation** | Per-point label over 12 facade classes |
+| **Instance segmentation** | Separating discrete/repeated facade elements (e.g. individual windows) |
+| **Functional-attribute prediction** | Per-instance functional attribute tagging |
 
 Instance and functional labels are produced with the semi-automatic annotation pipeline in [`scripts/`](scripts/README.md) (geometry-based clustering + CloudCompare review). They are being finalised and are not yet part of the released splits, which currently ship semantic labels.
 
