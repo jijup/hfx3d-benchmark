@@ -3,10 +3,10 @@
 <div align="center">
 
 A benchmark for **semantic segmentation, instance segmentation, and functional-attribute prediction** of urban building facade LiDAR point clouds.<br>
-**26 buildings · ~491.9 M points · 12 semantic classes · 4 seasons · 5 neighbourhoods**<br>
+**26 buildings · ~492 M points · 12 semantic classes · 4 seasons · 5 neighbourhoods**<br>
 Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 
-<sub>Semantic segmentation is available now; instance & functional-attribute annotations and baselines are in progress.</sub>
+<sub>Semantic and instance baselines are reported below; functional-attribute annotations are being finalised. Released splits currently ship semantic labels.</sub>
 
 <br>
 
@@ -75,12 +75,17 @@ Full-building point cloud fly-through animations, in **semantic** and **instance
 
 The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon handheld LiDAR, split at the building level: **18 train / 4 val / 4 test**. Each building is one LAS file; each point carries 7 attributes: `[x, y, z, r, g, b, intensity]`.
 
+**Capture diversity:**
+- **Seasons & lighting** — 6–8 months, all 4 seasons, day & night, snow/fog/sun
+- **Colour** — GeoSLAM ZEB Vision (4K panoramic + dual-fisheye) fused to per-point RGB
+- **Coverage** — 5 urban neighbourhoods (commercial, residential, institutional, waterfront); 2–20 floors
+
 | Property | Value |
 |----------|-------|
 | Buildings | 26 |
-| Total points | ~491.9 M |
+| Total points | ~492 M |
 | Classes | 12 |
-| Split | 18 train / 4 val / 4 test |
+| Split | 18 train / 4 val / 4 test (343.7M / 68.4M / 79.7M pts) |
 | Coordinates | Mean-centred per building, metric scale preserved |
 | RGB | \[0, 1\] (raw 16-bit ÷ 65 535) |
 | Intensity | \[0, 1\] (p1/p99 from training split) |
@@ -97,6 +102,26 @@ The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon hand
 <div align="center">
 <img src="assets/split_analysis.png" width="48%" alt="Per-class train / val / test split"/>
 <img src="assets/distribution_heatmap.png" width="48%" alt="Point distribution heatmap — building × class"/>
+</div>
+
+<br>
+
+<br>
+
+<div align="center">
+<sub><b>Environmental diversity</b> — the same facades across seasons and lighting</sub>
+<table>
+  <tr>
+    <td align="center"><img src="assets/cond_spring.png" width="100%" alt="Spring"/><br><sub>Spring</sub></td>
+    <td align="center"><img src="assets/cond_summer.png" width="100%" alt="Summer"/><br><sub>Summer</sub></td>
+    <td align="center"><img src="assets/cond_fall.png" width="100%" alt="Fall"/><br><sub>Fall</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/cond_winter.png" width="100%" alt="Winter (snow)"/><br><sub>Winter (snow)</sub></td>
+    <td align="center"><img src="assets/cond_day.png" width="100%" alt="Daytime"/><br><sub>Daytime</sub></td>
+    <td align="center"><img src="assets/cond_night.png" width="100%" alt="Night-time"/><br><sub>Night-time</sub></td>
+  </tr>
+</table>
 </div>
 
 <br>
@@ -126,7 +151,7 @@ HFX3D targets three tasks of increasing difficulty on the same point clouds:
 | Task | Description | Status |
 |------|-------------|:------:|
 | **Semantic segmentation** | Per-point label over 12 facade classes | ✅ Baselines below |
-| **Instance segmentation** | Separating discrete/repeated facade elements (e.g. individual windows) | 🚧 In progress |
+| **Instance segmentation** | Separating discrete/repeated facade elements (e.g. individual windows) | ✅ Baselines below |
 | **Functional-attribute prediction** | Per-instance functional attribute tagging | 🚧 In progress |
 
 Instance and functional labels are produced with the semi-automatic annotation pipeline in [`scripts/`](scripts/README.md) (geometry-based clustering + CloudCompare review). They are being finalised and are not yet part of the released splits, which currently ship semantic labels.
@@ -175,7 +200,26 @@ Per-building predictions vs. ground truth visualizations across all seven baseli
 
 ### Instance Segmentation
 
-🚧 **In progress.** Instance labels are generated with the annotation pipeline in [`scripts/`](scripts/README.md) (planar region-growing + DBSCAN, then CloudCompare review). Learned baselines and metrics will be added here.
+Element-level segmentation over the eight countable "thing" classes (AP averaged over IoU 0.50–0.95, plus AP50/AP25; minimum instance size 200 points). Ground-truth instance labels come from the annotation pipeline in [`scripts/`](scripts/README.md) (planar region-growing + DBSCAN, then CloudCompare review).
+
+**Learned methods** — trained end-to-end from raw points, no semantics supplied:
+
+| Method | mAP | AP50 | AP25 |
+|--------|:---:|:----:|:----:|
+| SoftGroup | **0.0030** | **0.0060** | **0.0270** |
+| PointGroup | 0.0003 | 0.0013 | 0.0215 |
+| ISBNet | 0.0000 | 0.0000 | 0.0093 |
+
+**Geometry-based clustering given ground-truth semantics** — an oracle ceiling for separation once each point's class is known:
+
+| Method | mAP | AP50 | AP25 |
+|--------|:---:|:----:|:----:|
+| DBSCAN | **0.2247** | **0.3906** | **0.4749** |
+| HDBSCAN | 0.0700 | 0.1226 | 0.1928 |
+| MeanShift | 0.0607 | 0.0652 | 0.1206 |
+| KMeans | 0.0166 | 0.0564 | 0.1498 |
+
+Learned methods struggle on repetitive facade elements (best 0.006 AP50); with ground-truth semantics, DBSCAN clustering reaches 0.39 AP50.
 
 ### Functional-Attribute Prediction
 
@@ -242,6 +286,12 @@ python scripts/review_metrics.py --root Output                   # original-vs-r
 ```
 
 Full workflow, options, and the CloudCompare guide are in [`scripts/README.md`](scripts/README.md).
+
+### Annotation & Quality Control
+
+- **Two-round cross-review** — one primary annotator per building; reviewers never review their own buildings; disagreements settled by majority vote.
+- **Inter-annotator agreement** — Cohen's κ per building: round 1 mean **0.44** → round 2 mean **0.99** after corrections.
+- **Instance refinement** — DBSCAN candidates hand-refined, **8,586 → 6,418** instances (−25.3%), mostly merging over-segmentation.
 
 ---
 
