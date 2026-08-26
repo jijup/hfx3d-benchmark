@@ -61,10 +61,14 @@ Fixed 15-dimensional order (column index in every output matrix):
 
 ```text
 scripts/functional_attributes/
-├── functional_labeling.py   # entry point
-├── hfx3d_core.py            # I/O, ontology, writers, validation
-├── hfx3d_rules.py           # geometry / context refinement
-└── scoring.py               # continuous scoring + odds fusion
+├── functional_labeling.py             # functional attribute assignment entry point
+├── hfx3d_core.py                      # H5/CSV I/O, ontology, and validation
+├── hfx3d_rules.py                     # geometry and context refinement rules
+├── scoring.py                         # continuous scoring and odds fusion
+├── compute_ambiguity.py               # Train-only class-attribute ambiguity analysis
+├── build_ablation_scores.py           # CSV/H5 loading and ablation score construction
+├── evaluate_ablation.py               # per-attribute F1/AP and macro metric utilities
+└── evaluate_functional_ablation.py    # Val/Test ablation evaluation entry point
 
 configs/
 ├── label_map.json           # shared 12-class semantic map
@@ -119,3 +123,36 @@ configs/label_map.json
 configs/functional_attributes/default_config.yaml
 configs/functional_attributes/ontology_rules.yaml
 ```
+
+### Ambiguity analysis
+
+Define ambiguous class-attribute pairs from the human-validated training split:
+
+```bash
+python scripts/functional_attributes/compute_ambiguity.py \
+    --validated-root /path/to/validated_h5 \
+    --output-root /path/to/ambiguity_outputs \
+    --tau 0.05
+```
+
+The script uses `eval_include=true` instances and applicable attribute cells.
+It writes attribute rates, ambiguous pairs, ambiguous classes, and an audit
+report to the output directory.
+
+### Ablation evaluation
+
+Evaluate the six evidence settings (`S only`, `G only`, `C only`, `S+G`, `S+C`,
+and `S+G+C`) against the human-validated labels:
+
+```bash
+python scripts/functional_attributes/evaluate_functional_ablation.py \
+    --prediction-csv-root /path/to/functional_labels_csv \
+    --validated-h5-root /path/to/validated_h5 \
+    --ambiguous-classes /path/to/ambiguity_outputs/ambiguous_classes.json \
+    --output-root /path/to/evaluation_outputs
+```
+
+The evaluator reports mF1, mAP, and ESM for the Val and Test splits, including
+the All and Ambiguous subsets. It also writes per-attribute F1 and AP results.
+`build_ablation_scores.py` and `evaluate_ablation.py` provide the shared loading,
+score construction, and metric functions used by this entry point.
