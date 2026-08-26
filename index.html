@@ -889,6 +889,29 @@
         </tbody>
       </table>
     </div>
+
+    <h3 class="bm-tbl-title fade-up" style="margin-top:44px">Functional Attributes — Evidence Ablation</h3>
+    <p class="bm-tbl-note fade-up">15 multi-label attributes per instance · Macro-F1 / exact-set-match on all test instances and the class-ambiguous subset · S = semantic prior, G = geometry, C = context</p>
+    <div class="table-wrap fade-up">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left">Evidence</th>
+            <th>mF1 (All)</th><th>ESM (All)</th>
+            <th class="th-sep">mF1 (Amb)</th><th>ESM (Amb)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="td-left">S only</td><td>0.6367</td><td class="td-best">0.6905</td><td class="th-sep">0.4808</td><td>0.5378</td></tr>
+          <tr><td class="td-left">G only</td><td class="td-best">0.8071</td><td>0.5880</td><td class="td-best th-sep">0.7039</td><td>0.5280</td></tr>
+          <tr><td class="td-left">C only</td><td>0.7449</td><td>0.5420</td><td class="th-sep">0.6746</td><td>0.4958</td></tr>
+          <tr><td class="td-left">S + G</td><td>0.7458</td><td>0.6888</td><td class="th-sep">0.5928</td><td class="td-best">0.5434</td></tr>
+          <tr><td class="td-left">S + C</td><td>0.7145</td><td>0.6676</td><td class="th-sep">0.6072</td><td>0.5224</td></tr>
+          <tr><td class="td-left">S + G + C</td><td>0.7691</td><td>0.6799</td><td class="th-sep">0.6606</td><td class="td-best">0.5434</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bm-tbl-note fade-up">Evaluated on 1,131 test instances (714 ambiguous — e.g. operable vs fixed windows, structural vs decorative columns).</p>
   </div>
 </section>
 
