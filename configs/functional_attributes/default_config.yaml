@@ -132,4 +132,3 @@ numerical:
 output:
   compression: gzip
   compression_level: 4
-  deterministic_creation_time: '2026-08-09T00:00:00+08:00'
