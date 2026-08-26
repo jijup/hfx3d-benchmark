@@ -1,8 +1,4 @@
-"""HFX3D refinement core: I/O, ontology, schema, instance extraction, writers, validation.
-
-Independent re-implementation of the base I/O layer for the simple
-Geometry-Guided Functional Refinement pipeline. No scoring logic lives here.
-"""
+"""I/O, schema, instance extraction, output, and validation utilities."""
 from __future__ import annotations
 
 __version__ = "1.0.0"
@@ -10,6 +6,7 @@ __version__ = "1.0.0"
 import csv
 import hashlib
 import json
+import shutil
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -545,6 +542,25 @@ def _write_scalar_string(group: h5py.Group, name: str, value: str) -> None:
     group.create_dataset(name, data=value, dtype=h5py.string_dtype(encoding="utf-8"))
 
 
+# Original HFX3D root groups that must remain present after annotation.
+ORIGINAL_H5_ROOT_GROUPS = ("point_cloud", "labels", "metadata")
+
+# Instance-level annotation datasets written under functional_attributes/.
+REQUIRED_FUNCTIONAL_DATASETS = {
+    "instance_id",
+    "semantic_id",
+    "semantic_class",
+    "semantic_purity",
+    "point_count",
+    "applicable_mask",
+    "semantic_prior_score",
+    "geometry_score",
+    "context_score",
+    "functional_attribute_confidence",
+    "functional_attribute_vector",
+}
+
+
 def write_functional_h5(
     path: str | Path,
     result: AssignmentResult,
@@ -556,14 +572,37 @@ def write_functional_h5(
     config: dict[str, Any],
     config_path: str | Path,
 ) -> Path:
+    """Write a full HFX3D H5 copy with an added functional_attributes group.
+
+    Strategy (safest for preserving original content):
+    1. ``shutil.copy2`` the source H5 byte-for-byte into the output path.
+    2. Open the copy in ``r+`` and create ``functional_attributes`` with the
+       instance-level semantic prior, geometry/context evidence, final
+       confidence, and 15-D functional vector.
+
+    The original source file is never opened for writing.
+    """
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    source = result.building.source_path
+    source = Path(result.building.source_path)
+    if not source.is_file():
+        raise FileNotFoundError(f"Source H5 does not exist: {source}")
+
+    # Full binary copy: all original groups, datasets, attributes, point data.
+    shutil.copy2(source, target)
+
     string_dtype = h5py.string_dtype(encoding="utf-8")
     compression = config["output"]["compression"]
     compression_level = int(config["output"]["compression_level"])
-    with h5py.File(target, "w", libver="earliest") as handle:
-        metadata = handle.create_group("metadata", track_order=True)
+    kwargs = {"compression": compression, "compression_opts": compression_level, "shuffle": True}
+    records = result.building.records
+
+    with h5py.File(target, "r+") as handle:
+        if "functional_attributes" in handle:
+            del handle["functional_attributes"]
+        fa = handle.create_group("functional_attributes", track_order=True)
+
+        metadata = fa.create_group("metadata", track_order=True)
         _write_scalar_string(metadata, "source_building_filename", source.name)
         _write_scalar_string(metadata, "source_building_relative_path", source_relative_path)
         _write_scalar_string(metadata, "source_building_sha256", sha256_file(source))
@@ -577,32 +616,95 @@ def write_functional_h5(
         config_path = Path(config_path).resolve()
         _write_scalar_string(metadata, "config_filename", config_path.name)
         _write_scalar_string(metadata, "config_sha256", sha256_file(config_path))
-        metadata.create_dataset("attribute_names", data=np.asarray(used_ontology.attribute_names, dtype=object), dtype=string_dtype)
+        metadata.create_dataset(
+            "attribute_names",
+            data=np.asarray(used_ontology.attribute_names, dtype=object),
+            dtype=string_dtype,
+        )
         metadata.create_dataset("attribute_count", data=np.int32(len(used_ontology.attribute_names)))
-        metadata.create_dataset("semantic_class_names", data=np.asarray(used_ontology.semantic_classes, dtype=object), dtype=string_dtype)
+        metadata.create_dataset(
+            "semantic_class_names",
+            data=np.asarray(used_ontology.semantic_classes, dtype=object),
+            dtype=string_dtype,
+        )
         _write_scalar_string(metadata, "creation_time", str(config["output"]["deterministic_creation_time"]))
         _write_scalar_string(metadata, "software_version", __version__)
-        _write_scalar_string(metadata, "zero_vector_meaning",
-                             "auxiliary binary attribute_value (confidence >= 0.5); a 0 is an automatic suggestion "
-                             "below 0.5 and does NOT mean unassigned - every applicable attribute is computed by the "
-                             "automatic rules")
-        _write_scalar_string(metadata, "fusion", "odds_fusion: conf = P*G*C / (P*G*C + (1-P)*(1-G)*(1-C))")
-        _write_scalar_string(metadata, "vector_rule", "vector = confidence >= 0.5 (auxiliary; continuous confidence is the primary result)")
+        _write_scalar_string(
+            metadata,
+            "zero_vector_meaning",
+            "auxiliary binary attribute_value (confidence >= 0.5); a 0 is an automatic suggestion "
+            "below 0.5 and does NOT mean unassigned - every applicable attribute is computed by the "
+            "automatic rules",
+        )
+        _write_scalar_string(
+            metadata,
+            "fusion",
+            "odds_fusion: conf = P*G*C / (P*G*C + (1-P)*(1-G)*(1-C))",
+        )
+        _write_scalar_string(
+            metadata,
+            "vector_rule",
+            "vector = confidence >= 0.5 (auxiliary; continuous confidence is the primary result)",
+        )
+        _write_scalar_string(
+            metadata,
+            "storage_layout",
+            "full HFX3D H5 copy via shutil.copy2; functional annotations under /functional_attributes",
+        )
 
-        instances = handle.create_group("instances", track_order=True)
-        records = result.building.records
-        kwargs = {"compression": compression, "compression_opts": compression_level, "shuffle": True}
-        instances.create_dataset("instance_id", data=np.asarray([r.instance_id for r in records], dtype=np.int64), **kwargs)
-        instances.create_dataset("semantic_id", data=np.asarray([r.semantic_id for r in records], dtype=np.int32), **kwargs)
-        instances.create_dataset("semantic_class", data=np.asarray([r.semantic_class for r in records], dtype=object), dtype=string_dtype, **kwargs)
-        instances.create_dataset("semantic_purity", data=np.asarray([r.semantic_purity for r in records], dtype=np.float32), **kwargs)
-        instances.create_dataset("point_count", data=np.asarray([r.point_count for r in records], dtype=np.int64), **kwargs)
-        instances.create_dataset("applicable_mask", data=result.applicable_mask.astype(np.uint8), **kwargs)
-        instances.create_dataset("semantic_prior_score", data=result.semantic_prior_score.astype(np.float32), **kwargs)
-        instances.create_dataset("geometry_score", data=result.geometry_score.astype(np.float32), **kwargs)
-        instances.create_dataset("context_score", data=result.context_score.astype(np.float32), **kwargs)
-        instances.create_dataset("functional_attribute_confidence", data=result.confidence.astype(np.float32), **kwargs)
-        instances.create_dataset("functional_attribute_vector", data=result.vector.astype(np.uint8), **kwargs)
+        # Instance-level functional annotation matrices (N x 15).
+        fa.create_dataset(
+            "instance_id",
+            data=np.asarray([r.instance_id for r in records], dtype=np.int64),
+            **kwargs,
+        )
+        fa.create_dataset(
+            "semantic_id",
+            data=np.asarray([r.semantic_id for r in records], dtype=np.int32),
+            **kwargs,
+        )
+        fa.create_dataset(
+            "semantic_class",
+            data=np.asarray([r.semantic_class for r in records], dtype=object),
+            dtype=string_dtype,
+            **kwargs,
+        )
+        fa.create_dataset(
+            "semantic_purity",
+            data=np.asarray([r.semantic_purity for r in records], dtype=np.float32),
+            **kwargs,
+        )
+        fa.create_dataset(
+            "point_count",
+            data=np.asarray([r.point_count for r in records], dtype=np.int64),
+            **kwargs,
+        )
+        fa.create_dataset("applicable_mask", data=result.applicable_mask.astype(np.uint8), **kwargs)
+        fa.create_dataset(
+            "semantic_prior_score",
+            data=result.semantic_prior_score.astype(np.float32),
+            **kwargs,
+        )
+        fa.create_dataset(
+            "geometry_score",
+            data=result.geometry_score.astype(np.float32),
+            **kwargs,
+        )
+        fa.create_dataset(
+            "context_score",
+            data=result.context_score.astype(np.float32),
+            **kwargs,
+        )
+        fa.create_dataset(
+            "functional_attribute_confidence",
+            data=result.confidence.astype(np.float32),
+            **kwargs,
+        )
+        fa.create_dataset(
+            "functional_attribute_vector",
+            data=result.vector.astype(np.uint8),
+            **kwargs,
+        )
     return target
 
 
@@ -650,13 +752,6 @@ def validate_score_arrays(*arrays: np.ndarray) -> None:
             raise ValueError("Score array is outside [0,1]")
 
 
-REQUIRED_INSTANCE_DATASETS = {
-    "instance_id", "semantic_id", "semantic_class", "semantic_purity", "point_count", "applicable_mask",
-    "semantic_prior_score", "geometry_score", "context_score", "functional_attribute_confidence",
-    "functional_attribute_vector",
-}
-
-
 def _decode_array(values: np.ndarray) -> list[str]:
     return [value.decode("utf-8") if isinstance(value, bytes) else str(value) for value in values]
 
@@ -671,24 +766,58 @@ def validate_output_file(
 ) -> dict[str, Any]:
     errors: list[str] = []
     output_path = Path(path)
+    ids = np.asarray([], dtype=np.int64)
     with h5py.File(output_path, "r") as handle:
-        if set(handle) != {"metadata", "instances"}:
-            errors.append(f"unexpected root groups: {sorted(handle)}")
-        instances = handle["instances"]
-        if set(instances) != REQUIRED_INSTANCE_DATASETS:
-            errors.append(f"instance dataset mismatch: {sorted(set(instances) ^ REQUIRED_INSTANCE_DATASETS)}")
-        if int(handle["metadata/attribute_count"][()]) != len(CANONICAL_ATTRIBUTE_ORDER):
+        # Full HFX3D copy: original groups must still be present.
+        for group_name in ORIGINAL_H5_ROOT_GROUPS:
+            if group_name not in handle:
+                errors.append(f"missing original root group: {group_name}")
+        if "point_cloud" in handle and "xyz" not in handle["point_cloud"]:
+            errors.append("original point_cloud/xyz missing from full H5 copy")
+        if "labels" in handle:
+            for label_name in ("semantic", "instance"):
+                if label_name not in handle["labels"]:
+                    errors.append(f"original labels/{label_name} missing from full H5 copy")
+
+        if "functional_attributes" not in handle:
+            errors.append("missing functional_attributes group")
+            return {
+                "path": str(output_path),
+                "valid": False,
+                "errors": errors,
+                "instance_count": 0,
+                "attribute_count": len(ontology.attribute_names),
+            }
+
+        fa = handle["functional_attributes"]
+        present_datasets = {name for name in fa if isinstance(fa[name], h5py.Dataset)}
+        if present_datasets != REQUIRED_FUNCTIONAL_DATASETS:
+            errors.append(
+                f"functional_attributes dataset mismatch: "
+                f"{sorted(present_datasets ^ REQUIRED_FUNCTIONAL_DATASETS)}"
+            )
+        if "metadata" not in fa:
+            errors.append("missing functional_attributes/metadata")
+            return {
+                "path": str(output_path),
+                "valid": not errors,
+                "errors": errors,
+                "instance_count": 0,
+                "attribute_count": len(ontology.attribute_names),
+            }
+
+        if int(fa["metadata/attribute_count"][()]) != len(CANONICAL_ATTRIBUTE_ORDER):
             errors.append("metadata attribute_count is not the fixed value 15")
-        ids = instances["instance_id"][:]
-        semantic_ids = instances["semantic_id"][:]
-        semantic_classes = _decode_array(instances["semantic_class"][:])
-        purity = instances["semantic_purity"][:]
-        applicable = instances["applicable_mask"][:]
-        prior = instances["semantic_prior_score"][:]
-        geometry = instances["geometry_score"][:]
-        context = instances["context_score"][:]
-        confidence = instances["functional_attribute_confidence"][:]
-        vector = instances["functional_attribute_vector"][:]
+        ids = fa["instance_id"][:]
+        semantic_ids = fa["semantic_id"][:]
+        semantic_classes = _decode_array(fa["semantic_class"][:])
+        purity = fa["semantic_purity"][:]
+        applicable = fa["applicable_mask"][:]
+        prior = fa["semantic_prior_score"][:]
+        geometry = fa["geometry_score"][:]
+        context = fa["context_score"][:]
+        confidence = fa["functional_attribute_confidence"][:]
+        vector = fa["functional_attribute_vector"][:]
         expected_shape = (len(ids), len(ontology.attribute_names))
         for name, array in {
             "applicable_mask": applicable, "semantic_prior_score": prior, "geometry_score": geometry,
@@ -727,6 +856,7 @@ def validate_output_file(
         if any(np.any(array[non_applicable]) for array in (prior, geometry, context, confidence)):
             errors.append("non-applicable attribute has non-zero P/G/C/confidence")
 
+        always_mask = np.zeros_like(applicable, dtype=bool)
         if all(array.shape == expected_shape for array in
                (applicable, prior, geometry, context, confidence)):
             expected_applicable = np.zeros_like(applicable)
@@ -738,16 +868,14 @@ def validate_output_file(
                     column = ontology.attribute_index[attribute]
                     expected_applicable[row, column] = 1
                     always_mask[row, column] = all(rule.condition == "always" for rule in rules)
-                    if always_mask[row, column]:
-                        base = float(config["semantic_priors"]["by_class"][semantic_class][attribute])
-                        expected_prior[row, column] = 0.5 + float(purity[row]) * (base - 0.5)
-                    else:
-                        expected_prior[row, column] = 0.5
+                    expected_prior[row, column] = float(
+                        config["semantic_priors"]["by_class"][semantic_class][attribute]
+                    )
             if not np.array_equal(applicable, expected_applicable):
                 errors.append("applicable_mask does not match ontology class-attribute rules")
             active = expected_applicable == 1
             if np.any(np.abs(prior[active] - expected_prior[active]) > 2e-6):
-                errors.append("semantic_prior_score does not match stable semantic prior / neutral refinement prior")
+                errors.append("semantic_prior_score does not match fixed class-attribute prior")
 
             from scoring import odds_fusion
             recomputed = np.zeros_like(confidence, dtype=np.float64)
@@ -767,10 +895,9 @@ def validate_output_file(
         other_rows = np.asarray([name == "other" for name in semantic_classes], dtype=bool)
         if np.any(applicable[other_rows]) or np.any(confidence[other_rows]) or np.any(vector[other_rows]):
             errors.append("other class is not all-zero")
-        if "point_cloud" in handle or any("xyz" in name.lower() for name in handle):
-            errors.append("output contains point-cloud data")
+
         def metadata_text(name: str) -> str:
-            value = handle[f"metadata/{name}"][()]
+            value = fa[f"metadata/{name}"][()]
             return value.decode("utf-8") if isinstance(value, bytes) else str(value)
         if metadata_text("ontology_sha256") != ontology.sha256:
             errors.append("metadata ontology_sha256 does not match current ontology")
@@ -780,7 +907,7 @@ def validate_output_file(
         if label_map_path is not None:
             if metadata_text("label_map_sha256") != sha256_file(label_map_path):
                 errors.append("metadata label_map_sha256 does not match current label map")
-        metadata_attributes = _decode_array(handle["metadata/attribute_names"][:])
+        metadata_attributes = _decode_array(fa["metadata/attribute_names"][:])
         if metadata_attributes != list(ontology.attribute_names):
             errors.append("metadata attribute order does not match used ontology")
     return {
@@ -795,10 +922,11 @@ def validate_output_file(
 def validate_csv_against_h5(csv_path: str | Path, h5_path: str | Path, ontology: Ontology) -> dict[str, Any]:
     errors: list[str] = []
     with h5py.File(h5_path, "r") as handle:
-        instance_ids = handle["instances/instance_id"][:]
-        confidence = handle["instances/functional_attribute_confidence"][:]
-        vector = handle["instances/functional_attribute_vector"][:]
-        applicable = handle["instances/applicable_mask"][:]
+        fa = handle["functional_attributes"]
+        instance_ids = fa["instance_id"][:]
+        confidence = fa["functional_attribute_confidence"][:]
+        vector = fa["functional_attribute_vector"][:]
+        applicable = fa["applicable_mask"][:]
     expected_rows = len(instance_ids) * len(ontology.attribute_names)
     count = 0
     with Path(csv_path).open("r", encoding="utf-8", newline="") as handle:

@@ -66,54 +66,54 @@ semantic_roles:
   drainage_neighbor:
   - other
 
-# Semantic-class prior table. Values are used only when every ontology rule for
-# the class-attribute pair has condition: always. Instance-dependent candidate
-# attributes use the neutral refinement prior P = 0.5.
+# Default semantic class-attribute prior table.
+# Every applicable pair uses its configured prior. Instance-dependent pairs
+# refine it with geometry/context; always pairs use neutral G=C=0.5.
 semantic_priors:
   by_class:
     wall:
-      load_bearing: 0.42
-      thermal_envelope: 0.86
-      vegetation_support: 0.12
+      load_bearing: 0.65
+      thermal_envelope: 0.9
+      vegetation_support: 0.4
     window:
-      thermal_envelope: 0.86
-      operable: 0.32
-      solar_shading: 0.18
-      ventilation: 0.24
-      natural_lighting: 0.86
+      thermal_envelope: 0.9
+      operable: 0.85
+      solar_shading: 0.7
+      ventilation: 0.75
+      natural_lighting: 0.9
     door:
-      access: 0.88
-      operable: 0.88
-      thermal_envelope: 0.44
+      access: 0.9
+      operable: 0.9
+      thermal_envelope: 0.9
     balcony:
-      load_bearing: 0.46
-      access: 0.84
-      vegetation_support: 0.12
-      fall_protection: 0.84
+      load_bearing: 0.9
+      access: 0.9
+      vegetation_support: 0.1
+      fall_protection: 0.9
     vegetation:
-      aesthetic: 0.82
+      aesthetic: 0.9
     stairs:
-      circulation: 0.84
-      fall_protection: 0.25
+      circulation: 0.9
+      fall_protection: 0.9
     terrain:
-      circulation: 0.3
+      circulation: 0.85
     roof:
-      thermal_envelope: 0.86
-      load_bearing: 0.48
-      drainage: 0.46
-      fall_protection: 0.22
+      thermal_envelope: 0.9
+      load_bearing: 0.85
+      drainage: 0.4
+      fall_protection: 0.75
     blinds:
-      solar_shading: 0.86
-      operable: 0.3
-      privacy_screening: 0.22
+      solar_shading: 0.9
+      operable: 0.9
+      privacy_screening: 0.9
     column:
-      load_bearing: 0.4
-      aesthetic: 0.16
+      load_bearing: 0.9
+      aesthetic: 0.5
     arch:
-      load_bearing: 0.36
-      aesthetic: 0.14
-      illumination: 0.08
-      surveillance: 0.08
+      load_bearing: 0.35
+      aesthetic: 0.25
+      illumination: 0.35
+      surveillance: 0.45
 
 # Continuous normalization scales (single shared values, not per-condition
 # thresholds). Angles are normalized by 30 degrees; distances are normalized
