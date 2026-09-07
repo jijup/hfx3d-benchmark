@@ -50,6 +50,9 @@ HFX_<BuildingID>_<SensorType>_<Status>.las
 | `BLD024`    | Sobeys_Inspiration_Hub   |
 | `BLD025`    | Belmont_House            |
 | `BLD026`    | The_Avery                |
+| `BLD027`    | Life_Sciences_Building   |
+| `BLD028`    | Alderney_Gate            |
+
 
 ---
 
