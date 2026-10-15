@@ -389,7 +389,7 @@ This work was supported by the [Natural Sciences and Engineering Research Counci
 If you use HFX3D in your research, please cite:
 
 ```bibtex
-@inproceedings{muse2027geometry,
+@inproceedings{hfx3d2027,
   title     = {From Geometry to Function: A Multi-Task {LiDAR} Benchmark Dataset
                for Semantic and Functional Parsing of Urban Facades},
   author    = {Muse, Abdiaziz and Javed, Tooba and Pu, Tao and
