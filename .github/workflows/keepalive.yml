@@ -1,0 +1,46 @@
+name: Supabase keep-alive
+
+# Keeps the HFX3D visitor-tracking Supabase project from auto-pausing.
+# Free-tier Supabase projects pause after 7 days with no traffic. A quiet
+# period (site offline, low traffic) is enough to trigger it, which empties
+# the visitor map until the project is manually restored. This pings the
+# Cloudflare worker's read endpoint on a schedule so the DB never goes idle.
+
+on:
+  schedule:
+    # Every day at 07:00 UTC. Daily (well under the 7-day pause window) gives
+    # plenty of margin even when GitHub delays or drops a scheduled run.
+    - cron: '0 7 * * *'
+  workflow_dispatch: {}   # allow manual runs from the Actions tab
+
+# Avoid piling up runs if one is slow.
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping visitors endpoint (warms Supabase via the worker)
+        run: |
+          URL="https://hfx3d-visits.zazukhan58.workers.dev/visitors"
+          echo "Pinging $URL"
+          # -sS: quiet but show errors. Capture body + HTTP status.
+          resp="$(curl -sS -w $'\n%{http_code}' --max-time 30 "$URL")"
+          body="$(printf '%s' "$resp" | head -n -1)"
+          code="$(printf '%s' "$resp" | tail -n 1)"
+          echo "HTTP $code"
+          echo "Body: $body"
+          # Fail loudly (GitHub emails on failure) if the DB is asleep again.
+          if [ "$code" != "200" ]; then
+            echo "::error::Endpoint returned HTTP $code — Supabase may be paused."
+            exit 1
+          fi
+          if ! printf '%s' "$body" | grep -q '"total"'; then
+            echo "::error::Response missing \"total\" — worker or DB unhealthy."
+            exit 1
+          fi
+          total="$(printf '%s' "$body" | grep -o '"total":[0-9]*' | grep -o '[0-9]*')"
+          echo "OK — $total visitors currently recorded."
