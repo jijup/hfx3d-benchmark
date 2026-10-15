@@ -8,7 +8,7 @@
 
 Abdiaziz Muse¹ · Tooba Javed¹ · Tao Pu² · Jiju Poovvancheri¹ · Dong Chen²
 
-<sub>¹ Saint Mary's University · ² Nanjing Forestry University</sub>
+<sub>¹ Saint Mary's University, Halifax, Canada · ² Nanjing Forestry University, Nanjing, China</sub>
 
 <br>
 
