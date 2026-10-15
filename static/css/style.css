@@ -100,10 +100,10 @@ body {
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black, transparent); }
 .hero-inner { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; text-align: center; }
-.hero-badge { display: inline-block; padding: 5px 16px; border-radius: 100px; margin-bottom: 24px;
-  font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+.hero-badge { display: inline-block; padding: 7px 20px; border-radius: 100px; margin-bottom: 24px;
+  font-size: .9rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
   background: rgba(37,99,235,.15); border: 1px solid rgba(37,99,235,.35); color: #93c5fd; }
-.hero-title { font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 800; letter-spacing: -.04em;
+.hero-title { font-size: clamp(1.9rem, 4.2vw, 3.1rem); font-weight: 800; letter-spacing: -.04em;
   line-height: 1.12; margin-bottom: 20px;
   background: linear-gradient(135deg, #ffffff 40%, #93c5fd 70%, #c4b5fd 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
