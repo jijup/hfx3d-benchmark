@@ -2,6 +2,16 @@
 
 <div align="center">
 
+### From Geometry to Function: A Multi-Task LiDAR Benchmark Dataset for Semantic and Functional Parsing of Urban Facades
+
+**WACV 2027** · IEEE/CVF Winter Conference on Applications of Computer Vision
+
+Abdiaziz Muse¹ · Tooba Javed¹ · Tao Pu² · Jiju Poovvancheri¹ · Dong Chen²
+
+<sub>¹ Saint Mary's University · ² Nanjing Forestry University</sub>
+
+<br>
+
 A benchmark for **semantic segmentation, instance segmentation, and functional-attribute prediction** of urban building facade LiDAR point clouds.<br>
 **26 buildings · ~492 M points · 12 semantic classes · 4 seasons · 5 neighbourhoods**<br>
 Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
@@ -379,12 +389,14 @@ This work was supported by the [Natural Sciences and Engineering Research Counci
 If you use HFX3D in your research, please cite:
 
 ```bibtex
-@inproceedings{hfx3d2026,
-  title     = {{HFX3D}: A {LiDAR} Benchmark for Semantic Segmentation
-               of Urban Building Facades},
-  author    = {Author One and Author Two and Author Three},
-  booktitle = {TBD},
-  year      = {2026},
+@inproceedings{muse2027geometry,
+  title     = {From Geometry to Function: A Multi-Task {LiDAR} Benchmark Dataset
+               for Semantic and Functional Parsing of Urban Facades},
+  author    = {Muse, Abdiaziz and Javed, Tooba and Pu, Tao and
+               Poovvancheri, Jiju and Chen, Dong},
+  booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications
+               of Computer Vision (WACV)},
+  year      = {2027},
 }
 ```
 
