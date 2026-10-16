@@ -178,7 +178,7 @@ Instance and functional labels are produced with the semi-automatic annotation p
 
 | Model | OA | mIoU | mP | mR | mF1 |
 |-------|:---:|:----:|:--:|:--:|:---:|
-| KPConv | 85.0% | **47.69%** | 65.1% | 52.3% | 55.9% |
+| KPConv | 86.6% | **47.26%** | 67.1% | 53.5% | 57.2% |
 | PointNet++ (SSG) | 78.5% | **29.19%** | 39.1% | 34.8% | 35.2% |
 | PTv3 (Point Transformer V3) | 74.8% | **28.18%** | 45.1% | 33.7% | 35.7% |
 | PointNet | 75.6% | **26.30%** | 39.8% | 32.9% | 33.3% |
@@ -190,19 +190,19 @@ Instance and functional labels are produced with the semi-automatic annotation p
 
 | Class | KPConv | PointNet++ | PTv3 | PointNet | PTv2 | RandLA-Net | DGCNN |
 |-------|:------:|:----------:|:----:|:--------:|:----:|:----------:|:-----:|
-| wall | **80.56%** | 72.47% | 65.98% | 69.31% | 77.74% | 67.98% | 63.53% |
-| window | **42.19%** | 21.99% | 6.62% | 20.45% | 29.14% | 3.01% | 4.21% |
-| door | **19.86%** | 0.00% | 0.00% | 1.16% | 0.00% | 0.00% | 0.00% |
-| balcony | 25.40% | 0.00% | **36.65%** | 0.00% | 0.05% | 0.00% | 0.00% |
-| vegetation | **93.91%** | 84.88% | 83.41% | 81.27% | 58.81% | 30.05% | 33.25% |
-| stairs | **83.50%** | 63.73% | 0.00% | 41.14% | 0.00% | 0.00% | 0.00% |
-| terrain | **91.64%** | 83.57% | 83.91% | 73.46% | 80.16% | 82.04% | 83.10% |
+| wall | **80.37%** | 72.47% | 65.98% | 69.31% | 77.74% | 67.98% | 63.53% |
+| window | **42.05%** | 21.99% | 6.62% | 20.45% | 29.14% | 3.01% | 4.21% |
+| door | **19.47%** | 0.00% | 0.00% | 1.16% | 0.00% | 0.00% | 0.00% |
+| balcony | 24.71% | 0.00% | **36.65%** | 0.00% | 0.05% | 0.00% | 0.00% |
+| vegetation | **93.94%** | 84.88% | 83.41% | 81.27% | 58.81% | 30.05% | 33.25% |
+| stairs | **83.43%** | 63.73% | 0.00% | 41.14% | 0.00% | 0.00% | 0.00% |
+| terrain | **91.59%** | 83.57% | 83.91% | 73.46% | 80.16% | 82.04% | 83.10% |
 | roof | 0.00% | 0.02% | **22.89%** | 0.13% | 0.00% | 20.14% | 0.00% |
-| blinds | **42.74%** | 6.39% | 0.00% | 4.27% | 0.00% | 0.00% | 0.00% |
-| other | **55.87%** | 16.25% | 28.20% | 22.19% | 1.88% | 0.00% | 0.34% |
-| column | **36.54%** | 1.02% | 10.44% | 2.20% | 0.00% | 0.00% | 0.00% |
-| arch | **0.02%** | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% |
-| **mIoU** | **47.69%** | **29.19%** | **28.18%** | **26.30%** | **20.65%** | **16.94%** | **15.37%** |
+| blinds | **42.05%** | 6.39% | 0.00% | 4.27% | 0.00% | 0.00% | 0.00% |
+| other | **53.73%** | 16.25% | 28.20% | 22.19% | 1.88% | 0.00% | 0.34% |
+| column | **35.80%** | 1.02% | 10.44% | 2.20% | 0.00% | 0.00% | 0.00% |
+| arch | **0.01%** | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% | 0.00% |
+| **mIoU** | **47.26%** | **29.19%** | **28.18%** | **26.30%** | **20.65%** | **16.94%** | **15.37%** |
 
 #### Qualitative Results
 
@@ -380,7 +380,7 @@ hfx3d-benchmark/
 
 <br>
 
-This work was supported by the [Natural Sciences and Engineering Research Council of Canada (NSERC)](https://www.nserc-crsng.gc.ca/) and the [Canada Foundation for Innovation (CFI)](https://www.innovation.ca/). Computational resources were provided by the [Digital Research Alliance of Canada](https://alliancecan.ca/). We gratefully acknowledge [Saint Mary's University](https://www.smu.ca/) for institutional support. We thank the building owners and facility managers across Halifax for generously granting scanning access to their properties. The quality of the HFX3D annotations is owed to the dedication of our collection, curation and labelling team: Tooba Javed, Prachi Kudeshia, Jack Greenlaw, Avery Cao, and Khushal Das.
+This work was supported by the [Natural Sciences and Engineering Research Council of Canada (NSERC)](https://www.nserc-crsng.gc.ca/) and the [Canada Foundation for Innovation (CFI)](https://www.innovation.ca/). Computational resources were provided by the [Digital Research Alliance of Canada](https://alliancecan.ca/). We gratefully acknowledge [Saint Mary's University](https://www.smu.ca/) for institutional support. We thank the building owners and facility managers across Halifax for generously granting scanning access to their properties. The quality of the HFX3D annotations is owed to the dedication of our collection, curation and labelling team: Prachi Kudeshia, Jack Greenlaw, Avery Cao, Khushal Das, and Mirza Baig.
 
 ---
 
