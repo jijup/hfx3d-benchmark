@@ -1227,26 +1227,24 @@
     vmap.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'top-right');
     vmap.keyboard.enable();
 
-    var seenCoords = {};
+    // Aggregate visitors to ONE pin per *real* stored coordinate. Cloudflare
+    // only resolves to city/ISP level (~1 km), so many visitors share the same
+    // point — we collapse those into a single counted pin instead of fanning
+    // them into a fabricated ring (which both invents locations and lets anyone
+    // recover an individual's position from the ring's centre). Genuinely
+    // distinct points within a metro are kept.
+    function groupKey(v) {
+      return v.lat.toFixed(2) + ',' + v.lon.toFixed(2);
+    }
 
-    function addVisitorPin(v) {
-      if (!validCoord(v.lat, v.lon)) return;
-      var el = makePinEl('#f97316', 20);
-      var label = (v.city || 'Unknown') + (v.country ? ', ' + v.country : '');
-      // colliding pins fan out in a ~400 m ring; offset must stay small so
-      // coastal city centroids don't land in the water
-      var key = v.lat.toFixed(2) + ',' + v.lon.toFixed(2);
-      var n = seenCoords[key] || 0;
-      seenCoords[key] = n + 1;
-      var lat = v.lat, lon = v.lon;
-      if (n > 0) {
-        var angle = n * 2.39996;
-        lat += Math.sin(angle) * 0.004;
-        lon += Math.cos(angle) * 0.004;
-      }
+    function addCityPin(g) {
+      // gentle size scaling so busier locations read as busier
+      var size = Math.max(18, Math.min(34, 18 + Math.round(Math.log2(g.count + 1) * 4)));
+      var el = makePinEl('#f97316', size);
+      var text = g.label + ' · ' + g.count + (g.count === 1 ? ' visitor' : ' visitors');
       new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-        .setLngLat([lon, lat])
-        .setPopup(new mapboxgl.Popup({ offset: 18, closeButton: false }).setText(label))
+        .setLngLat([g.lon, g.lat])
+        .setPopup(new mapboxgl.Popup({ offset: 18, closeButton: false }).setText(text))
         .addTo(vmap);
     }
 
@@ -1268,15 +1266,23 @@
           .then(function (d) {
             if (!d || !Array.isArray(d.visitors)) return;
 
-            var skippedSelf = false;
+            // one pin per real stored coordinate — repeat visits and geo-jitter
+            // collapse into a single counted marker, never a fabricated ring
+            var groups = {};
             d.visitors.forEach(function (v) {
-              if (!skippedSelf && me &&
-                  Math.abs(v.lat - me.lat) < 0.03 && Math.abs(v.lon - me.lon) < 0.03) {
-                skippedSelf = true;
-                return;
+              if (!validCoord(v.lat, v.lon)) return;
+              var k = groupKey(v);
+              if (!groups[k]) {
+                groups[k] = {
+                  count: 0,
+                  lat: Math.round(v.lat * 100) / 100,
+                  lon: Math.round(v.lon * 100) / 100,
+                  label: (v.city || 'Unknown') + (v.country ? ', ' + v.country : '')
+                };
               }
-              addVisitorPin(v);
+              groups[k].count += 1;
             });
+            Object.keys(groups).forEach(function (k) { addCityPin(groups[k]); });
 
             var stats = document.getElementById('visitorStats');
             if (stats) {
