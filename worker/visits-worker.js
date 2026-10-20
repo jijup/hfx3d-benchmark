@@ -109,13 +109,28 @@ async function handleVisitors(request, env, ctx) {
   );
   const rows = res.ok ? await res.json() : [];
 
-  const visitors = rows.filter(
+  const valid = rows.filter(
     (r) =>
       typeof r.lat === 'number' && typeof r.lon === 'number' &&
       !(r.lat === 0 && r.lon === 0)
   );
 
-  const body = json({ total: visitors.length, visitors }, { 'Cache-Control': 'public, max-age=300' });
+  // one entry per ~1 km location with a visitor count; no per-visit rows exposed
+  const byCell = new Map();
+  for (const r of valid) {
+    const lat = Math.round(r.lat * 100) / 100;
+    const lon = Math.round(r.lon * 100) / 100;
+    const key = lat + ',' + lon;
+    const g = byCell.get(key);
+    if (g) g.count += 1;
+    else byCell.set(key, { lat, lon, city: r.city || null, country: r.country || null, count: 1 });
+  }
+  const visitors = [...byCell.values()];
+
+  const body = json(
+    { total: valid.length, locations: visitors.length, visitors },
+    { 'Cache-Control': 'public, max-age=300' }
+  );
   ctx.waitUntil(cache.put(cacheKey, body.clone()));
   return body;
 }

@@ -1227,18 +1227,12 @@
     vmap.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'top-right');
     vmap.keyboard.enable();
 
-    // Aggregate visitors to ONE pin per *real* stored coordinate. Cloudflare
-    // only resolves to city/ISP level (~1 km), so many visitors share the same
-    // point — we collapse those into a single counted pin instead of fanning
-    // them into a fabricated ring (which both invents locations and lets anyone
-    // recover an individual's position from the ring's centre). Genuinely
-    // distinct points within a metro are kept.
+    // one counted pin per ~1 km location (no fan-out ring)
     function groupKey(v) {
       return v.lat.toFixed(2) + ',' + v.lon.toFixed(2);
     }
 
     function addCityPin(g) {
-      // gentle size scaling so busier locations read as busier
       var size = Math.max(18, Math.min(34, 18 + Math.round(Math.log2(g.count + 1) * 4)));
       var el = makePinEl('#f97316', size);
       var text = g.label + ' · ' + g.count + (g.count === 1 ? ' visitor' : ' visitors');
@@ -1266,8 +1260,6 @@
           .then(function (d) {
             if (!d || !Array.isArray(d.visitors)) return;
 
-            // one pin per real stored coordinate — repeat visits and geo-jitter
-            // collapse into a single counted marker, never a fabricated ring
             var groups = {};
             d.visitors.forEach(function (v) {
               if (!validCoord(v.lat, v.lon)) return;
@@ -1280,7 +1272,7 @@
                   label: (v.city || 'Unknown') + (v.country ? ', ' + v.country : '')
                 };
               }
-              groups[k].count += 1;
+              groups[k].count += (typeof v.count === 'number' ? v.count : 1);
             });
             Object.keys(groups).forEach(function (k) { addCityPin(groups[k]); });
 
