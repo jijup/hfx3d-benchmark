@@ -82,7 +82,8 @@
       <sup>2</sup>&nbsp;Nanjing Forestry University, Nanjing, China
     </p>
     <div class="hero-btns fade-up">
-      <a href="#" class="btn btn-ghost-dark"><i class="fas fa-file-pdf"></i> Paper</a>
+      <!-- TODO(arXiv): inert placeholder for now; once the paper is live, add href="https://arxiv.org/abs/XXXX.XXXXX" target="_blank" rel="noopener". -->
+      <a class="btn btn-ghost-dark" aria-disabled="true" title="Paper — coming soon"><i class="fas fa-file-pdf"></i> Paper</a>
       <a href="#download" class="btn btn-ghost-dark"><i class="fas fa-database"></i> Dataset</a>
       <a href="https://github.com/jijup/hfx3d-benchmark" target="_blank" class="btn btn-ghost-dark">
         <i class="fab fa-github"></i> Code
@@ -167,7 +168,7 @@
              data-sem-gif="assets/images/buildings/hfx004_gif.gif"
              data-inst-gif="assets/images/buildings/hfx004_instance_gif.gif">
         <source src="assets/images/buildings/hfx004_wm.mp4" type="video/mp4">
-        <img src="assets/images/buildings/hfx004_gif.gif" alt="BLD004 fly-through">
+        <img src="assets/images/buildings/hfx004_gif.gif" alt="BLD004 full-building LiDAR point-cloud fly-through animation">
       </video>
       <span class="teaser-vid-lbl">BLD004 · Kenneth C. Rowe</span>
     </div>
@@ -178,7 +179,7 @@
              data-sem-gif="assets/images/buildings/hfx010_gif.gif"
              data-inst-gif="assets/images/buildings/hfx010_instance_gif.gif">
         <source src="assets/images/buildings/hfx010_wm.mp4" type="video/mp4">
-        <img src="assets/images/buildings/hfx010_gif.gif" alt="BLD010 fly-through">
+        <img src="assets/images/buildings/hfx010_gif.gif" alt="BLD010 full-building LiDAR point-cloud fly-through animation">
       </video>
       <span class="teaser-vid-lbl">BLD010 · Emera Place</span>
     </div>
@@ -271,19 +272,19 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px">
         <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px">
           <p style="margin:0 0 10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)">Class Balance</p>
-          <img src="assets/images/class_balance_metrics.png" alt="Class proportions and balance" style="width:100%;border-radius:4px;display:block">
+          <img src="assets/images/class_balance_metrics.png" alt="Bar charts of per-class point proportions, highlighting the class imbalance across the twelve semantic classes" style="width:100%;border-radius:4px;display:block">
         </div>
         <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px">
           <p style="margin:0 0 10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)">Points &amp; Classes per Building</p>
-          <img src="assets/images/file_statistics.png" alt="Points and classes per building" style="width:100%;border-radius:4px;display:block">
+          <img src="assets/images/file_statistics.png" alt="Chart of total points and number of semantic classes present in each building" style="width:100%;border-radius:4px;display:block">
         </div>
         <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px">
           <p style="margin:0 0 10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)">Per-Class Split</p>
-          <img src="assets/images/split_analysis.png" alt="Train / Val / Test per class" style="width:100%;border-radius:4px;display:block">
+          <img src="assets/images/split_analysis.png" alt="Stacked bar chart of train, validation, and test point counts for each semantic class" style="width:100%;border-radius:4px;display:block">
         </div>
         <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px">
           <p style="margin:0 0 10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)">Building × Class Heatmap</p>
-          <img src="assets/images/distribution_heatmap.png" alt="Point distribution heatmap" style="width:100%;border-radius:4px;display:block">
+          <img src="assets/images/distribution_heatmap.png" alt="Heatmap of per-class point distribution across all buildings in the dataset" style="width:100%;border-radius:4px;display:block">
         </div>
       </div>
     </div>
@@ -296,11 +297,11 @@
           <div class="annot-bld-lbl">BLD006 · VIC Suites</div>
           <div class="annot-pair">
             <div class="annot-img-wrap">
-              <img src="assets/images/buildings/hfx006_rgb.png" alt="BLD006 RGB" loading="lazy">
+              <img src="assets/images/buildings/hfx006_rgb.png" alt="BLD006 facade as an RGB-coloured point cloud" loading="lazy">
               <span class="annot-tag">RGB</span>
             </div>
             <div class="annot-img-wrap">
-              <img src="assets/images/buildings/hfx006_semantic.png" alt="BLD006 Semantic" loading="lazy">
+              <img src="assets/images/buildings/hfx006_semantic.png" alt="BLD006 facade with per-point semantic segmentation colouring" loading="lazy">
               <span class="annot-tag">Semantic</span>
             </div>
           </div>
@@ -309,11 +310,11 @@
           <div class="annot-bld-lbl">BLD017 · 1801 Hollis (Sidewalk)</div>
           <div class="annot-pair">
             <div class="annot-img-wrap">
-              <img src="assets/images/buildings/hfx017_rgb_sidewalk.png" alt="BLD017 RGB sidewalk" loading="lazy">
+              <img src="assets/images/buildings/hfx017_rgb_sidewalk.png" alt="BLD017 sidewalk view as an RGB-coloured point cloud" loading="lazy">
               <span class="annot-tag">RGB</span>
             </div>
             <div class="annot-img-wrap">
-              <img src="assets/images/buildings/hfx017_semantic_sidewalk.png" alt="BLD017 Semantic sidewalk" loading="lazy">
+              <img src="assets/images/buildings/hfx017_semantic_sidewalk.png" alt="BLD017 sidewalk view with per-point semantic segmentation colouring" loading="lazy">
               <span class="annot-tag">Semantic</span>
             </div>
           </div>
@@ -322,11 +323,11 @@
           <div class="annot-bld-lbl">BLD022 · Steele Ocean 1</div>
           <div class="annot-pair">
             <div class="annot-img-wrap">
-              <img src="assets/images/buildings/hfx022_rgb.png" alt="BLD022 RGB" loading="lazy">
+              <img src="assets/images/buildings/hfx022_rgb.png" alt="BLD022 facade as an RGB-coloured point cloud" loading="lazy">
               <span class="annot-tag">RGB</span>
             </div>
             <div class="annot-img-wrap">
-              <img src="assets/images/buildings/hfx022_semantic.png" alt="BLD022 Semantic" loading="lazy">
+              <img src="assets/images/buildings/hfx022_semantic.png" alt="BLD022 facade with per-point semantic segmentation colouring" loading="lazy">
               <span class="annot-tag">Semantic</span>
             </div>
           </div>
@@ -335,11 +336,11 @@
           <div class="annot-bld-lbl">BLD024 · Sobeys Hub</div>
           <div class="annot-pair">
             <div class="annot-img-wrap">
-              <img src="assets/images/buildings/hfx024_rgb.png" alt="BLD024 RGB" loading="lazy">
+              <img src="assets/images/buildings/hfx024_rgb.png" alt="BLD024 facade as an RGB-coloured point cloud" loading="lazy">
               <span class="annot-tag">RGB</span>
             </div>
             <div class="annot-img-wrap">
-              <img src="assets/images/buildings/hfx024_semantic.png" alt="BLD024 Semantic" loading="lazy">
+              <img src="assets/images/buildings/hfx024_semantic.png" alt="BLD024 facade with per-point semantic segmentation colouring" loading="lazy">
               <span class="annot-tag">Semantic</span>
             </div>
           </div>
@@ -358,27 +359,27 @@
       <p class="taxonomy-title">Environmental Diversity</p>
       <div class="cond-grid">
         <div class="cond-card">
-          <img src="assets/images/conditions/cond_spring_front_face.png" alt="Spring" loading="lazy">
+          <img src="assets/images/conditions/cond_spring_front_face.png" alt="The same building facade scanned in spring" loading="lazy">
           <div class="cond-label">Spring</div>
         </div>
         <div class="cond-card">
-          <img src="assets/images/conditions/cond_summer_front_face.png" alt="Summer" loading="lazy">
+          <img src="assets/images/conditions/cond_summer_front_face.png" alt="The same building facade scanned in summer" loading="lazy">
           <div class="cond-label">Summer</div>
         </div>
         <div class="cond-card">
-          <img src="assets/images/conditions/cond_fall_front_face.png" alt="Fall" loading="lazy">
+          <img src="assets/images/conditions/cond_fall_front_face.png" alt="The same building facade scanned in autumn" loading="lazy">
           <div class="cond-label">Fall</div>
         </div>
         <div class="cond-card">
-          <img src="assets/images/conditions/cond_winter_front_face.png" alt="Winter" loading="lazy">
+          <img src="assets/images/conditions/cond_winter_front_face.png" alt="The same building facade scanned in winter, with snow" loading="lazy">
           <div class="cond-label">Winter</div>
         </div>
         <div class="cond-card">
-          <img src="assets/images/conditions/cond_day_front_face.png" alt="Daytime" loading="lazy">
+          <img src="assets/images/conditions/cond_day_front_face.png" alt="The same building facade scanned in daytime lighting" loading="lazy">
           <div class="cond-label">Daytime</div>
         </div>
         <div class="cond-card">
-          <img src="assets/images/conditions/cond_night_front_face.png" alt="Night" loading="lazy">
+          <img src="assets/images/conditions/cond_night_front_face.png" alt="The same building facade scanned at night" loading="lazy">
           <div class="cond-label">Night</div>
         </div>
       </div>
@@ -390,25 +391,25 @@
       <div style="display:flex;gap:28px;justify-content:center;flex-wrap:wrap;margin-top:20px">
         <div style="text-align:center">
           <div style="width:170px;height:170px;border-radius:50%;overflow:hidden;margin:0 auto 10px;background:#000;box-shadow:0 4px 16px rgba(0,0,0,.4)">
-            <img src="assets/images/conditions/fisheye_winter.png" alt="Winter scan" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+            <img src="assets/images/conditions/fisheye_winter.png" alt="Fisheye panorama of a scan captured in winter" loading="lazy" style="width:100%;height:100%;object-fit:cover">
           </div>
           <div class="cond-label">Winter</div>
         </div>
         <div style="text-align:center">
           <div style="width:170px;height:170px;border-radius:50%;overflow:hidden;margin:0 auto 10px;background:#000;box-shadow:0 4px 16px rgba(0,0,0,.4)">
-            <img src="assets/images/conditions/fisheye_fall.png" alt="Fall scan" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+            <img src="assets/images/conditions/fisheye_fall.png" alt="Fisheye panorama of a scan captured in autumn" loading="lazy" style="width:100%;height:100%;object-fit:cover">
           </div>
           <div class="cond-label">Fall</div>
         </div>
         <div style="text-align:center">
           <div style="width:170px;height:170px;border-radius:50%;overflow:hidden;margin:0 auto 10px;background:#000;box-shadow:0 4px 16px rgba(0,0,0,.4)">
-            <img src="assets/images/conditions/fisheye_waterfront.png" alt="Waterfront scan" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+            <img src="assets/images/conditions/fisheye_waterfront.png" alt="Fisheye panorama of a waterfront scan" loading="lazy" style="width:100%;height:100%;object-fit:cover">
           </div>
           <div class="cond-label">Summer</div>
         </div>
         <div style="text-align:center">
           <div style="width:170px;height:170px;border-radius:50%;overflow:hidden;margin:0 auto 10px;background:#000;box-shadow:0 4px 16px rgba(0,0,0,.4)">
-            <img src="assets/images/conditions/fisheye_urban.png" alt="Urban scan" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+            <img src="assets/images/conditions/fisheye_urban.png" alt="Fisheye panorama of a dense urban scan" loading="lazy" style="width:100%;height:100%;object-fit:cover">
           </div>
           <div class="cond-label">Urban</div>
         </div>
@@ -510,132 +511,132 @@
     <div class="bsl-outer">
       <div id="bslTrack">
         <div class="bsl-item" data-bld="BLD009">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD009_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD009_rgb.png" alt="BLD009 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Halifax Lib.</div>
           <div class="bsl-id">BLD009</div>
         </div>
         <div class="bsl-item" data-bld="BLD001">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD001_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD001_rgb.png" alt="BLD001 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Goldberg</div>
           <div class="bsl-id">BLD001</div>
         </div>
         <div class="bsl-item" data-bld="BLD002">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD002_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD002_rgb.png" alt="BLD002 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Mona Camp. A</div>
           <div class="bsl-id">BLD002</div>
         </div>
         <div class="bsl-item" data-bld="BLD003">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD003_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD003_rgb.png" alt="BLD003 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Mona Camp. B</div>
           <div class="bsl-id">BLD003</div>
         </div>
         <div class="bsl-item" data-bld="BLD004">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD004_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD004_rgb.png" alt="BLD004 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Kenneth Rowe</div>
           <div class="bsl-id">BLD004</div>
         </div>
         <div class="bsl-item" data-bld="BLD005">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD005_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD005_rgb.png" alt="BLD005 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Schulich Law</div>
           <div class="bsl-id">BLD005</div>
         </div>
         <div class="bsl-item" data-bld="BLD006">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD006_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD006_rgb.png" alt="BLD006 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">VIC Suites</div>
           <div class="bsl-id">BLD006</div>
         </div>
         <div class="bsl-item" data-bld="BLD007">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD007_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD007_rgb.png" alt="BLD007 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Engineering</div>
           <div class="bsl-id">BLD007</div>
         </div>
         <div class="bsl-item" data-bld="BLD008">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD008_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD008_rgb.png" alt="BLD008 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Mona Camp. C</div>
           <div class="bsl-id">BLD008</div>
         </div>
         <div class="bsl-item" data-bld="BLD010">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD010_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD010_rgb.png" alt="BLD010 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Emera Place</div>
           <div class="bsl-id">BLD010</div>
         </div>
         <div class="bsl-item" data-bld="BLD011">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD011_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD011_rgb.png" alt="BLD011 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Gerard Hall</div>
           <div class="bsl-id">BLD011</div>
         </div>
         <div class="bsl-item" data-bld="BLD012">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD012_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD012_rgb.png" alt="BLD012 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">The Margarita</div>
           <div class="bsl-id">BLD012</div>
         </div>
         <div class="bsl-item" data-bld="BLD013">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD013_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD013_rgb.png" alt="BLD013 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">1801 Hollis #1</div>
           <div class="bsl-id">BLD013</div>
         </div>
         <div class="bsl-item" data-bld="BLD014">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD014_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD014_rgb.png" alt="BLD014 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Summit Place</div>
           <div class="bsl-id">BLD014</div>
         </div>
         <div class="bsl-item" data-bld="BLD015">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD015_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD015_rgb.png" alt="BLD015 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">1801 Hollis #2</div>
           <div class="bsl-id">BLD015</div>
         </div>
         <div class="bsl-item" data-bld="BLD016">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD016_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD016_rgb.png" alt="BLD016 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">1801 Hollis #3</div>
           <div class="bsl-id">BLD016</div>
         </div>
         <div class="bsl-item" data-bld="BLD017">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD017_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD017_rgb.png" alt="BLD017 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">1801 Hollis #4</div>
           <div class="bsl-id">BLD017</div>
         </div>
         <div class="bsl-item" data-bld="BLD018">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD018_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD018_rgb.png" alt="BLD018 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">The Exchange</div>
           <div class="bsl-id">BLD018</div>
         </div>
         <div class="bsl-item" data-bld="BLD019">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD019_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD019_rgb.png" alt="BLD019 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Sexton Camp. 1</div>
           <div class="bsl-id">BLD019</div>
         </div>
         <div class="bsl-item" data-bld="BLD020">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD020_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD020_rgb.png" alt="BLD020 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Sexton Camp. 2</div>
           <div class="bsl-id">BLD020</div>
         </div>
         <div class="bsl-item" data-bld="BLD021">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD021_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD021_rgb.png" alt="BLD021 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">TD Building</div>
           <div class="bsl-id">BLD021</div>
         </div>
         <div class="bsl-item" data-bld="BLD022">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD022_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD022_rgb.png" alt="BLD022 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Steele Ocean 1</div>
           <div class="bsl-id">BLD022</div>
         </div>
         <div class="bsl-item" data-bld="BLD023">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD023_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD023_rgb.png" alt="BLD023 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Steele Ocean 2</div>
           <div class="bsl-id">BLD023</div>
         </div>
         <div class="bsl-item" data-bld="BLD024">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD024_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD024_rgb.png" alt="BLD024 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Sobeys Hub</div>
           <div class="bsl-id">BLD024</div>
         </div>
         <div class="bsl-item" data-bld="BLD025">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD025_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD025_rgb.png" alt="BLD025 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">Belmont House</div>
           <div class="bsl-id">BLD025</div>
         </div>
         <div class="bsl-item" data-bld="BLD026">
-          <img class="bsl-thumb" src="assets/images/thumbnails/BLD026_rgb.png" alt="" onerror="this.style.opacity='.15'">
+          <img class="bsl-thumb" src="assets/images/thumbnails/BLD026_rgb.png" alt="BLD026 building, RGB point-cloud preview" onerror="this.style.opacity='.15'">
           <div class="bsl-label">The Avery</div>
           <div class="bsl-id">BLD026</div>
         </div>
@@ -850,22 +851,22 @@
         <tbody>
           <tr class="row-rank1">
             <td class="td-left">SoftGroup</td>
-            <td class="td-best">0.0030</td><td class="td-best">0.0060</td><td class="td-high th-sep">0.0270</td>
-          </tr>
-          <tr>
-            <td class="td-left">PointGroup</td>
-            <td>0.0003</td><td>0.0013</td><td class="th-sep">0.0215</td>
+            <td class="td-best">0.2032</td><td class="td-best">0.2923</td><td class="td-high th-sep">0.4044</td>
           </tr>
           <tr>
             <td class="td-left">ISBNet</td>
-            <td>0.0000</td><td>0.0000</td><td class="th-sep">0.0093</td>
+            <td>0.0422</td><td>0.0883</td><td class="th-sep">0.2276</td>
+          </tr>
+          <tr>
+            <td class="td-left">PointGroup</td>
+            <td>0.0145</td><td>0.0427</td><td class="th-sep">0.0955</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <h3 class="bm-tbl-title fade-up" style="margin-top:44px">Instance Segmentation — Geometry Clustering (GT semantics)</h3>
-    <p class="bm-tbl-note fade-up">Oracle ceiling: clustering given ground-truth semantic labels</p>
+    <p class="bm-tbl-note fade-up">Oracle-semantic baseline: clustering given ground-truth semantic labels · isolates instance separation from recognition</p>
     <div class="table-wrap fade-up">
       <table>
         <thead>
@@ -876,27 +877,27 @@
         </thead>
         <tbody>
           <tr class="row-rank1">
-            <td class="td-left">DBSCAN</td>
-            <td class="td-best">0.2247</td><td class="td-best">0.3906</td><td class="td-high th-sep">0.4749</td>
+            <td class="td-left">HDBSCAN</td>
+            <td class="td-best">0.2533</td><td class="td-best">0.3430</td><td class="td-high th-sep">0.4521</td>
           </tr>
           <tr>
-            <td class="td-left">HDBSCAN</td>
-            <td>0.0700</td><td>0.1226</td><td class="th-sep">0.1928</td>
+            <td class="td-left">DBSCAN</td>
+            <td>0.2063</td><td>0.2725</td><td class="th-sep">0.3574</td>
           </tr>
           <tr>
             <td class="td-left">MeanShift</td>
-            <td>0.0607</td><td>0.0652</td><td class="th-sep">0.1206</td>
+            <td>0.0310</td><td>0.0871</td><td class="th-sep">0.1059</td>
           </tr>
           <tr>
             <td class="td-left">KMeans</td>
-            <td>0.0166</td><td>0.0564</td><td class="th-sep">0.1498</td>
+            <td>0.0201</td><td>0.0615</td><td class="th-sep">0.1793</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <h3 class="bm-tbl-title fade-up" style="margin-top:44px">Functional Attributes — Evidence Ablation</h3>
-    <p class="bm-tbl-note fade-up">15 multi-label attributes per instance · Macro-F1 / exact-set-match on all test instances and the class-ambiguous subset · S = semantic prior, G = geometry, C = context</p>
+    <p class="bm-tbl-note fade-up">15 multi-label attributes per instance · Macro-F1 / exact-set-match on all test instances and the class-ambiguous subset · S = semantic prior, G = geometry, C = context · the learned MLP row is the mean over 10 seeds</p>
     <div class="table-wrap fade-up">
       <table>
         <thead>
@@ -913,6 +914,7 @@
           <tr><td class="td-left">S + G</td><td>0.7458</td><td>0.6888</td><td class="th-sep">0.5928</td><td class="td-best">0.5434</td></tr>
           <tr><td class="td-left">S + C</td><td>0.7145</td><td>0.6676</td><td class="th-sep">0.6072</td><td>0.5224</td></tr>
           <tr><td class="td-left">S + G + C</td><td>0.7691</td><td>0.6799</td><td class="th-sep">0.6606</td><td class="td-best">0.5434</td></tr>
+          <tr><td class="td-left">Learned MLP</td><td>0.7304</td><td>0.5590</td><td class="th-sep">0.6354</td><td>0.4141</td></tr>
         </tbody>
       </table>
     </div>
@@ -943,48 +945,48 @@
       <div class="qual-head">DGCNN</div>
 
       <div class="qual-row-label">BLD005</div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld005_rgb.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_rgb.png" alt="BLD005 RGB" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld005_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_gt.png" alt="BLD005 ground truth" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld005_kpconv.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_kpconv.png" alt="BLD005 KPConv prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld005_pointnet2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_pointnet2.png" alt="BLD005 PointNet++ prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld005_ptv3.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_ptv3.png" alt="BLD005 PTv3 prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld005_pointnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_pointnet.png" alt="BLD005 PointNet prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld005_ptv2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_ptv2.png" alt="BLD005 PTv2 prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld005_randlanet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_randlanet.png" alt="BLD005 RandLA-Net prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld005_dgcnn.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_dgcnn.png" alt="BLD005 DGCNN prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld005_rgb.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_rgb.png" alt="BLD005, input RGB point cloud" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld005_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_gt.png" alt="BLD005, ground-truth semantic labels" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld005_kpconv.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_kpconv.png" alt="BLD005, KPConv semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld005_pointnet2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_pointnet2.png" alt="BLD005, PointNet++ semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld005_ptv3.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_ptv3.png" alt="BLD005, Point Transformer v3 semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld005_pointnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_pointnet.png" alt="BLD005, PointNet semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld005_ptv2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_ptv2.png" alt="BLD005, Point Transformer v2 semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld005_randlanet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_randlanet.png" alt="BLD005, RandLA-Net semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld005_dgcnn.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld005_dgcnn.png" alt="BLD005, DGCNN semantic segmentation prediction" loading="lazy"></a></div>
 
       <div class="qual-row-label">BLD017</div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld017_rgb.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_rgb.png" alt="BLD017 RGB" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld017_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_gt.png" alt="BLD017 ground truth" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld017_kpconv.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_kpconv.png" alt="BLD017 KPConv prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld017_pointnet2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_pointnet2.png" alt="BLD017 PointNet++ prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld017_ptv3.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_ptv3.png" alt="BLD017 PTv3 prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld017_pointnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_pointnet.png" alt="BLD017 PointNet prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld017_ptv2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_ptv2.png" alt="BLD017 PTv2 prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld017_randlanet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_randlanet.png" alt="BLD017 RandLA-Net prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld017_dgcnn.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_dgcnn.png" alt="BLD017 DGCNN prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld017_rgb.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_rgb.png" alt="BLD017, input RGB point cloud" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld017_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_gt.png" alt="BLD017, ground-truth semantic labels" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld017_kpconv.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_kpconv.png" alt="BLD017, KPConv semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld017_pointnet2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_pointnet2.png" alt="BLD017, PointNet++ semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld017_ptv3.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_ptv3.png" alt="BLD017, Point Transformer v3 semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld017_pointnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_pointnet.png" alt="BLD017, PointNet semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld017_ptv2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_ptv2.png" alt="BLD017, Point Transformer v2 semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld017_randlanet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_randlanet.png" alt="BLD017, RandLA-Net semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld017_dgcnn.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld017_dgcnn.png" alt="BLD017, DGCNN semantic segmentation prediction" loading="lazy"></a></div>
 
       <div class="qual-row-label">BLD021</div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld021_rgb.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_rgb.png" alt="BLD021 RGB" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld021_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_gt.png" alt="BLD021 ground truth" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld021_kpconv.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_kpconv.png" alt="BLD021 KPConv prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld021_pointnet2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_pointnet2.png" alt="BLD021 PointNet++ prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld021_ptv3.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_ptv3.png" alt="BLD021 PTv3 prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld021_pointnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_pointnet.png" alt="BLD021 PointNet prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld021_ptv2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_ptv2.png" alt="BLD021 PTv2 prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld021_randlanet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_randlanet.png" alt="BLD021 RandLA-Net prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld021_dgcnn.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_dgcnn.png" alt="BLD021 DGCNN prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld021_rgb.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_rgb.png" alt="BLD021, input RGB point cloud" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld021_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_gt.png" alt="BLD021, ground-truth semantic labels" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld021_kpconv.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_kpconv.png" alt="BLD021, KPConv semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld021_pointnet2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_pointnet2.png" alt="BLD021, PointNet++ semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld021_ptv3.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_ptv3.png" alt="BLD021, Point Transformer v3 semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld021_pointnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_pointnet.png" alt="BLD021, PointNet semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld021_ptv2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_ptv2.png" alt="BLD021, Point Transformer v2 semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld021_randlanet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_randlanet.png" alt="BLD021, RandLA-Net semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld021_dgcnn.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld021_dgcnn.png" alt="BLD021, DGCNN semantic segmentation prediction" loading="lazy"></a></div>
 
       <div class="qual-row-label">BLD026</div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld026_rgb.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_rgb.png" alt="BLD026 RGB" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld026_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_gt.png" alt="BLD026 ground truth" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld026_kpconv.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_kpconv.png" alt="BLD026 KPConv prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld026_pointnet2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_pointnet2.png" alt="BLD026 PointNet++ prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld026_ptv3.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_ptv3.png" alt="BLD026 PTv3 prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld026_pointnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_pointnet.png" alt="BLD026 PointNet prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld026_ptv2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_ptv2.png" alt="BLD026 PTv2 prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld026_randlanet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_randlanet.png" alt="BLD026 RandLA-Net prediction" loading="lazy"></a></div>
-      <div class="qual-cell"><a href="assets/images/qualitative/bld026_dgcnn.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_dgcnn.png" alt="BLD026 DGCNN prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld026_rgb.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_rgb.png" alt="BLD026, input RGB point cloud" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld026_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_gt.png" alt="BLD026, ground-truth semantic labels" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld026_kpconv.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_kpconv.png" alt="BLD026, KPConv semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld026_pointnet2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_pointnet2.png" alt="BLD026, PointNet++ semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld026_ptv3.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_ptv3.png" alt="BLD026, Point Transformer v3 semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld026_pointnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_pointnet.png" alt="BLD026, PointNet semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld026_ptv2.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_ptv2.png" alt="BLD026, Point Transformer v2 semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld026_randlanet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_randlanet.png" alt="BLD026, RandLA-Net semantic segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/bld026_dgcnn.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/bld026_dgcnn.png" alt="BLD026, DGCNN semantic segmentation prediction" loading="lazy"></a></div>
     </div>
     <div class="teaser-legend fade-up" style="margin-top:24px">
       <span class="tl-item"><span class="tl-dot" style="background:#FF2828"></span>Wall</span>
@@ -999,6 +1001,86 @@
       <span class="tl-item"><span class="tl-dot" style="background:#A0A0A0"></span>Other</span>
       <span class="tl-item"><span class="tl-dot" style="background:#4F0004"></span>Column</span>
       <span class="tl-item"><span class="tl-dot" style="background:#000000;border:1px solid #ccc"></span>Arch</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="section-head text-center fade-up" style="margin-top:64px">
+      <h3 class="section-title" style="font-size:1.6rem">Instance Segmentation</h3>
+      <p class="section-sub">Per-building instance predictions vs. ground truth on four test buildings, columns ordered best to worst · each instance drawn in an arbitrary distinct colour · click any tile to view full resolution</p>
+    </div>
+  </div>
+
+  <div class="qual-full fade-up">
+    <p class="bm-tbl-note" style="text-align:center;margin-bottom:14px"><strong>Learned methods</strong> — trained end-to-end from raw points, no semantics supplied</p>
+    <div class="qual-grid-inst cols4">
+      <div class="qual-head"></div>
+      <div class="qual-head">Ground Truth</div>
+      <div class="qual-head">SoftGroup</div>
+      <div class="qual-head">ISBNet</div>
+      <div class="qual-head">PointGroup</div>
+
+      <div class="qual-row-label">BLD005</div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld005_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld005_gt.png" alt="BLD005 ground-truth instances" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld005_softgroup.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld005_softgroup.png" alt="BLD005 SoftGroup instance segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld005_isbnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld005_isbnet.png" alt="BLD005 ISBNet instance segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld005_pointgroup.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld005_pointgroup.png" alt="BLD005 PointGroup instance segmentation prediction" loading="lazy"></a></div>
+
+      <div class="qual-row-label">BLD017</div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld017_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld017_gt.png" alt="BLD017 ground-truth instances" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld017_softgroup.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld017_softgroup.png" alt="BLD017 SoftGroup instance segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld017_isbnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld017_isbnet.png" alt="BLD017 ISBNet instance segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld017_pointgroup.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld017_pointgroup.png" alt="BLD017 PointGroup instance segmentation prediction" loading="lazy"></a></div>
+
+      <div class="qual-row-label">BLD021</div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld021_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld021_gt.png" alt="BLD021 ground-truth instances" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld021_softgroup.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld021_softgroup.png" alt="BLD021 SoftGroup instance segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld021_isbnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld021_isbnet.png" alt="BLD021 ISBNet instance segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld021_pointgroup.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld021_pointgroup.png" alt="BLD021 PointGroup instance segmentation prediction" loading="lazy"></a></div>
+
+      <div class="qual-row-label">BLD026</div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld026_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld026_gt.png" alt="BLD026 ground-truth instances" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld026_softgroup.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld026_softgroup.png" alt="BLD026 SoftGroup instance segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld026_isbnet.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld026_isbnet.png" alt="BLD026 ISBNet instance segmentation prediction" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld026_pointgroup.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld026_pointgroup.png" alt="BLD026 PointGroup instance segmentation prediction" loading="lazy"></a></div>
+    </div>
+
+    <p class="bm-tbl-note" style="text-align:center;margin:36px 0 14px"><strong>Geometry clustering given ground-truth semantics</strong> — an oracle-semantic baseline: each point's class is supplied, isolating instance separation</p>
+    <div class="qual-grid-inst cols5">
+      <div class="qual-head"></div>
+      <div class="qual-head">Ground Truth</div>
+      <div class="qual-head">HDBSCAN</div>
+      <div class="qual-head">DBSCAN</div>
+      <div class="qual-head">Mean Shift</div>
+      <div class="qual-head">K-Means</div>
+
+      <div class="qual-row-label">BLD005</div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld005_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld005_gt.png" alt="BLD005 ground-truth instances" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld005_hdbscan.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld005_hdbscan.png" alt="BLD005 HDBSCAN clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld005_dbscan.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld005_dbscan.png" alt="BLD005 DBSCAN clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld005_meanshift.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld005_meanshift.png" alt="BLD005 Mean Shift clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld005_kmeans.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld005_kmeans.png" alt="BLD005 K-Means clustering given ground-truth semantics" loading="lazy"></a></div>
+
+      <div class="qual-row-label">BLD017</div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld017_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld017_gt.png" alt="BLD017 ground-truth instances" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld017_hdbscan.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld017_hdbscan.png" alt="BLD017 HDBSCAN clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld017_dbscan.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld017_dbscan.png" alt="BLD017 DBSCAN clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld017_meanshift.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld017_meanshift.png" alt="BLD017 Mean Shift clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld017_kmeans.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld017_kmeans.png" alt="BLD017 K-Means clustering given ground-truth semantics" loading="lazy"></a></div>
+
+      <div class="qual-row-label">BLD021</div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld021_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld021_gt.png" alt="BLD021 ground-truth instances" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld021_hdbscan.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld021_hdbscan.png" alt="BLD021 HDBSCAN clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld021_dbscan.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld021_dbscan.png" alt="BLD021 DBSCAN clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld021_meanshift.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld021_meanshift.png" alt="BLD021 Mean Shift clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld021_kmeans.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld021_kmeans.png" alt="BLD021 K-Means clustering given ground-truth semantics" loading="lazy"></a></div>
+
+      <div class="qual-row-label">BLD026</div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld026_gt.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld026_gt.png" alt="BLD026 ground-truth instances" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld026_hdbscan.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld026_hdbscan.png" alt="BLD026 HDBSCAN clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld026_dbscan.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld026_dbscan.png" alt="BLD026 DBSCAN clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld026_meanshift.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld026_meanshift.png" alt="BLD026 Mean Shift clustering given ground-truth semantics" loading="lazy"></a></div>
+      <div class="qual-cell"><a href="assets/images/qualitative/instance/bld026_kmeans.png" target="_blank" rel="noopener"><img src="assets/images/qualitative/instance/bld026_kmeans.png" alt="BLD026 K-Means clustering given ground-truth semantics" loading="lazy"></a></div>
     </div>
   </div>
 </section>

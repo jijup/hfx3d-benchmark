@@ -552,6 +552,26 @@ footer { background: var(--hero-bg); border-top: 1px solid rgba(255,255,255,.06)
   .qual-cell img { height: clamp(48px, 11vw, 100px); }
 }
 
+/* Instance qualitative grids: individual tiles in the same framed look as .qual-grid,
+   but fewer columns and natural aspect (pre-rendered wide views, so no object-fit crop). */
+.qual-grid-inst {
+  display: grid; margin: 0 auto;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); overflow: hidden;
+}
+.qual-grid-inst.cols4 { grid-template-columns: 84px repeat(4, 1fr); max-width: 960px; }
+.qual-grid-inst.cols5 { grid-template-columns: 84px repeat(5, 1fr); max-width: 1100px; }
+.qual-grid-inst .qual-cell img { width: 100%; height: auto; object-fit: contain; }
+.qual-grid-inst.cols4 .qual-cell:nth-child(5n+2) { border-left: none; }
+.qual-grid-inst.cols5 .qual-cell:nth-child(6n+2) { border-left: none; }
+.qual-grid-inst.cols4 > div:nth-last-child(-n+5) { border-bottom: none; }
+.qual-grid-inst.cols5 > div:nth-last-child(-n+6) { border-bottom: none; }
+@media(max-width: 768px) {
+  .qual-grid-inst.cols4 { grid-template-columns: 44px repeat(4, 1fr); }
+  .qual-grid-inst.cols5 { grid-template-columns: 44px repeat(5, 1fr); }
+  .qual-grid-inst .qual-head, .qual-grid-inst .qual-row-label { font-size: .56rem; padding: 6px 2px; letter-spacing: 0; }
+}
+
 /* RGB + Semantic annotation gallery */
 .annot-grid {
   display: grid;
