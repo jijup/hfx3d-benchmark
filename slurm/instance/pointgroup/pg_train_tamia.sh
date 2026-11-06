@@ -18,7 +18,7 @@
 
 R=/scratch/abdiaziz/hfx3d/fresh/pointgroup/Pointcept
 CFG=configs/hfx3d/insseg-pointgroup-v1m1-0-spunet-fresh.py
-SIF=/scratch/abdiaziz/hfx3d/containers/pointcept.sif
+SIF=${HFX3D_CONTAINER:-/scratch/abdiaziz/hfx3d/containers/pointcept.sif}
 SEED=${SEED:-42}   # extra seeds: sbatch --export=ALL,SEED=43 ...
 EXP=$R/exp/pg_fresh_s$SEED
 echo "Job: $SLURM_JOB_ID  Node: $SLURMD_NODENAME  Started: $(date)"

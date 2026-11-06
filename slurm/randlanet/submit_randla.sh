@@ -15,4 +15,4 @@ export CUDA_VISIBLE_DEVICES=0
 
 mkdir -p /home/a/abdiaziz/RandLA-Net/logs
 
-apptainer exec --nv --cleanenv   --bind /home/a/abdiaziz:/home/a/abdiaziz   --bind /project/6118401/abdiaziz:/project/6118401/abdiaziz   /home/a/abdiaziz/pointcept.sif bash -lc   'cd /home/a/abdiaziz/RandLA-Net &&    export PYTHONNOUSERSITE=1 &&    export OMP_NUM_THREADS=4 &&    export CUDA_VISIBLE_DEVICES=0 &&    python main_HFX3D.py      --log_dir output_hfx3d      --max_epoch 200      --batch_size 4      --data_root "${HFX3D_DATA_ROOT:-/project/6118401/abdiaziz/data/HFX3D_Splits}"      --gpus 1      --seed 42'
+apptainer exec --nv --cleanenv   --bind /home/a/abdiaziz:/home/a/abdiaziz   --bind /project/6118401/abdiaziz:/project/6118401/abdiaziz   ${HFX3D_CONTAINER:-/home/a/abdiaziz/pointcept.sif} bash -lc   'cd /home/a/abdiaziz/RandLA-Net &&    export PYTHONNOUSERSITE=1 &&    export OMP_NUM_THREADS=4 &&    export CUDA_VISIBLE_DEVICES=0 &&    python main_HFX3D.py      --log_dir output_hfx3d      --max_epoch 200      --batch_size 4      --data_root "${HFX3D_DATA_ROOT:-/project/6118401/abdiaziz/data/HFX3D_Splits}"      --gpus 1      --seed 42'

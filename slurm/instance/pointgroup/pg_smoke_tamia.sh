@@ -16,8 +16,8 @@
 
 R=/scratch/abdiaziz/hfx3d/fresh/pointgroup/Pointcept
 CFG=configs/hfx3d/insseg-pointgroup-v1m1-0-spunet-fresh.py
-SIF=/scratch/abdiaziz/hfx3d/containers/pointcept.sif
-DATA=/scratch/abdiaziz/hfx3d/fresh/data/HFX3D_Instance
+SIF=${HFX3D_CONTAINER:-/scratch/abdiaziz/hfx3d/containers/pointcept.sif}
+DATA=${HFX3D_DATA_ROOT:-/scratch/abdiaziz/hfx3d/fresh/data/HFX3D_Instance}
 EXP=$R/exp/pg_fresh_smoke
 echo "Job: $SLURM_JOB_ID  Node: $SLURMD_NODENAME  Started: $(date)"
 _o=$-; set +u; type module >/dev/null 2>&1 || source /etc/profile.d/z-00-computecanada.sh   # batch shells may lack the module env (nounset off for cvmfs/Lmod)

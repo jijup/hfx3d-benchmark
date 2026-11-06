@@ -282,7 +282,7 @@ sbatch slurm/dgcnn/submit_dgcnn.sh      # DGCNN       (~15 min, 200 epochs)
 sbatch slurm/randlanet/submit_randla.sh # RandLA-Net  (~24h, 200 epochs)
 ```
 
-Set `HFX3D_DATA_ROOT` to your `HFX3D_Splits/` path before training; all dataset loaders read this env var.
+Set `HFX3D_DATA_ROOT` to your `HFX3D_Splits/` path before training; all dataset loaders read this env var. The scripts' `#SBATCH --account` is our Alliance allocation — you don't need it: override per job with `sbatch --account=<your-account> …`. See [Adapting to your environment](docs/REPRODUCTION.md#adapting-to-your-environment) for the full list (account, data path, container, GPUs).
 
 ### Framework Repos
 

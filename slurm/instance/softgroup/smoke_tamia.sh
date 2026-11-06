@@ -11,7 +11,7 @@
 # eval of one val building). Run: sbatch slurm/smoke_tamia.sh  (from the repo root)
 ROOT=/scratch/abdiaziz/hfx3d/fresh/softgroup
 REPO=$ROOT/SoftGroup
-SIF=/scratch/abdiaziz/hfx3d/containers/pointcept.sif
+SIF=${HFX3D_CONTAINER:-/scratch/abdiaziz/hfx3d/containers/pointcept.sif}
 WD=$ROOT/work_dirs/smoke_$SLURM_JOB_ID
 LOG=$ROOT/logs/smoke_$SLURM_JOB_ID
 mkdir -p $WD $LOG

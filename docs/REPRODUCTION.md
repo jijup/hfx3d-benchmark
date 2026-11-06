@@ -1,14 +1,36 @@
 # Reproducing Benchmark Results
 
-All experiments run on the Tamia cluster (`tamia.alliancecan.ca`) using SLURM + Apptainer.
+The committed SLURM scripts are the **exact** runs from the Alliance Canada
+**Tamia** cluster (`tamia.alliancecan.ca`), using SLURM + Apptainer. They are
+published as-run for transparency; to run on your own cluster, change the few
+environment-specific values below. The as-run values stay in the scripts as
+defaults/examples.
+
+## Adapting to your environment
+
+- **SLURM account** — the scripts declare `#SBATCH --account=aip-jijup`
+  (semantic) or `def-jijup_gpu` (instance). You do **not** need our account:
+  override per submission with `sbatch --account=<your-account> <script>.sh`
+  (the command-line value wins over the directive), or edit the
+  `#SBATCH --account` line.
+- **Data path** — `export HFX3D_DATA_ROOT=/path/to/HFX3D_Splits`; the scripts
+  fall back to our path if it is unset. The split holds per-building `.h5`
+  files in `train/`, `val/`, and `test/` subdirs.
+- **Container** — an Apptainer/Singularity `.sif` with PyTorch 2.4.1, CUDA 12.1,
+  h5py, scipy and torch_geometric (build from the
+  [Pointcept image](https://github.com/Pointcept/Pointcept?tab=readme-ov-file#docker-image)).
+  All SLURM scripts read `HFX3D_CONTAINER` (falling back to our path if unset):
+  `export HFX3D_CONTAINER=/path/to/pointcept.sif`.
+- **Paths / bind mounts** — the `<user>`, `<pi>`, and `<...-dir>` placeholders in
+  the commands below are yours to fill in.
+- **GPUs / partition** — we used NVIDIA H100 (PTv2/PTv3 on 2 GPUs, all others on
+  1); adjust `--gpus-per-node` and the partition for your cluster.
 
 ## Prerequisites
 
-- Alliance Canada account with a resource allocation (the committed scripts use account `aip-jijup`)
-- Apptainer SIF at `/home/<user>/pointcept.sif` (PyTorch 2.4.1, CUDA 12.1, h5py, scipy, torch_geometric)
-  - Build from: https://github.com/Pointcept/Pointcept?tab=readme-ov-file#docker-image
-- Dataset at `/project/<rap>/<user>/data/HFX3D_Splits/` with `train/`, `val/`, and `test/` subdirs
-- Set `HFX3D_DATA_ROOT` to that path (the SLURM scripts fall back to the committed tamia path if unset)
+- A SLURM cluster with a GPU allocation (we used Alliance Canada / Tamia).
+- The Apptainer `.sif` described above.
+- The dataset at your `HFX3D_DATA_ROOT`, with `train/`, `val/`, `test/` subdirs.
 
 ## PTv2m2 and PTv3 (Pointcept)
 

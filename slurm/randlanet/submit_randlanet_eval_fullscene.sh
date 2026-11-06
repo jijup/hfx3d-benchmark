@@ -12,7 +12,7 @@ module load apptainer
 apptainer exec --nv --cleanenv \
   --bind /home/a/abdiaziz:/home/a/abdiaziz \
   --bind /project/6118401/abdiaziz/data/HFX3D_Splits:/project/6118401/abdiaziz/data/HFX3D_Splits \
-  /home/a/abdiaziz/pointcept.sif bash -lc \
+  ${HFX3D_CONTAINER:-/home/a/abdiaziz/pointcept.sif} bash -lc \
   'cd ~/RandLA-Net && \
    export PYTHONNOUSERSITE=1 && \
    export OMP_NUM_THREADS=4 && \

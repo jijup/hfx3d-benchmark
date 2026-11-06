@@ -26,21 +26,21 @@ ls ${WRAPPERS_DIR}/cpp_subsampling/*.so 2>/dev/null && echo "cpp_subsampling OK"
     echo "Compiling cpp_subsampling..."
     apptainer exec --nv --cleanenv \
         --bind /home/a/abdiaziz:/home/a/abdiaziz \
-        /home/a/abdiaziz/pointcept.sif bash -lc \
+        ${HFX3D_CONTAINER:-/home/a/abdiaziz/pointcept.sif} bash -lc \
         "cd ${WRAPPERS_DIR}/cpp_subsampling && export PYTHONNOUSERSITE=1 && python setup.py build_ext --inplace"
 }
 ls ${WRAPPERS_DIR}/cpp_neighbors/*.so 2>/dev/null && echo "cpp_neighbors OK" || {
     echo "Compiling cpp_neighbors..."
     apptainer exec --nv --cleanenv \
         --bind /home/a/abdiaziz:/home/a/abdiaziz \
-        /home/a/abdiaziz/pointcept.sif bash -lc \
+        ${HFX3D_CONTAINER:-/home/a/abdiaziz/pointcept.sif} bash -lc \
         "cd ${WRAPPERS_DIR}/cpp_neighbors && export PYTHONNOUSERSITE=1 && python setup.py build_ext --inplace"
 }
 
 apptainer exec --nv --cleanenv \
   --bind /home/a/abdiaziz:/home/a/abdiaziz \
   --bind /project/6118401/abdiaziz:/project/6118401/abdiaziz \
-  /home/a/abdiaziz/pointcept.sif bash -lc \
+  ${HFX3D_CONTAINER:-/home/a/abdiaziz/pointcept.sif} bash -lc \
   'cd /home/a/abdiaziz/KPConv && \
    export PYTHONNOUSERSITE=1 && \
    export PYTHONPATH=$PWD && \

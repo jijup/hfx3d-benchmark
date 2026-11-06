@@ -1,9 +1,9 @@
 # Sourced by the ISBNet SLURM scripts.
 ROOT=/scratch/abdiaziz/hfx3d/fresh/isbnet
 CODE=$ROOT/ISBNet
-SIF=$ROOT/containers/killarney_pointcept.sif   # ISBNet ops were compiled against this image
+SIF=${HFX3D_CONTAINER:-$ROOT/containers/killarney_pointcept.sif}   # ISBNet ops were compiled against this image
 TRAIN_NPY=$ROOT/data/hfx3d_isbnet               # converter output (train split, .npy)
-H5_ROOT=/scratch/abdiaziz/hfx3d/fresh/data/HFX3D_Instance   # released HFX3D_Instance .h5 (GT + eval input)
+H5_ROOT=${HFX3D_DATA_ROOT:-/scratch/abdiaziz/hfx3d/fresh/data/HFX3D_Instance}   # released HFX3D_Instance .h5 (GT + eval input)
 RUN="bash $CODE/slurm/run_in_container.sh"      # usage: $RUN python3 tools/train.py ...
 
 stage_train_data () {   # copy the train .npy set to node-local disk

@@ -14,7 +14,7 @@
 #   STEP=12600 SPLIT=test sbatch --export=ALL slurm/eval_tamia.sh
 ROOT=/scratch/abdiaziz/hfx3d/fresh/softgroup
 REPO=$ROOT/SoftGroup
-SIF=/scratch/abdiaziz/hfx3d/containers/pointcept.sif
+SIF=${HFX3D_CONTAINER:-/scratch/abdiaziz/hfx3d/containers/pointcept.sif}
 SEED=${SEED:-42}   # seeds 43/44: sbatch --export=ALL,SEED=43,STEP=...,SPLIT=test
 WD=$ROOT/work_dirs/hfx3d_fresh_s$SEED
 : ${STEP:?set STEP (global step of the checkpoint)} ${SPLIT:=test}

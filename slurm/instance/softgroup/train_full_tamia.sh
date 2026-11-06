@@ -19,7 +19,7 @@
 # Val curve:   grep -h "Full-scene val" $WD/eval_val/step_*/eval.log
 ROOT=/scratch/abdiaziz/hfx3d/fresh/softgroup
 REPO=$ROOT/SoftGroup
-SIF=/scratch/abdiaziz/hfx3d/containers/pointcept.sif
+SIF=${HFX3D_CONTAINER:-/scratch/abdiaziz/hfx3d/containers/pointcept.sif}
 SEED=${SEED:-42}   # extra seeds: sbatch --export=ALL,SEED=43 ...
 WD=$ROOT/work_dirs/hfx3d_fresh_s$SEED
 CFG1=configs/softgroup/softgroup_hfx3d_fresh_backbone.yaml; [ $SEED != 42 ] && CFG1=configs/softgroup/softgroup_hfx3d_fresh_backbone_s$SEED.yaml
