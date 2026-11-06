@@ -29,9 +29,9 @@ assets/videos/
 # Stray dependency freeze (see requirements.txt)
 instance_reqs.text
 
-# Not yet ready for release
-tools/
-static/
+# Not yet ready for release (root-level only; nested model tools/ are released)
+/tools/
+/static/
 inspect_hdf5.py
 utils/create_viz.py
 utils/VIZ_README.md
@@ -41,3 +41,72 @@ results/functional_labels/
 results/functional_labels_csv/
 **/functional_labels/
 **/functional_labels_csv/
+
+# --- Local working-tree artifacts (regenerable / local-only; never commit) ---
+# WSL virtualenv
+.venv-wsl/
+# Vendored external libs (have their own repos)
+third_party/
+# Large local dataset / viz copies kept on disk only
+HFX3D_Instance+Semantic/
+functional_vis/
+# Superpoint experiment code + outputs (not part of the release)
+preprocessing/superpoints/
+slurm/superpoints/
+# Undo/backup dirs produced by one-off fix scripts
+scripts/*undo*/
+# QA / figure artifacts deleted from the tree (keep ignored so they don't reappear)
+superpoint_las/
+superpoint_qa/
+stairs_seam_qa/
+stairs_context_qa/
+stairs_merge_preview/
+paper_figures/
+# Root-level one-off analysis dumps
+audit_full.json
+audit_repacked.json
+audit_report.json
+class_consistency.json
+desync_abc_current.json
+instance_size_analysis.json
+sp_explore.json
+tile_size_analysis.json
+voxel_budget_analysis.json
+
+# Local-only intermediate/analysis/figure scripts — kept on disk, NOT released
+data/train_test_split_analyzer.py
+preprocessing/analyse_dataset.py
+preprocessing/build_release_h5.py
+scripts/analyze_instance_size_threshold.py
+scripts/analyze_tile_border_cuts.py
+scripts/analyze_voxel_budget.py
+scripts/apply_min_instance_size.py
+scripts/audit_desync_abc.py
+scripts/audit_instance_readiness.py
+scripts/audit_instances_full.py
+scripts/audit_repacked.py
+scripts/check_stairs.py
+scripts/class_consistency_review.py
+scripts/export_functional_viewer.py
+scripts/export_rgb_sem_inst_las.py
+scripts/export_size_bands_las.py
+scripts/export_stairs_context_las.py
+scripts/export_stairs_other_seam_las.py
+scripts/export_superpoint_las.py
+scripts/export_superpoint_quality_las.py
+scripts/fix_desync_categoryA.py
+scripts/fix_desync_majority.py
+scripts/fix_desync_splits.py
+scripts/inspect_h5_contents.py
+scripts/make_crossdomain_perclass_heatmap.py
+scripts/make_qual_montage.py
+scripts/make_rgb_and_labels.py
+scripts/make_teaser_fig1.py
+scripts/make_view_clouds.py
+scripts/merge_railings_into_stairs.py
+scripts/normalize_ignore.py
+scripts/stairs_other_confusion.py
+scripts/veg_stairs_breakdown.py
+scripts/visualize_functional_attributes.py
+utils/point_cloud_file_analyzer.py
+utils/review_las_files.py

@@ -1,0 +1,39 @@
+name: Supabase keep-alive
+
+# Pings the visitor worker daily so the free-tier Supabase project never hits
+# 7 idle days and auto-pauses (which would blank the visitor map).
+
+on:
+  schedule:
+    - cron: '0 7 * * *'   # daily 07:00 UTC — well under the 7-day pause window
+  workflow_dispatch: {}
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping visitors endpoint (warms Supabase via the worker)
+        run: |
+          URL="https://hfx3d-visits.zazukhan58.workers.dev/visitors"
+          # body is only echoed on failure — Action logs are public
+          resp="$(curl -sS -w $'\n%{http_code}' --max-time 30 "$URL")"
+          body="$(printf '%s' "$resp" | head -n -1)"
+          code="$(printf '%s' "$resp" | tail -n 1)"
+          echo "HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::Endpoint returned HTTP $code — Supabase may be paused."
+            echo "Body: $body"
+            exit 1
+          fi
+          if ! printf '%s' "$body" | grep -q '"total"'; then
+            echo "::error::Response missing \"total\" — worker or DB unhealthy."
+            echo "Body: $body"
+            exit 1
+          fi
+          total="$(printf '%s' "$body" | grep -o '"total":[0-9]*' | grep -o '[0-9]*')"
+          echo "OK — $total visitors currently recorded."
