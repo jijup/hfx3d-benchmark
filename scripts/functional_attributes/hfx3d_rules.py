@@ -1,18 +1,13 @@
-"""Simple Geometry-Guided Functional Refinement rules.
+"""Geometry- and context-guided functional attribute rules.
 
-Non-learning pipeline. For every instance I and every applicable attribute a:
+For every instance I and applicable attribute a:
 
-    P = semantic prior (purity-adjusted, neutral 0.5)
+    P = fixed class-attribute semantic prior from the configuration
     G = geometry evidence
     C = graph-context evidence
     confidence = odds_fusion(P, G, C)
 
-All evidence is continuous, in [0,1], with 0.5 = neutral/unknown. Missing
-evidence (no neighbor found, too few points, unreliable measurement) returns
-0.5 and is never treated as strong negative evidence. There are no
-per-class/per-attribute fusion weights, no binary thresholds, and no
-condition-specific threshold banks. A small set of shared continuous
-normalization scales lives in ``scoring``.
+All evidence is continuous in [0,1], with 0.5 as neutral evidence.
 """
 from __future__ import annotations
 
@@ -493,13 +488,14 @@ def build_instance_graph(
 
 
 # ---------------------------------------------------------------------------
-# Semantic prior (continuous purity adjustment toward neutral 0.5)
+# Configured class-attribute semantic prior
 # ---------------------------------------------------------------------------
 
 
-def semantic_prior(semantic_class: str, attribute: str, semantic_purity: float, config: dict[str, Any]) -> float:
+def semantic_prior(semantic_class: str, attribute: str, config: dict[str, Any]) -> float:
+    """Return the configured class-attribute prior."""
     base = float(config["semantic_priors"]["by_class"][semantic_class][attribute])
-    return float(_clip01(0.5 + semantic_purity * (base - 0.5)))
+    return float(_clip01(base))
 
 
 # ---------------------------------------------------------------------------
@@ -1035,26 +1031,30 @@ def evaluate_window_solar_shading(record, geom, ctx, config):
 
 
 def evaluate_window_ventilation(record, geom, ctx, config):
-    # Explicit functional dependency: ventilation evidence is the final
-    # operable confidence of the SAME window instance (G), with neutral
-    # context. operable > 0.5 strengthens the ventilation prior, < 0.5
-    # weakens it, = 0.5 leaves it unchanged. No airflow claim is made from
-    # static XYZ.
+    # Explicit functional dependency: ventilation reuses the prior-neutral
+    # operable evidence of the SAME window instance (G), with neutral context.
+    # This keeps evidence independent of the semantic prior: changing the
+    # operable prior must not silently change the ventilation evidence.
     operable = _window_operable_evidence(ctx, record.instance_id)
     if operable is None:
         evidence = _base_evidence(record, ctx, {"dependency_attribute": "operable"}, "operable evidence unavailable")
         return _result(NEUTRAL, NEUTRAL, evidence, "operable_result_missing", False)
-    operable_confidence = float(operable["confidence"])
+    operable_evidence = odds_fusion(
+        NEUTRAL,
+        float(operable["geometry_score"]),
+        float(operable["context_score"]),
+        float(config["numerical"]["odds_epsilon"]),
+    )
     measured = {
         "dependency_attribute": "operable",
-        "operable_confidence": operable_confidence,
+        "operable_prior_neutral_evidence": operable_evidence,
         "operable_geometry_score": operable.get("geometry_score"),
         "operable_context_score": operable.get("context_score"),
     }
     evidence = _base_evidence(record, ctx, measured,
-                              "ventilation derived from the same window instance final operable confidence")
+                              "ventilation derived from the same window instance prior-neutral operable evidence")
     informative = bool(operable.get("informative", False))
-    return _result(operable_confidence, NEUTRAL, evidence, "depends_on_operable", informative)
+    return _result(operable_evidence, NEUTRAL, evidence, "depends_on_operable", informative)
 
 
 def evaluate_door_exterior_wall(record, geom, ctx, config):
@@ -1644,14 +1644,14 @@ def assign_building(
         by_attribute = ontology.rules_by_class_attribute.get(record.semantic_class, {})
         for attribute in _dependency_order(by_attribute):
             attribute_rules = by_attribute[attribute]
-            semantic_stable = all(rule.condition == "always" for rule in attribute_rules)
             column = ontology.attribute_index[attribute]
             applicable[row, column] = 1
             rule_payloads: list[dict[str, Any]] = []
             for rule in attribute_rules:
-                prior_value = (
-                    semantic_prior(record.semantic_class, rule.attribute, record.semantic_purity, runtime_config)
-                    if semantic_stable else NEUTRAL
+                # Refine the configured prior with geometry and context.
+                # ``always`` evaluators return G=C=0.5 and preserve the prior.
+                prior_value = semantic_prior(
+                    record.semantic_class, rule.attribute, runtime_config
                 )
                 evaluator = CONDITION_EVALUATORS[rule.condition]
                 evaluated = evaluator(record, geometry[record.instance_id], ctx, runtime_config)

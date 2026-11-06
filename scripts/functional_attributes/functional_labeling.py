@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""HFX3D functional attribute refinement - main entry point.
-
-Runs the non-learning refinement pipeline over building point clouds:
-semantic prior + geometry evidence + graph-context evidence are fused with a
-parameter-free odds fusion into a 15-dimensional functional-attribute
-confidence vector per instance. Results are written as H5 and CSV files.
+"""Assign functional attributes and write per-building H5 and CSV outputs.
 
 Run from the repository root:
 

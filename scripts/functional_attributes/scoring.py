@@ -1,24 +1,12 @@
-"""Unified scoring primitives for the simple refinement method.
+"""Scoring and odds-fusion utilities.
 
-Conventions
------------
-* Every score is in [0, 1].
-* 0.5 is the neutral / unknown value. Missing or unreliable evidence returns 0.5
-  and must never be interpreted as strong negative evidence.
-* Distance-based scores are normalised by local point spacing (scale free).
-* Scale-dependent features use percentile-rank normalisation inside the same
-  building and semantic class; a class with a single instance returns neutral.
-
-Fusion
-------
-Single, parameter-free odds fusion used by every condition:
+Scores lie in [0,1], and 0.5 represents neutral evidence. Fusion uses:
 
     positive = P * G * C
     negative = (1-P) * (1-G) * (1-C)
     conf     = positive / (positive + negative)
 
-With G = C = 0.5 this reduces exactly to conf = P, which is how
-``condition: always`` (pure semantic prior) is handled without a special path.
+With G=C=0.5, the result equals P.
 """
 from __future__ import annotations
 
