@@ -96,7 +96,7 @@ The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon hand
 | RGB | `uint8`, 0–255 (raw) |
 | Intensity | `uint16`, raw |
 
-> The released HDF5 stores **raw** values. The benchmark's input protocol normalizes them at load — xyz mean-centred per building, RGB scaled to [0, 1], intensity normalized by training-split p1/p99 — to form the 7-channel model input.
+> The released HDF5 stores **raw** values. The benchmark loaders expect the normalized input, so run [`preprocessing/normalize_hdf5.py`](preprocessing/normalize_hdf5.py) once after downloading — it mean-centres xyz per building, scales RGB to [0, 1], and normalizes intensity by the training-split p1/p99. See [Download](#download).
 
 <br>
 
@@ -124,9 +124,12 @@ The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon hand
 
 📦 The dataset is on **[Hugging Face](https://huggingface.co/datasets/SMU-GSCLab/hfx3d-benchmark)** — 26 raw per-building HDF5 files (xyz / rgb / intensity + semantic, instance, and functional labels), with a `MANIFEST.csv`, `DATASHEET.md`, and `ontology_class_to_attributes.json`. Click **Request Access** there (gated); see [Contact](#contact) with any questions.
 
+The released HDF5 is **raw**; the loaders expect the normalized input, so run `normalize_hdf5.py` once after downloading:
+
 ```bash
-huggingface-cli download SMU-GSCLab/hfx3d-benchmark --repo-type dataset --local-dir HFX3D_Splits
-export HFX3D_DATA_ROOT=/path/to/HFX3D_Splits   # loaders normalize at load (see Dataset)
+huggingface-cli download SMU-GSCLab/hfx3d-benchmark --repo-type dataset --local-dir HFX3D_raw
+python preprocessing/normalize_hdf5.py HFX3D_raw HFX3D_Splits   # mean-centre xyz, rgb→[0,1], intensity p1/p99
+export HFX3D_DATA_ROOT=/path/to/HFX3D_Splits
 ```
 
 ---
@@ -313,6 +316,8 @@ hfx3d-benchmark/
 │   ├── run_all_baselines.sh
 │   └── evaluate_all_baselines.sh
 ├── scripts/             # instance + classification annotation pipeline (see scripts/README.md)
+├── preprocessing/
+│   └── normalize_hdf5.py  # raw released HDF5 → the normalized input the loaders expect
 ├── configs/
 │   ├── palette.py       # single source of truth for all class/split colours
 │   ├── label_map.json
