@@ -1,5 +1,6 @@
 """
 RandLA-Net training / evaluation entry point for HFX3D.
+Adapted from QingyongHu/RandLA-Net (https://github.com/QingyongHu/RandLA-Net).
 
 Usage
 -----

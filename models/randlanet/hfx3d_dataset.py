@@ -1,5 +1,6 @@
 """
 HFX3D dataset adapter for RandLA-Net (PyTorch).
+Adapted from QingyongHu/RandLA-Net (https://github.com/QingyongHu/RandLA-Net).
 
 Each building is an HDF5 file with:
   point_cloud/xyz        (N, 3) float32  -- mean-centred, metric scale preserved

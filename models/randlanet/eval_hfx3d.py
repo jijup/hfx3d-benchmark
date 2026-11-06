@@ -1,5 +1,6 @@
 """
 Standalone full-building evaluation for RandLA-Net on HFX3D.
+Adapted from QingyongHu/RandLA-Net (https://github.com/QingyongHu/RandLA-Net).
 
 Uses 200 crops per building (vs 20 during training) for stable coverage.
 Loads checkpoint_best.tar and reports OA/mP/mR/mF1/mIoU + per-class.

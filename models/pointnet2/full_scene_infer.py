@@ -1,5 +1,6 @@
 """
 Full-scene inference utility for DGCNN and PointNet++ on HFX3D.
+Possibility-guided KNN crop sampling follows RandLA-Net (QingyongHu/RandLA-Net).
 
 Provides possibility-based KNN crop sampling (RandLA-Net style) that
 guarantees 100% point coverage before yielding predictions, and a

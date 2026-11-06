@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Pipeline validation for DGCNN full-scene inference on HFX3D.
+Adapted from AnTao97/dgcnn.pytorch (https://github.com/AnTao97/dgcnn.pytorch).
 
 Uses randomly-initialised weights — checks pipeline mechanics, not accuracy.
 Runs on HFX_BLD015 (smallest test building, ~1.9M pts).

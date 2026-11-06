@@ -1,3 +1,4 @@
+# PTv2 smoke config. Adapted from Pointcept (https://github.com/Pointcept/Pointcept).
 _base_ = ["semseg-pt-v2m2-0-base.py"]
 
 # Smoke test: verify pipeline end-to-end

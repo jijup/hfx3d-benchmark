@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Smoke-test eval_fullscene_hfx3d.py pipeline on HFX_BLD015 (smallest test building, ~1.9M pts).
+Adapted from QingyongHu/RandLA-Net (https://github.com/QingyongHu/RandLA-Net).
 
 Uses randomly-initialised weights — correctness of predictions is not the goal;
 correctness of the pipeline mechanics is.

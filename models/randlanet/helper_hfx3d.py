@@ -1,5 +1,6 @@
 """
 HFX3D helper: config + data-processing utilities for RandLA-Net.
+Adapted from QingyongHu/RandLA-Net (https://github.com/QingyongHu/RandLA-Net).
 
 Avoids the C++ nearest_neighbors and cpp_subsampling extensions entirely.
 Uses scipy.spatial.cKDTree for KNN and a pure-numpy grid subsampling.

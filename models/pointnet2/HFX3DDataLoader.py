@@ -1,5 +1,6 @@
 """
 HFX3D Dataset Loader for PointNet++ semantic segmentation.
+Adapted from yanx27/Pointnet_Pointnet2_pytorch (https://github.com/yanx27/Pointnet_Pointnet2_pytorch).
 
 Dataset path: set via the HFX3D_DATA_ROOT env var (see repo README).
   train/  and  test/  subdirs, each with *.h5 files (one per building).

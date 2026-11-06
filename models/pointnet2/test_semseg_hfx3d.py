@@ -1,5 +1,6 @@
 """
 Full-scene test evaluation for PointNet / PointNet++ on HFX3D.
+Adapted from yanx27/Pointnet_Pointnet2_pytorch (https://github.com/yanx27/Pointnet_Pointnet2_pytorch).
 
 Uses possibility-based KNN inference (full_scene_infer.FullSceneEvaluator) to
 guarantee 100% point coverage per building before computing metrics.

@@ -1,5 +1,6 @@
 """
 Full-scene test evaluation for DGCNN on HFX3D.
+Adapted from AnTao97/dgcnn.pytorch (https://github.com/AnTao97/dgcnn.pytorch).
 
 Uses possibility-based KNN inference (full_scene_infer.FullSceneEvaluator) to
 guarantee 100% point coverage per building before computing metrics.

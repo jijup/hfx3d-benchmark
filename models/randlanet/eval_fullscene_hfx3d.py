@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 RandLA-Net full-scene benchmark inference for HFX3D.
+Adapted from QingyongHu/RandLA-Net (https://github.com/QingyongHu/RandLA-Net).
 
 Three clearly separated inference regimes
 -----------------------------------------
