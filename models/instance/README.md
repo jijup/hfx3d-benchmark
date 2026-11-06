@@ -125,6 +125,40 @@ are intentionally omitted (the paper reports seed 42, building-level only).
 
 ---
 
+## Geometry clustering baselines (oracle-semantic)
+
+A complementary diagnostic that clusters each thing class's points **given
+ground-truth semantics**, isolating instance separation from recognition. Code
+is in [`models/clustering/`](../clustering); the four estimators are
+scikit-learn's DBSCAN, HDBSCAN, Mean Shift, and K-Means.
+
+| Method | mAP | AP50 | AP25 |
+|--------|:---:|:----:|:----:|
+| HDBSCAN  | **0.2533** | **0.3430** | **0.4521** |
+| DBSCAN   | 0.2063 | 0.2725 | 0.3574 |
+| Mean Shift | 0.0310 | 0.0871 | 0.1059 |
+| K-Means  | 0.0201 | 0.0615 | 0.1793 |
+
+Each method has one scale parameter tuned on validation; the test split is then
+run once with it. Points are clustered on 5 cm voxels (mean 7-D feature per
+voxel) standardised with training-split statistics, so a given radius means the
+same physical distance in every building; every point takes its voxel's label
+(full resolution) and is scored with the same shared evaluator
+([`evaluation/insseg_eval_utils.py`](../../evaluation)) as the learned methods.
+
+**Files** ([`models/clustering/`](../clustering)):
+- `derive_cluster_hparams.py` — derive every hyperparameter from the training
+  split only (writes a JSON the evaluator reads)
+- `cluster_common.py` — shared voxelisation / standardisation helpers
+- `eval_cluster_hfx3d.py` — cluster one method on a split and score it
+- `select_best.py` — pick each method's scale parameter on validation
+
+**Run:** [`slurm/clustering/run_clustering_fir.sh`](../../slurm/clustering) chains
+derive → validation sweep → single test (CPU only; needs numpy, scipy,
+scikit-learn and h5py).
+
+---
+
 ## Reproducibility note
 
 The SLURM scripts under [`slurm/instance/`](../../slurm/instance) are the
