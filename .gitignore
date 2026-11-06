@@ -110,3 +110,5 @@ scripts/veg_stairs_breakdown.py
 scripts/visualize_functional_attributes.py
 utils/point_cloud_file_analyzer.py
 utils/review_las_files.py
+preprocessing/las_to_hdf5.py
+preprocessing/preprocess.py

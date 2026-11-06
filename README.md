@@ -16,10 +16,6 @@ A benchmark for **semantic segmentation, instance segmentation, and functional-a
 **26 buildings · ~492 M points · 12 semantic classes · 4 seasons · 5 neighbourhoods**<br>
 Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 
-<sub>Semantic, instance, and functional-attribute baselines are reported below.</sub>
-
-<br>
-
 [**🌐 Project Page**](https://jijup.github.io/hfx3d-benchmark/)
 
 <br>
@@ -83,7 +79,7 @@ Full-building point cloud fly-through animations, in **semantic** and **instance
 
 ## Dataset
 
-The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon handheld LiDAR, split at the building level: **18 train / 4 val / 4 test**. Each building is one LAS file; each point carries 7 attributes: `[x, y, z, r, g, b, intensity]`.
+The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon handheld LiDAR, split at the building level: **18 train / 4 val / 4 test**. Each building is one self-describing **HDF5** file carrying raw `[x, y, z, r, g, b, intensity]` plus per-point semantic and instance labels and per-instance functional attributes.
 
 **Capture diversity:**
 - **Seasons & lighting** — 6–8 months, all 4 seasons, day & night, snow/fog/sun
@@ -92,13 +88,15 @@ The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon hand
 
 | Property | Value |
 |----------|-------|
-| Buildings | 26 |
+| Buildings | 26 (one self-describing HDF5 each) |
 | Total points | ~492 M |
-| Classes | 12 |
+| Classes | 12 semantic · 15 functional attributes · 6,549 instances |
 | Split | 18 train / 4 val / 4 test (343.7M / 68.4M / 79.7M pts) |
-| Coordinates | Mean-centred per building, metric scale preserved |
-| RGB | \[0, 1\] (raw 16-bit ÷ 65 535) |
-| Intensity | \[0, 1\] (p1/p99 from training split) |
+| Coordinates | `float32`, raw scanner metres (local SLAM frame) |
+| RGB | `uint8`, 0–255 (raw) |
+| Intensity | `uint16`, raw |
+
+> The released HDF5 stores **raw** values. The benchmark's input protocol normalizes them at load — xyz mean-centred per building, RGB scaled to [0, 1], intensity normalized by training-split p1/p99 — to form the 7-channel model input.
 
 <br>
 
@@ -116,26 +114,6 @@ The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon hand
 
 <br>
 
-<br>
-
-<div align="center">
-<sub><b>Environmental diversity</b> — across seasons and lighting conditions</sub>
-<table>
-  <tr>
-    <td align="center"><img src="assets/cond_spring.png" width="100%" alt="Spring"/><br><sub>Spring</sub></td>
-    <td align="center"><img src="assets/cond_summer.png" width="100%" alt="Summer"/><br><sub>Summer</sub></td>
-    <td align="center"><img src="assets/cond_fall.png" width="100%" alt="Fall"/><br><sub>Fall</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="assets/cond_winter.png" width="100%" alt="Winter (snow)"/><br><sub>Winter (snow)</sub></td>
-    <td align="center"><img src="assets/cond_day.png" width="100%" alt="Daytime"/><br><sub>Daytime</sub></td>
-    <td align="center"><img src="assets/cond_night.png" width="100%" alt="Night-time"/><br><sub>Night-time</sub></td>
-  </tr>
-</table>
-</div>
-
-<br>
-
 - Building index and naming → [`docs/HFX3D_README.md`](docs/HFX3D_README.md)
 - 12-class taxonomy and imbalance notes → [`docs/LABEL_TAXONOMY.md`](docs/LABEL_TAXONOMY.md)
 - Split assignments and point counts → [`data/splits/SPLITS.md`](data/splits/SPLITS.md)
@@ -144,11 +122,11 @@ The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon hand
 
 ## Download
 
-📦 The dataset (per-building HDF5 files with the official normalization) is on **[Hugging Face](https://huggingface.co/datasets/SMU-GSCLab/hfx3d-benchmark)**. Click **Request Access** there (the dataset is gated); see [Contact](#contact) with any questions.
+📦 The dataset is on **[Hugging Face](https://huggingface.co/datasets/SMU-GSCLab/hfx3d-benchmark)** — 26 raw per-building HDF5 files (xyz / rgb / intensity + semantic, instance, and functional labels), with a `MANIFEST.csv`, `DATASHEET.md`, and `ontology_class_to_attributes.json`. Click **Request Access** there (gated); see [Contact](#contact) with any questions.
 
 ```bash
 huggingface-cli download SMU-GSCLab/hfx3d-benchmark --repo-type dataset --local-dir HFX3D_Splits
-export HFX3D_DATA_ROOT=/path/to/HFX3D_Splits
+export HFX3D_DATA_ROOT=/path/to/HFX3D_Splits   # loaders normalize at load (see Dataset)
 ```
 
 ---
@@ -272,13 +250,13 @@ Full setup instructions (framework cloning, file placement, cluster config) are 
 bash slurm/run_all_baselines.sh
 
 # Or individually
-sbatch slurm/kpconv/submit_kpconv.sh    # KPConv      (~24h, 200 epochs)
-sbatch slurm/pointnet2/submit_pn2.sh    # PointNet++  (~24h, 200 epochs)
-sbatch slurm/pointnet2/submit_pn.sh     # PointNet    (~24h, 200 epochs)
-sbatch slurm/pointcept/submit_ptv2.sh   # PTv2        (~24h, 200 epochs)
-sbatch slurm/pointcept/submit_ptv3.sh   # PTv3        (~24h, 200 epochs)
-sbatch slurm/dgcnn/submit_dgcnn.sh      # DGCNN       (~15 min, 200 epochs)
-sbatch slurm/randlanet/submit_randla.sh # RandLA-Net  (~24h, 200 epochs)
+sbatch slurm/kpconv/submit_kpconv.sh    # KPConv
+sbatch slurm/pointnet2/submit_pn2.sh    # PointNet++
+sbatch slurm/pointnet2/submit_pn.sh     # PointNet
+sbatch slurm/pointcept/submit_ptv2.sh   # PTv2
+sbatch slurm/pointcept/submit_ptv3.sh   # PTv3
+sbatch slurm/dgcnn/submit_dgcnn.sh      # DGCNN
+sbatch slurm/randlanet/submit_randla.sh # RandLA-Net
 ```
 
 Set `HFX3D_DATA_ROOT` to your `HFX3D_Splits/` path before training; all dataset loaders read this env var. The scripts' `#SBATCH --account` is our Alliance allocation — you don't need it: override per job with `sbatch --account=<your-account> …`. See [Adapting to your environment](docs/REPRODUCTION.md#adapting-to-your-environment) for the full list (account, data path, container, GPUs).
@@ -292,19 +270,6 @@ Set `HFX3D_DATA_ROOT` to your `HFX3D_Splits/` path before training; all dataset 
 | RandLA-Net | [QingyongHu/RandLA-Net](https://github.com/QingyongHu/RandLA-Net) |
 | PointNet / PointNet++ | [yanx27/Pointnet_Pointnet2_pytorch](https://github.com/yanx27/Pointnet_Pointnet2_pytorch) |
 | KPConv | [HuguesTHOMAS/KPConv-PyTorch](https://github.com/HuguesTHOMAS/KPConv-PyTorch) |
-
----
-
-## Preprocessing
-
-The distributed LAS files are already cleaned and labelled. To produce HDF5 training data:
-
-```bash
-# input_dir must contain train/ val/ test/ subdirs with .las files
-python preprocessing/las_to_hdf5.py <input_dir> <output_dir>
-```
-
-`las_to_hdf5.py` is two-pass: computes intensity p1/p99 from the training split first, then normalises all splits with those stats. `preprocess.py` is included for reference if adapting to a new raw dataset.
 
 ---
 
@@ -328,15 +293,6 @@ Full workflow, options, and the CloudCompare guide are in [`scripts/README.md`](
 
 ---
 
-## Infrastructure
-
-- **Cluster:** [Alliance Canada](https://docs.alliancecan.ca/wiki/Tamia) — `tamia.alliancecan.ca`
-- **GPUs:** NVIDIA H100 · a full 4-GPU node per job (tamia policy); PTv2/PTv3 use 2 GPUs, all other models 1
-- **Container:** Apptainer SIF (PyTorch 2.4.1, CUDA 12.1)
-- **Scheduler:** SLURM
-
----
-
 ## Repository Structure
 
 ```
@@ -357,10 +313,6 @@ hfx3d-benchmark/
 │   ├── run_all_baselines.sh
 │   └── evaluate_all_baselines.sh
 ├── scripts/             # instance + classification annotation pipeline (see scripts/README.md)
-├── preprocessing/
-│   ├── preprocess.py    # strip label-0 points, shift labels
-│   ├── las_to_hdf5.py   # LAS → HDF5 with official normalization
-│   └── analyse_dataset.py
 ├── configs/
 │   ├── palette.py       # single source of truth for all class/split colours
 │   ├── label_map.json
