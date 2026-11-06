@@ -1,0 +1,1800 @@
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/configs/hfx3d/isbnet_backbone_hfx3d.yaml new/ISBNet/configs/hfx3d/isbnet_backbone_hfx3d.yaml
+--- old/ISBNet/configs/hfx3d/isbnet_backbone_hfx3d.yaml	2026-08-14 15:51:29.000000000 -0300
++++ new/ISBNet/configs/hfx3d/isbnet_backbone_hfx3d.yaml	2026-11-01 05:52:13.262570400 -0400
+@@ -1,32 +1,32 @@
+-# Stage 1/2 of ISBNet's own author-recommended two-stage recipe (protocol
+-# §7: "per-model author-recommended... logged verbatim"; ISBNet's own
+-# STPLS3D configs -- its closest outdoor-scene precedent -- ARE two-stage:
+-# backbone-only pretrain, then instance-head fine-tune with backbone frozen.
+-# Modeled directly on configs/stpls3d/isbnet_backbone_stpls3d.yaml.
++# HFX3D ISBNet, stage 1/2: backbone (semantic + offset + box heads), from scratch.
++# Protocol v1.1 (docs/BENCHMARK_PROTOCOL.md 1.2, 1.3, 3.4). Fresh setup 2026-11-01.
++# Base recipe: ISBNet's own configs/stpls3d/isbnet_backbone_stpls3d.yaml (closest
++# outdoor precedent). Every change vs that file / the old Aug-2026 HFX3D run is
++# marked "HFX3D:".
++# Run with: tools/train.py <this> --only_backbone --skip_validate (see slurm script).
+ model:
+   channels: 16
+   num_blocks: 7
+-  semantic_classes: 12   # HFX3D: 4 stuff + 8 thing (protocol §3)
+-  instance_classes: 8    # the 8 "thing" classes only
++  semantic_classes: 12   # 4 stuff + 8 thing (dense stuff-first ids, see converter)
++  instance_classes: 8
+   sem2ins_classes: []
+-  semantic_only: False
+-  # Real median-frequency weights from isbnet_hfx3d_converter.py's train-split
+-  # point counts (semantic_weight.txt) -- NOT borrowed from STPLS3D's own
+-  # values, same "recalibrate from real data" principle as SoftGroup's
+-  # class_numpoint_mean/semantic_weight and PointGroup's class_weight.
++  semantic_only: False   # --only_backbone sets True for this stage
++  # median-frequency weights from the train split (converter, semantic_weight.txt)
+   semantic_weight: [0.1000, 0.1000, 1.8241, 0.7556, 0.2158, 3.9194, 1.4860, 0.2021, 1.8942, 0.7131, 1.4780, 6.2673]
+-  with_coords: False
++  with_coords: True      # HFX3D: protocol 3.4 "xyz as features where the architecture allows";
++                         # ISBNet supports it (ScanNet/S3DIS configs use True). Input = 4 feat
++                         # [r,g,b,intensity] + 3 tile-local xyz (metres) = 7 channels.
+   ignore_label: -100
+-  voxel_scale: 3
+-  use_spp_pool: False   # superpoints not ingestible at this scale (protocol §6)
++  voxel_scale: 20        # HFX3D: 1 voxel = 1/20 m = 0.05 m (protocol 3.4). Old run: 3 (0.33 m).
++  use_spp_pool: False
+   filter_bg_thresh: 0.1
+   iterative_sampling: False
+-  instance_head_cfg:
++  instance_head_cfg:     # not built in this stage (semantic_only); kept identical to stage 2
+     dec_dim: 64
+     n_sample_pa1: 2048
+     n_queries: 256
+-    radius_scale: 10
+-    radius: 0.4
++    radius_scale: 2.5    # HFX3D: see isbnet_hfx3d.yaml
++    radius: 0.4          # unused by the code (only radius_scale is read)
+     neighbor: 16
+   test_cfg:
+     x4_split: False
+@@ -41,42 +41,40 @@
+ data:
+   train:
+     type: 'hfx3d'
+-    data_root: 'dataset/hfx3d'
++    data_root: '/project/6118401/abdiaziz/fresh/isbnet/data/hfx3d_isbnet'  # overridden by --data_root
+     prefix: 'train'
+-    suffix: '.pth'
++    suffix: '_xyz.npy'   # HFX3D: one memory-mapped .npy set per building
+     training: True
+-    repeat: 3
++    repeat: 20           # HFX3D: each building listed 20x per sampler pass (uniform over buildings, as PointGroup loop=20) so the
++                         # loader has 90 batches per pass to pipeline over its workers; step count is set by total_steps
+     voxel_cfg:
+-      scale: 3
+-      spatial_shape: [128, 512]
+-      max_npoint: 250000   # matches protocol §7's training-tile point cap
++      scale: 20          # HFX3D: 0.05 m voxels
++      spatial_shape: [128, 512]   # [0] = min sparse-tensor extent; [1] only used by crop(), which HFX3D skips
++      max_npoint: 250000 # protocol 3.4 crop cap (enforced in HFX3DDataset.load)
+       min_npoint: 5000
+-  test:
++  test:                  # not used (validation = offline full-scene script)
+     type: 'hfx3d'
+-    data_root: 'dataset/hfx3d'
++    data_root: '/project/6118401/abdiaziz/fresh/isbnet/data/hfx3d_isbnet'
+     prefix: 'val'
+-    suffix: '.pth'
++    suffix: '_xyz.npy'
+     training: False
+     voxel_cfg:
+-      scale: 3
++      scale: 20
+       spatial_shape: [128, 512]
+       max_npoint: 250000
+       min_npoint: 5000
+ 
+ dataloader:
+   train:
+-    batch_size: 8   # STPLS3D's batch_size=32 assumed a smaller per-sample
+-                     # point budget than HFX3D's buildings; scaled down for
+-                     # our GPU memory (L40S 48GB) -- adjust after smoke test
+-                     # if OOM, per protocol's per-model logging requirement
+-    num_workers: 8
++    batch_size: 4        # HFX3D: protocol effective batch 4 (1 GPU x 4 crops)
++    num_workers: 40       # HFX3D: loading is CPU-bound (column crop + elastic); smoke job 659382 was data-bound at 24
+   test:
+     batch_size: 1
+     num_workers: 1
+ 
+ optimizer:
+   type: 'AdamW'
+-  lr: 0.004
++  lr: 0.004              # ISBNet value "for batch 16"; train.py scales linearly -> 0.001 at batch 4
+   weight_decay: 0.0001
+ 
+ save_cfg:
+@@ -87,9 +85,14 @@
+   nmc_clusters: False
+   object_conditions: False
+ 
+-fp16: False
+-epochs: 100
+-step_epoch: 40
+-save_freq: 4
++fp16: False              # as ISBNet's backbone configs
++loss_voxel_scale: 20     # = voxel_scale: ISBNet's own rule, offset/box L1 losses x voxel_scale/50 = 0.4 (see report: open question)
++# HFX3D: iteration-based schedule (protocol 3.4: 18,000 steps total = 6,000 backbone + 12,000 instance).
++# ISBNet backbone recipe: 100 epochs, constant LR for the first 40 then cosine -> 40% of 6,000 = 2,400.
++total_steps: 6000
++lr_cosine_start_step: 2400
++save_every: 1800         # GLOBAL steps (checkpoints at 1800/3600/5400 + final 6000)
++global_step_offset: 0
++max_consecutive_skips: 200
+ pretrain: ''
+ work_dir: ''
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/configs/hfx3d/isbnet_hfx3d.yaml new/ISBNet/configs/hfx3d/isbnet_hfx3d.yaml
+--- old/ISBNet/configs/hfx3d/isbnet_hfx3d.yaml	2026-08-16 09:39:19.000000000 -0300
++++ new/ISBNet/configs/hfx3d/isbnet_hfx3d.yaml	2026-11-01 05:52:13.285214000 -0400
+@@ -1,6 +1,9 @@
+-# Stage 2/2: instance-head fine-tune on top of the frozen stage-1 backbone
+-# (pretrain: below). Modeled directly on configs/stpls3d/isbnet_stpls3d.yaml
+-# -- see isbnet_backbone_hfx3d.yaml for the stage-1 config and rationale.
++# HFX3D ISBNet, stage 2/2: instance head on the FROZEN stage-1 backbone.
++# Protocol v1.1 (docs/BENCHMARK_PROTOCOL.md 1.2, 1.3, 3.4). Fresh setup 2026-11-01.
++# Base recipe: ISBNet's own configs/stpls3d/isbnet_stpls3d.yaml. ISBNet's official
++# stage-2 configs for EVERY dataset (ScanNetV2, ScanNet200, S3DIS, STPLS3D) freeze
++# the backbone via fixed_modules below; we follow that.
++# Run with: tools/train.py <this> --skip_validate (no --only_backbone / --trainall).
+ model:
+   channels: 16
+   num_blocks: 7
+@@ -9,9 +12,9 @@
+   sem2ins_classes: []
+   semantic_only: False
+   semantic_weight: [0.1000, 0.1000, 1.8241, 0.7556, 0.2158, 3.9194, 1.4860, 0.2021, 1.8942, 0.7131, 1.4780, 6.2673]
+-  with_coords: False
++  with_coords: True      # HFX3D: must match stage 1 (see isbnet_backbone_hfx3d.yaml)
+   ignore_label: -100
+-  voxel_scale: 3
++  voxel_scale: 20        # HFX3D: 0.05 m voxels
+   use_spp_pool: False
+   filter_bg_thresh: 0.1
+   iterative_sampling: False
+@@ -21,14 +24,22 @@
+     dec_dim: 64
+     n_sample_pa1: 2048
+     n_queries: 256
+-    radius_scale: 10
+-    radius: 0.4
++    # HFX3D: ball-query radii are METRIC (applied to coords in metres):
++    #   aggregator1 r = 0.2*radius_scale, aggregator2 r = 0.4*radius_scale (post-radius 2x).
++    #   ScanNet (official): radius_scale 1 -> 0.2 / 0.4 m at 2 cm voxels (10 / 20 voxels).
++    #   STPLS3D / old HFX3D run: 10 -> 2.0 / 4.0 m (tuned for 50 m urban blocks; with only
++    #   16 neighbours per ball, a 2 m ball over 5 cm voxels samples an arbitrary 16 of ~5k).
++    #   HFX3D: 2.5 -> 0.5 / 1.0 m (post 1.0 / 2.0 m) = the SAME 10 / 20 voxels per radius as
++    #   ISBNet's ScanNet design at our 5 cm voxel, and ~half the width of a typical window
++    #   or door (1-2 m). Not tuned on val.
++    radius_scale: 2.5
++    radius: 0.4          # unused by the code
+     neighbor: 16
+   test_cfg:
+     x4_split: False
+     logit_thresh: 0.0
+     score_thresh: 0.2
+-    npoint_thresh: 10
++    npoint_thresh: 10    # voxels/points; permissive pre-filter, the protocol 100-pt filter is applied after the merge
+     type_nms: 'matrix'
+     topk: 100
+ 
+@@ -37,39 +48,39 @@
+ data:
+   train:
+     type: 'hfx3d'
+-    data_root: 'dataset/hfx3d'
++    data_root: '/project/6118401/abdiaziz/fresh/isbnet/data/hfx3d_isbnet'  # overridden by --data_root
+     prefix: 'train'
+-    suffix: '.pth'
++    suffix: '_xyz.npy'
+     training: True
+-    repeat: 3
++    repeat: 20           # HFX3D: each building 20x per sampler pass (see backbone config); step count = total_steps
+     voxel_cfg:
+-      scale: 3
++      scale: 20
+       spatial_shape: [128, 512]
+       max_npoint: 250000
+       min_npoint: 5000
+   test:
+     type: 'hfx3d'
+-    data_root: 'dataset/hfx3d'
++    data_root: '/project/6118401/abdiaziz/fresh/isbnet/data/hfx3d_isbnet'
+     prefix: 'val'
+-    suffix: '.pth'
++    suffix: '_xyz.npy'
+     training: False
+     voxel_cfg:
+-      scale: 3
++      scale: 20
+       spatial_shape: [128, 512]
+       max_npoint: 250000
+       min_npoint: 5000
+ 
+ dataloader:
+   train:
+-    batch_size: 8
+-    num_workers: 8
++    batch_size: 4
++    num_workers: 40       # HFX3D: loading is CPU-bound (column crop + elastic); smoke job 659382 was data-bound at 24
+   test:
+     batch_size: 1
+     num_workers: 1
+ 
+ optimizer:
+   type: 'AdamW'
+-  lr: 0.001
++  lr: 0.001              # ISBNet stage-2 value "for batch 16" -> 0.00025 at batch 4
+   weight_decay: 0.0001
+ 
+ save_cfg:
+@@ -80,22 +91,15 @@
+   nmc_clusters: False
+   object_conditions: False
+ 
+-fp16: False   # HFX3D fix: fp16 crashed stage 2 (CUDA device-side assert
+-              # indexing instance_cls in get_subsample_gt, model_utils.py:675)
+-              # -- likely cause: instance IDs get summed across an 8-item
+-              # batch via a running offset (custom.py collate_fn), and
+-              # HFX3D buildings can have 800+ instances each (BLD011: 813)
+-              # -- fp16 only exactly represents integers up to 2048, so
+-              # batch-cumulative instance-id bookkeeping risks silent
+-              # corruption if it round-trips through an autocast region.
+-              # This code path never ran in stage 1 (semantic_only=True
+-              # short-circuits before reaching it), so this crash is
+-              # specific to stage 2. fp16 is a speed optimization, not
+-              # required for correctness -- stage 1 finished all 100
+-              # epochs in ~2h without it.
+-epochs: 100   # user requested matching stage 1's epoch count instead of
+-              # ISBNet's own STPLS3D-recipe 120
+-step_epoch: 42   # scaled proportionally from ISBNet's own 50/120 ratio
+-save_freq: 4
+-pretrain: 'work_dirs/hfx3d_backbone_s42/latest.pth'   # stage-1 final checkpoint (no best.pth exists -- we use --skip_validate, so ISBNet's own best-tracking never runs; latest.pth == epoch_100.pth, confirmed stage-1 completed cleanly all 100 epochs)
++fp16: False              # ISBNet's STPLS3D stage 2 uses True; it crashed the old HFX3D stage 2 (instance-id
++                         # indexing assert), so it stays off. Speed only, not accuracy-relevant.
++loss_voxel_scale: 20     # = voxel_scale: ISBNet's own rule, offset/box L1 losses x voxel_scale/50 = 0.4 (see report: open question)
++# HFX3D: iteration-based schedule, 12,000 of the 18,000 total steps. ISBNet stage-2 recipe
++# (STPLS3D): 120 epochs, constant LR for 50 then cosine -> 50/120 of 12,000 = 5,000.
++total_steps: 12000
++lr_cosine_start_step: 5000
++save_every: 1800         # GLOBAL steps: 7200, 9000, ..., 18000 (7 instance checkpoints)
++global_step_offset: 6000
++max_consecutive_skips: 200
++pretrain: '/project/6118401/abdiaziz/fresh/isbnet/work_dirs/backbone_s42/step_06000.pth'
+ work_dir: ''
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/isbnet/data/__init__.py new/ISBNet/isbnet/data/__init__.py
+--- old/ISBNet/isbnet/data/__init__.py	2026-08-14 15:36:27.000000000 -0300
++++ new/ISBNet/isbnet/data/__init__.py	2026-11-01 04:38:41.393503900 -0400
+@@ -1,4 +1,8 @@
++import numpy as np
++import torch
+ from torch.utils.data import DataLoader
++
++import random
+ from torch.utils.data.distributed import DistributedSampler
+ 
+ from .s3dis import S3DISDataset
+@@ -40,12 +44,26 @@
+         raise ValueError(f"Unknown {data_type}")
+ 
+ 
+-def build_dataloader(dataset, batch_size=1, num_workers=1, training=True, dist=False):
++def _seed_worker(worker_id):
++    # HFX3D fix (protocol 1.3): forked workers inherit an identical NumPy RNG
++    # state, so without this every worker drew the SAME crops/augmentations.
++    # torch.initial_seed() differs per worker and per epoch and is itself
++    # derived from torch.manual_seed(42) in the main process.
++    seed = torch.initial_seed() % 2**32
++    np.random.seed(seed)
++    random.seed(seed)
++
++
++def build_dataloader(dataset, batch_size=1, num_workers=1, training=True, dist=False, seed=None):
+     shuffle = training
+     sampler = DistributedSampler(dataset, shuffle=shuffle) if dist else None
+     if sampler is not None:
+         shuffle = False
+     if training:
++        generator = None
++        if seed is not None:
++            generator = torch.Generator()
++            generator.manual_seed(seed)
+         return DataLoader(
+             dataset,
+             batch_size=batch_size,
+@@ -55,6 +73,9 @@
+             sampler=sampler,
+             drop_last=True,
+             pin_memory=True,
++            worker_init_fn=_seed_worker,
++            generator=generator,
++            persistent_workers=num_workers > 0,
+         )
+     else:
+         # assert batch_size == 1
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/isbnet/data/custom.py new/ISBNet/isbnet/data/custom.py
+--- old/ISBNet/isbnet/data/custom.py	2026-08-14 15:36:09.000000000 -0300
++++ new/ISBNet/isbnet/data/custom.py	2026-11-01 04:39:11.313007200 -0400
+@@ -13,6 +13,8 @@
+ class CustomDataset(Dataset):
+ 
+     CLASSES = None
++    COLOR_CHANNELS = 3
++    COLOR_NOISE_STD = 0.1
+ 
+     def __init__(self, data_root, prefix, suffix, voxel_cfg=None, training=True, repeat=1, logger=None):
+         self.data_root = data_root
+@@ -175,13 +177,20 @@
+ 
+         xyz, xyz_middle, rgb, semantic_label, instance_label, spp = data
+ 
+-        inst_num = int(instance_label.max()) + 1
++        # HFX3D fix (audit 2026-11-01): a crop with no thing instance has
++        # instance_label.max() == -100, which gave inst_num = -99 and corrupted
++        # collate_fn's running instance-id offset for the rest of the batch.
++        inst_num = max(int(instance_label.max()) + 1, 0)
+ 
+         coord = torch.from_numpy(xyz).long()
+         coord_float = torch.from_numpy(xyz_middle)
+         feat = torch.from_numpy(rgb).float()
+         if self.training:
+-            feat += torch.randn(feat.shape[1]) * 0.1  # HFX3D fix: rgb+intensity is 4ch, not 3
++            # ISBNet's colour noise (randn(3) * 0.1 on [-1,1] colour). Datasets with
++            # a different colour range / extra non-colour channels override the two
++            # class attributes (HFX3D: 0.05 on [0,1] rgb, intensity untouched).
++            c = self.COLOR_CHANNELS
++            feat[:, :c] += torch.randn(c) * self.COLOR_NOISE_STD
+ 
+         semantic_label = torch.from_numpy(semantic_label)
+         instance_label = torch.from_numpy(instance_label)
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/isbnet/data/hfx3d.py new/ISBNet/isbnet/data/hfx3d.py
+--- old/ISBNet/isbnet/data/hfx3d.py	2026-08-16 01:45:39.000000000 -0300
++++ new/ISBNet/isbnet/data/hfx3d.py	2026-11-01 04:47:43.203247800 -0400
+@@ -1,21 +1,42 @@
+ import numpy as np
+-import torch
+ 
+ from .custom import CustomDataset
+ 
+ 
++def tile_local_coords(xyz):
++    """Shift a crop/tile to its own local frame: XY bounding-box midpoint at
++    0, lowest point at z = 0. Same convention as Pointcept's
++    CenterShift(apply_z=True), which the PointGroup baseline applies to
++    every training crop and every evaluation tile, so the xyz feature that
++    both models see (with_coords=True) is tile-local in the same way.
++    Pure translation: metric scale is untouched (protocol 1.2)."""
++    xyz_min = xyz.min(0)
++    xyz_max = xyz.max(0)
++    shift = np.array(
++        [(xyz_min[0] + xyz_max[0]) / 2.0, (xyz_min[1] + xyz_max[1]) / 2.0, xyz_min[2]], dtype=xyz.dtype
++    )
++    return xyz - shift
++
++
+ class HFX3DDataset(CustomDataset):
+     """
+-    HFX3D facade instance-seg benchmark. Modeled directly on STPLS3DDataset
+-    (isbnet/data/stpls3d.py) -- STPLS3D is ISBNet's own closest outdoor-scene
+-    precedent (no posed images, block/building-scale point clouds).
+-
+-    Files are produced by isbnet_hfx3d_converter.py (Pointcept repo, run
+-    outside this container -- only needs h5py/numpy/torch) as plain
+-    (coords, colors, sem_labels, instance_labels) tuples, dense stuff-first
+-    remapped (wall/terrain/roof/other = 0-3, the 8 thing classes = 4-11) and
+-    instance-relabeled to ISBNet's own -100-ignore / dense-0..K-1 convention
+-    -- see that script's docstring for the exact remap and why it's needed.
++    HFX3D facade instance-seg benchmark (protocol v1.1, sections 1.2 and 3.4).
++    Modeled on STPLS3DDataset (ISBNet's closest outdoor precedent).
++
++    Data: one directory of memory-mapped .npy arrays per split, written by
++    isbnet_hfx3d_converter.py:
++        <name>_xyz.npy  float32 (N,3)  metres, building-mean-centred (as released)
++        <name>_feat.npy float32 (N,4)  [r, g, b, intensity], all in [0,1] (as released)
++        <name>_sem.npy  int64   (N,)   dense stuff-first ids (wall/terrain/roof/other = 0-3)
++        <name>_inst.npy int64   (N,)   0..K-1 thing instances, -100 = stuff OR GT instance -1
++    The file list globs "*_xyz.npy" (config suffix), one entry per building.
++
++    Training sample (protocol 3.4): a random 15 m x 15 m full-height column
++    centred on a random point (exactly Pointcept's ColumnCrop, used by the
++    PointGroup baseline), capped at 250k points by a seeded random subsample
++    (np.random is seeded per worker in build_dataloader). The column is drawn
++    BEFORE any augmentation so the expensive elastic distortion only ever runs
++    on the crop.
+     """
+ 
+     CLASSES = (
+@@ -24,73 +45,86 @@
+         "column", "arch",
+     )
+ 
+-    # Matches protocol §7's ~15m vertical-column training tile footprint
+-    # (same convention PointGroup/SoftGroup already train on in this
+-    # benchmark, via pointcept/datasets/transform.py::ColumnCrop) -- radius
+-    # = half the 15m footprint.
+-    COLUMN_RADIUS = 7.5
+-    # Generous margin over config's voxel_cfg.min_npoint (5000) -- a
+-    # borderline-sized column crop was found to occasionally still fail
+-    # ISBNet's own downstream min_npoint check (empty-batch crash,
+-    # confirmed on a live run), so this leaves real headroom rather than
+-    # matching that threshold exactly.
+-    MIN_COLUMN_POINTS = 50000
+-    # Cap + random-subsample if over budget, INSTEAD of leaving this to
+-    # ISBNet's own crop() (which iteratively shrinks its XY window with a
+-    # random offset when over max_npoint -- fragile for a column crop that
+-    # already has small XY extent but full building height, since that
+-    # shrink logic only ever narrows XY, never Z; this combination is the
+-    # most likely cause of the empty-batch crash actually observed on a
+-    # live run). Mirrors pointcept/datasets/transform.py::ColumnCrop's own
+-    # already-validated pattern for this exact dataset, rather than
+-    # inventing a new approach.
+-    MAX_COLUMN_POINTS = 200000
++    COLUMN_FOOTPRINT = 15.0   # metres (protocol 3.4)
++    POINT_MAX = 250000        # protocol 3.4 / 3.2 forward-pass cap
++    MAX_CROP_TRIES = 10       # redraw a column that falls below voxel_cfg.min_npoint
++    # ISBNet's train-time colour noise is randn*0.1 on colour in [-1,1]; the
++    # same relative perturbation on the released [0,1] colour is 0.05. It is
++    # applied to the 3 colour channels only (intensity is not colour).
++    COLOR_CHANNELS = 3
++    COLOR_NOISE_STD = 0.05
+ 
+     def load(self, filename):
+-        xyz, rgb, semantic_label, instance_label = torch.load(filename)
++        base = filename[: -len("_xyz.npy")]
++        xyz_all = np.load(base + "_xyz.npy", mmap_mode="r")
++        feat_all = np.load(base + "_feat.npy", mmap_mode="r")
++        sem_all = np.load(base + "_sem.npy", mmap_mode="r")
++        inst_all = np.load(base + "_inst.npy", mmap_mode="r")
++
++        if self.training:
++            half = self.COLUMN_FOOTPRINT / 2.0
++            xy = xyz_all[:, :2]
++            for _ in range(self.MAX_CROP_TRIES):
++                center_xy = np.asarray(xy[np.random.randint(xy.shape[0])])
++                idx = np.flatnonzero(np.all(np.abs(xy - center_xy) <= half, axis=1))
++                if idx.shape[0] >= self.voxel_cfg.min_npoint:
++                    break
++            if idx.shape[0] > self.POINT_MAX:
++                idx = np.sort(np.random.choice(idx, self.POINT_MAX, replace=False))
++        else:
++            idx = np.arange(xyz_all.shape[0])
++
++        xyz = np.asarray(xyz_all[idx], dtype=np.float32)
++        rgb = np.asarray(feat_all[idx], dtype=np.float32)
++        semantic_label = np.asarray(sem_all[idx], dtype=np.int64)
++        instance_label = np.asarray(inst_all[idx], dtype=np.int64)
++        if self.training:
++            xyz = tile_local_coords(xyz)
+ 
+-        # HFX3D fix (perf, not a behavior change): unlike STPLS3D, which is
+-        # pre-split into ~50m blocks at preprocessing time (confirmed by
+-        # reading VinAIResearch/ISBNet's own dataset/stpls3d/prepare_data_
+-        # inst_instance_stpls3d.py -- splitPointCloud()), HFX3D buildings
+-        # are stored whole (up to ~38M pts on the train split). custom.py's
+-        # own transform_train() runs an expensive elastic distortion (two
+-        # scipy 3D-convolution passes) on whatever array it's handed
+-        # BEFORE its own crop() step narrows it down -- so every training
+-        # iteration was elastic-distorting an entire building just to
+-        # discard all but a ~250k-point crop afterward. Measured cause of
+-        # a ~26 min/epoch pace with only 6-7 batches/epoch (should be far
+-        # faster for a 7.5M-param model on an L40S).
+-        #
+-        # Fix: pick a random ~15m-footprint vertical column HERE, before
+-        # elastic/dataAugment/crop() run, so those operate on a
+-        # protocol-§7-sized tile instead of a whole building. This is a
+-        # re-ordering, not a redesign -- a fresh random column is still
+-        # drawn every time a sample is loaded (same per-epoch diversity as
+-        # before), we're just choosing it earlier in the pipeline instead
+-        # of after the expensive augmentation step. Downstream
+-        # getCroppedInstLabel() (custom.py, called inside transform_train
+-        # after its own crop()) already renumbers instance ids to close
+-        # any gaps a crop introduces, so this composes safely with the
+-        # existing pipeline without any further changes there.
+-        if self.training and len(xyz) > 0:
+-            center_xy = xyz[np.random.randint(len(xyz)), :2]
+-            idx_crop = np.flatnonzero(
+-                np.all(np.abs(xyz[:, :2] - center_xy) <= self.COLUMN_RADIUS, axis=1)
+-            )
+-            if idx_crop.shape[0] >= self.MIN_COLUMN_POINTS:
+-                if idx_crop.shape[0] > self.MAX_COLUMN_POINTS:
+-                    idx_crop = np.random.choice(idx_crop, self.MAX_COLUMN_POINTS, replace=False)
+-                xyz, rgb, semantic_label, instance_label = (
+-                    xyz[idx_crop], rgb[idx_crop], semantic_label[idx_crop], instance_label[idx_crop]
+-                )
+-            # else: fall through with the full building -- custom.py's own
+-            # crop() retries up to 5 times with shifting windows and will
+-            # handle a too-sparse column the same way it already handles
+-            # any other under-sized crop attempt.
+-
+-        # No real superpoints ingestible at this scale (protocol §6) --
+-        # same dummy-per-point-id placeholder STPLS3DDataset itself uses,
+-        # unconsumed since our config sets use_spp_pool=False.
++        # No superpoints (use_spp_pool=False, as in ISBNet's STPLS3D config):
++        # dummy per-point ids, same as STPLS3DDataset.
+         spp = np.arange(xyz.shape[0], dtype=np.int64)
+         return xyz, rgb, semantic_label, instance_label, spp
++
++    def getCroppedInstLabel(self, instance_label, valid_idxs):
++        # Equivalent to CustomDataset's version (ids made contiguous 0..K-1,
++        # -100 kept) but vectorised: the original loops over every id up to
++        # the building's max id (~800) with a full scan per id.
++        instance_label = instance_label[valid_idxs].copy()
++        m = instance_label != -100
++        if m.any():
++            instance_label[m] = np.unique(instance_label[m], return_inverse=True)[1]
++        return instance_label
++
++    def transform_train(self, xyz, rgb, semantic_label, instance_label, spp, aug_prob=1.0):
++        # ISBNet's own augmentation (jitter/shear 0.1, flip, full z-rotation),
++        # applied to the tile-local metric coordinates.
++        xyz_middle = self.dataAugment(xyz, True, True, True, aug_prob)
++        xyz = xyz_middle * self.voxel_cfg.scale
++        # Shift to the positive octant BEFORE elastic distortion: elastic()
++        # sizes its noise grid by max|x|, so on building-centred coordinates
++        # it allocated a grid spanning the whole building for every crop.
++        xyz = xyz - xyz.min(0)
++        if np.random.rand() < aug_prob:
++            # Elastic parameters are in VOXEL units. Scale them with the voxel
++            # size exactly as SoftGroup's CustomDataset does
++            # (6*scale//50, 40*scale/50, ...), i.e. keep the metric meaning
++            # ISBNet/SoftGroup use on ScanNet (2 cm voxels): ~0.1 m and
++            # ~0.4 m distortion granularity. The old run used the raw
++            # STPLS3D numbers at 0.33 m voxels (2 m / 6.7 m granularity).
++            s = self.voxel_cfg.scale / 50.0
++            xyz = self.elastic(xyz, max(int(6 * s), 1), 40.0 * s)
++            xyz = self.elastic(xyz, max(int(20 * s), 1), 160.0 * s)
++        xyz = xyz - xyz.min(0)
++        # No CustomDataset.crop(): the column crop and 250k cap were already
++        # applied in load(), so crop() would be a no-op (and its 512-voxel
++        # window logic assumes STPLS3D's 0.33 m voxels).
++        valid_idxs = np.ones(xyz.shape[0], dtype=bool)
++        instance_label = self.getCroppedInstLabel(instance_label, valid_idxs)
++        return xyz, xyz_middle, rgb, semantic_label, instance_label, spp
++
++    def transform_test(self, xyz, rgb, semantic_label, instance_label, spp):
++        # Unchanged ISBNet test transform (including its fixed 0.35*pi
++        # rotation). Callers pass tile-local coordinates (tile_local_coords).
++        return super().transform_test(xyz, rgb, semantic_label, instance_label, spp)
++
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/slurm/common_isbnet_tamia.sh new/ISBNet/slurm/common_isbnet_tamia.sh
+--- old/ISBNet/slurm/common_isbnet_tamia.sh	1969-12-31 20:00:00.000000000 -0400
++++ new/ISBNet/slurm/common_isbnet_tamia.sh	2026-11-01 04:46:26.177994200 -0400
+@@ -0,0 +1,20 @@
++# Sourced by the ISBNet tamia SLURM scripts. Paths for the fresh protocol-v1.1 setup.
++ROOT=/project/6118401/abdiaziz/fresh/isbnet
++CODE=$ROOT/ISBNet
++SIF=$ROOT/containers/killarney_pointcept.sif   # md5-verified copy of Killarney's; ISBNet ops were compiled against it
++TRAIN_NPY=$ROOT/data/hfx3d_isbnet               # converter output (train split, .npy)
++H5_ROOT=/project/6118401/abdiaziz/fresh/data/HFX3D_Instance   # released HFX3D_Instance .h5 (GT + eval input)
++RUN="bash $CODE/slurm/run_in_container.sh"      # usage: $RUN python3 tools/train.py ...
++
++stage_train_data () {   # copy the train .npy set to node-local disk
++  echo "Copying training data to $SLURM_TMPDIR ($(du -sh $TRAIN_NPY/train | cut -f1)) ..."
++  mkdir -p "$SLURM_TMPDIR/hfx3d_isbnet"
++  cp -r "$TRAIN_NPY/train" "$SLURM_TMPDIR/hfx3d_isbnet/"
++  echo "  done: $(ls $SLURM_TMPDIR/hfx3d_isbnet/train | wc -l) files  $(date)"
++}
++
++log_gpu () {   # log_gpu <csv>: sample GPU memory/utilisation every 10 s in the background
++  nvidia-smi --query-gpu=timestamp,index,memory.used,memory.total,utilization.gpu \
++    --format=csv -l 10 > "$1" 2>&1 &
++  GPU_LOG_PID=$!
++}
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/slurm/eval_isbnet_fresh_tamia.sh new/ISBNet/slurm/eval_isbnet_fresh_tamia.sh
+--- old/ISBNet/slurm/eval_isbnet_fresh_tamia.sh	1969-12-31 20:00:00.000000000 -0400
++++ new/ISBNet/slurm/eval_isbnet_fresh_tamia.sh	2026-11-01 04:47:07.557930800 -0400
+@@ -0,0 +1,45 @@
++#!/bin/bash
++#SBATCH --job-name=isbnet_fresh_eval
++#SBATCH --account=aip-jijup
++#SBATCH --time=06:00:00
++#SBATCH --nodes=1
++#SBATCH --gpus=h100:4
++#SBATCH --cpus-per-task=48
++#SBATCH --mem=480G
++#SBATCH --output=/project/6118401/abdiaziz/fresh/isbnet/logs/%x-%j.out
++
++# Protocol v1.1 3.2/3.3 full-scene evaluation of ISBNet instance-stage checkpoints.
++# Up to 4 checkpoints run in parallel, one per GPU.
++#   Val sweep (model selection, every 1,800 global steps):
++#     sbatch slurm/eval_isbnet_fresh_tamia.sh
++#   Test, ONCE, with the checkpoint that has the highest val AP (e.g. step 14400):
++#     sbatch --export=ALL,SPLIT=test,STEPS=14400 slurm/eval_isbnet_fresh_tamia.sh
++# Results: work_dirs/instance_s42/eval_<split>_step_<N>/{result.json,test_fullscene.log}
++# (Wall-time note: the old ISBNet eval took ~40 min for the 4 test buildings on one L40S
++#  without propagation; the 1-NN propagation adds CPU time. Adjust --time if needed.)
++
++source /project/6118401/abdiaziz/fresh/isbnet/ISBNet/slurm/common_isbnet_tamia.sh
++module load apptainer
++SPLIT=${SPLIT:-val}
++STEPS=${STEPS:-"07200 09000 10800 12600 14400 16200 18000"}
++IN=$ROOT/work_dirs/instance_s42
++echo "Job $SLURM_JOB_ID: split=$SPLIT steps=$STEPS  $(date)"
++
++gpu=0
++for st in $STEPS; do
++  st=$(printf "%05d" $((10#$st)))
++  ck=$IN/step_$st.pth
++  [ -f $ck ] || { echo "missing $ck"; continue; }
++  out=$IN/eval_${SPLIT}_step_$st
++  CUDA_VISIBLE_DEVICES=$gpu $RUN python3 tools/test_fullscene_hfx3d.py configs/hfx3d/isbnet_hfx3d.yaml $ck \
++    --data_root $H5_ROOT --eval_split $SPLIT --save_dir $out --no_dump > $ROOT/logs/eval_${SPLIT}_step_$st-$SLURM_JOB_ID.log 2>&1 &
++  gpu=$(( (gpu + 1) % 4 ))
++  [ $gpu -eq 0 ] && wait
++done
++wait
++
++for st in $STEPS; do
++  st=$(printf "%05d" $((10#$st)))
++  grep -h "Full-scene" $IN/eval_${SPLIT}_step_$st/test_fullscene.log 2>/dev/null | sed "s/^/step $st: /"
++done
++echo "Finished $(date)"
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/slurm/run_in_container.sh new/ISBNet/slurm/run_in_container.sh
+--- old/ISBNet/slurm/run_in_container.sh	1969-12-31 20:00:00.000000000 -0400
++++ new/ISBNet/slurm/run_in_container.sh	2026-11-01 04:46:26.232847000 -0400
+@@ -0,0 +1,9 @@
++#!/bin/bash
++# Run "$@" inside the ISBNet container from the repo root (GPU = $CUDA_VISIBLE_DEVICES, default 0).
++source /project/6118401/abdiaziz/fresh/isbnet/ISBNet/slurm/common_isbnet_tamia.sh
++exec apptainer exec --nv --cleanenv \
++  --env CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}" \
++  --bind /project/6118401/abdiaziz:/project/6118401/abdiaziz \
++  --bind /home/a/abdiaziz:/home/a/abdiaziz \
++  --bind "${SLURM_TMPDIR:-/tmp}:${SLURM_TMPDIR:-/tmp}" \
++  "$SIF" bash -c 'cd "$0" && export PYTHONNOUSERSITE=1 && export PYTHONPATH="$0:$0/isbnet/pointnet2:$0/.deps" && exec "$@"' "$CODE" "$@"
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/slurm/smoke_isbnet_fresh_tamia.sh new/ISBNet/slurm/smoke_isbnet_fresh_tamia.sh
+--- old/ISBNet/slurm/smoke_isbnet_fresh_tamia.sh	1969-12-31 20:00:00.000000000 -0400
++++ new/ISBNet/slurm/smoke_isbnet_fresh_tamia.sh	2026-11-01 04:46:37.857428100 -0400
+@@ -0,0 +1,47 @@
++#!/bin/bash
++#SBATCH --job-name=isbnet_fresh_smoke
++#SBATCH --account=aip-jijup
++#SBATCH --time=00:30:00
++#SBATCH --nodes=1
++#SBATCH --gpus=h100:4
++#SBATCH --cpus-per-task=48
++#SBATCH --mem=480G
++#SBATCH --output=/project/6118401/abdiaziz/fresh/isbnet/logs/%x-%j.out
++
++# SMOKE TEST (not a result): short stage 1 -> short stage 2 -> full-scene eval of
++# the stage-2 checkpoint on ONE val building (BLD008, the smallest).
++# Measures s/step and GPU memory; exercises checkpoint save/load and the eval path.
++# Run:  sbatch /project/6118401/abdiaziz/fresh/isbnet/ISBNet/slurm/smoke_isbnet_fresh_tamia.sh
++
++source /project/6118401/abdiaziz/fresh/isbnet/ISBNet/slurm/common_isbnet_tamia.sh
++module load apptainer
++export CUDA_VISIBLE_DEVICES=0
++S=$ROOT/smoke/$SLURM_JOB_ID
++mkdir -p $S
++echo "Job $SLURM_JOB_ID on $SLURMD_NODENAME, start $(date)"
++log_gpu $S/gpu.csv
++stage_train_data
++
++echo "===== stage 1 (backbone) smoke: 150 steps $(date)"
++timeout 9m $RUN python3 tools/train.py configs/hfx3d/isbnet_backbone_hfx3d.yaml --only_backbone --skip_validate \
++  --data_root $SLURM_TMPDIR/hfx3d_isbnet --work_dir $S/backbone \
++  --total_steps 150 --lr_cosine_start_step 60 --save_every 50 --global_step_offset 0
++echo "stage 1 exit: $?  $(date)"
++
++echo "===== stage 2 (instance, frozen backbone) smoke: 60 steps $(date)"
++timeout 7m $RUN python3 tools/train.py configs/hfx3d/isbnet_hfx3d.yaml --skip_validate \
++  --data_root $SLURM_TMPDIR/hfx3d_isbnet --work_dir $S/instance \
++  --pretrain $S/backbone/step_00150.pth \
++  --total_steps 60 --lr_cosine_start_step 24 --save_every 30 --global_step_offset 150
++echo "stage 2 exit: $?  $(date)"
++
++echo "===== full-scene eval, val BLD008 only $(date)"
++timeout 9m $RUN python3 tools/test_fullscene_hfx3d.py configs/hfx3d/isbnet_hfx3d.yaml $S/instance/step_00210.pth \
++  --data_root $H5_ROOT --eval_split val --only HFX_BLD008_ZEB_CLEAN --save_dir $S/eval_val_BLD008
++echo "eval exit: $?  $(date)"
++
++kill $GPU_LOG_PID 2>/dev/null
++echo "peak GPU memory (MiB) per GPU:"
++awk -F', ' 'NR>1 {split($3,a," "); if (a[1]+0 > m[$2]) m[$2]=a[1]+0} END {for (g in m) print "  gpu " g ": " m[g]}' $S/gpu.csv
++ls -la $S/backbone $S/instance $S/eval_val_BLD008
++echo "Finished $(date)"
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/slurm/train_isbnet_fresh_tamia.sh new/ISBNet/slurm/train_isbnet_fresh_tamia.sh
+--- old/ISBNet/slurm/train_isbnet_fresh_tamia.sh	1969-12-31 20:00:00.000000000 -0400
++++ new/ISBNet/slurm/train_isbnet_fresh_tamia.sh	2026-11-01 05:52:13.365106500 -0400
+@@ -0,0 +1,59 @@
++#!/bin/bash
++#SBATCH --job-name=isbnet_fresh_train
++#SBATCH --account=aip-jijup
++#SBATCH --time=10:00:00
++#SBATCH --nodes=1
++#SBATCH --gpus=h100:4
++#SBATCH --cpus-per-task=48
++#SBATCH --mem=480G
++#SBATCH --output=/project/6118401/abdiaziz/fresh/isbnet/logs/%x-%j.out
++
++# ISBNet on HFX3D, protocol v1.1 section 3.4. Seed 42, from scratch, effective batch 4
++# (1 H100 x 4 crops), 18,000 optimizer steps in total:
++#   stage 1 backbone            6,000 steps  (global    1 -  6,000)  configs/hfx3d/isbnet_backbone_hfx3d.yaml
++#   stage 2 instance (frozen bb) 12,000 steps (global 6,001 - 18,000) configs/hfx3d/isbnet_hfx3d.yaml
++# Checkpoints every 1,800 GLOBAL steps (+ each stage's last step):
++#   work_dirs/backbone_s42/step_{01800,03600,05400,06000}.pth
++#   work_dirs/instance_s42/step_{07200,09000,10800,12600,14400,16200,18000}.pth
++# Model selection: slurm/eval_isbnet_fresh_tamia.sh on val (highest val AP), then test once.
++#
++# Resubmit the SAME script to resume: a finished stage is skipped, an unfinished one
++# resumes from its latest.pth (model + optimizer + step; data RNG is not restored).
++# Run:  sbatch /project/6118401/abdiaziz/fresh/isbnet/ISBNet/slurm/train_isbnet_fresh_tamia.sh
++#
++# Only GPU 0 is used (ISBNet's HFX3D loop is single-process); the node is requested
++# whole per tamia policy.
++
++source /project/6118401/abdiaziz/fresh/isbnet/ISBNet/slurm/common_isbnet_tamia.sh
++module load apptainer
++export CUDA_VISIBLE_DEVICES=0
++BB=$ROOT/work_dirs/backbone_s42
++IN=$ROOT/work_dirs/instance_s42
++mkdir -p $BB $IN
++echo "Job $SLURM_JOB_ID on $SLURMD_NODENAME, start $(date)"
++$RUN python3 -c "import torch, spconv, numpy; print('torch', torch.__version__, 'cuda', torch.version.cuda, 'numpy', numpy.__version__, torch.cuda.get_device_name(0))"
++log_gpu $ROOT/logs/gpu-$SLURM_JOB_ID.csv
++stage_train_data
++
++if [ ! -f $BB/step_06000.pth ]; then
++  RES=""; [ -f $BB/latest.pth ] && RES="--resume $BB/latest.pth"
++  echo "===== stage 1: backbone, 6,000 steps $RES  $(date)"
++  $RUN python3 tools/train.py configs/hfx3d/isbnet_backbone_hfx3d.yaml --only_backbone --skip_validate \
++    --data_root $SLURM_TMPDIR/hfx3d_isbnet --work_dir $BB --exp_name backbone_s42 $RES || exit 1
++else
++  echo "stage 1 already finished ($BB/step_06000.pth)"
++fi
++
++if [ ! -f $IN/step_18000.pth ]; then
++  RES=""; [ -f $IN/latest.pth ] && RES="--resume $IN/latest.pth"
++  echo "===== stage 2: instance head, frozen backbone, 12,000 steps $RES  $(date)"
++  $RUN python3 tools/train.py configs/hfx3d/isbnet_hfx3d.yaml --skip_validate \
++    --data_root $SLURM_TMPDIR/hfx3d_isbnet --work_dir $IN --exp_name instance_s42 \
++    --pretrain $BB/step_06000.pth $RES || exit 1
++else
++  echo "stage 2 already finished ($IN/step_18000.pth)"
++fi
++
++kill $GPU_LOG_PID 2>/dev/null
++md5sum $BB/step_06000.pth $IN/step_*.pth
++echo "Finished $(date)"
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/tools/insseg_eval_utils.py new/ISBNet/tools/insseg_eval_utils.py
+--- old/ISBNet/tools/insseg_eval_utils.py	2026-08-16 12:59:35.000000000 -0300
++++ new/ISBNet/tools/insseg_eval_utils.py	2026-11-01 04:45:19.990634300 -0400
+@@ -1,12 +1,18 @@
+ """
+ Shared ScanNet-v2-style instance segmentation evaluator for HFX3D.
+ 
+-Verbatim copy of Pointcept/tools/insseg_eval_utils.py (pure numpy, no
+-torch/framework import), reused here unchanged so ISBNet's full-scene
+-stitching result is scored with the exact same metric as PointGroup's and
+-SoftGroup's own full-scene numbers -- same overlap thresholds, same
+-min-region-size filter, directly comparable across every model in this
+-benchmark. See that file's own docstring for the full rationale.
++Direct port of Pointcept's InsSegEvaluator/InsSegTester
++associate_instances()/evaluate_matches()
++(pointcept/engines/hooks/evaluator.py, pointcept/engines/test.py), adapted to
++take plain numpy arrays instead of a live trainer/tester object. Same metric,
++same overlap thresholds, same min-region-size filter -- every HFX3D
++instance-seg result in this project (PointGroup's own test.py run, the
++clustering-oracle baselines, the full-scene tiling+merge eval) goes through
++this exact same class, so numbers are directly comparable across all of them.
++
++Pure numpy -- no torch/pointcept import -- so this stays importable from
++tools/eval_cluster_gt_hfx3d.py's standalone (sklearn-only) environment as
++well as from tools/test_fullscene_insseg_hfx3d.py's full Pointcept/CUDA one.
+ """
+ 
+ from uuid import uuid4
+@@ -26,19 +32,33 @@
+         self.min_region_sizes = 100
+ 
+     def associate_instances(self, pred_masks, pred_classes, pred_scores, segment, instance):
+-        # HFX3D fix: np.in1d was removed in NumPy 2.x (the version present
+-        # in this ISBNet environment's .deps -- confirmed it shadows the
+-        # container's own numpy since PYTHONPATH entries all precede
+-        # site-packages in import resolution regardless of their own
+-        # relative order, not "last PYTHONPATH entry loses" as assumed
+-        # when .deps was first set up). np.isin is the direct modern
+-        # replacement, identical semantics.
+-        void_mask = np.isin(segment, self.segment_ignore_index)
++        # Sparse (point-index-array) intersections, NOT dense N-length boolean
++        # masks. The original port (mirroring Pointcept's InsSegEvaluator/
++        # InsSegTester verbatim) stored a full dense mask per predicted
++        # instance and recomputed `instance == gt_inst["instance_id"]` (a
++        # dense O(N) scan) for every (pred, gt) pair -- fine for Pointcept's
++        # normal ~100-250k point crops and this project's clustering-oracle
++        # baseline (tens of instances/building), but it OOM'd running the
++        # full-scene PointGroup stitching eval: confirmed via `sstat` showing
++        # 67GB RSS against a 64G job limit while scoring a 47.9M-point
++        # building with 2309 barely-merged instances (2309 dense masks x
++        # ~48MB each is >100GB by itself). Fixed by converting every mask to
++        # a sorted point-index array once, and intersecting via
++        # np.intersect1d (cost scales with instance size, not building size)
++        # -- same matching logic, same output fields (just no "mask" key,
++        # which evaluate_matches() never read), so every already-reported
++        # number from this evaluator (clustering-oracle DBSCAN/HDBSCAN)
++        # stays exactly reproducible.
++        # D2 fix (2026-11-01): thing points whose instance is ignore (-1, i.e. removed
++        # <200-pt instances) are void too, as in the official ScanNet evaluator.
++        void_mask = np.isin(segment, self.segment_ignore_index) | (instance == self.instance_ignore_index)
+ 
+         gt_instances = {name: [] for i, name in enumerate(self.class_names) if i not in self.segment_ignore_index}
+         instance_ids, idx, counts = np.unique(instance, return_index=True, return_counts=True)
+         segment_ids = segment[idx]
+ 
++        # Group every point's original index by its GT instance id once
++        # (O(N log N)), instead of recomputing `instance == id` per pair.
+         order = np.argsort(instance, kind="stable")
+         sorted_instance = instance[order]
+         starts = np.searchsorted(sorted_instance, instance_ids)
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/tools/test_fullscene_hfx3d.py new/ISBNet/tools/test_fullscene_hfx3d.py
+--- old/ISBNet/tools/test_fullscene_hfx3d.py	2026-08-18 20:09:31.000000000 -0300
++++ new/ISBNet/tools/test_fullscene_hfx3d.py	2026-11-01 04:44:59.921099300 -0400
+@@ -1,96 +1,114 @@
+ """
+-Full-scene instance segmentation evaluation for ISBNet on HFX3D
+-(protocol §8) -- the real, protocol-mandated metric, same methodology
+-already built for PointGroup (Pointcept/tools/test_fullscene_insseg_hfx3d.py)
+-and reused verbatim where model-agnostic (tile geometry, cross-tile
+-union-merge, ScanNet-v2 AP evaluator -- see insseg_eval_utils.py, a straight
+-copy). Only the per-tile data-prep and per-tile inference call are
+-model-specific, same "separate parallel script" pattern already used for
+-Mask3D's own stitching script (different container/framework, can't share
+-code directly with Pointcept's).
+-
+-Method:
+-  1. Tile the whole building into overlapping ~15m-footprint vertical
+-     columns (full height kept), covering the entire XY extent.
+-  2. Run ISBNet inference on each tile independently, reusing the REAL
+-     HFX3DDataset.transform_test()/collate_fn() methods (not reimplemented)
+-     so tile preprocessing is byte-for-byte identical to how val/test
+-     samples are normally prepared -- including the fixed 0.35pi rotation
+-     dataAugment() always applies even with rot=False, easy to silently
+-     get wrong by hand.
+-  3. Merge every tile's instance proposals into whole-building instances
+-     via same-class mask-IoU union (identical algorithm to PointGroup's
+-     merge_tile_predictions, copied verbatim).
+-  4. Score with the same ScanNetInstanceEvaluator used everywhere else in
+-     this project.
+-
+-HOW TO RUN THIS YOURSELF:
+-    cd /project/6118401/abdiaziz/repos/ISBNet
+-    module load apptainer/1.3.5
+-    apptainer exec --nv --bind /project/6118401/abdiaziz:/project/6118401/abdiaziz \\
+-      /project/6118401/abdiaziz/containers/killarney_pointcept.sif bash -lc \\
+-      "export PYTHONPATH=\$PWD:\$PWD/isbnet/pointnet2:\$PWD/.deps && \\
+-       python3 tools/test_fullscene_hfx3d.py \\
+-         configs/hfx3d/isbnet_hfx3d.yaml \\
+-         work_dirs/hfx3d_s42/latest.pth \\
+-         --eval_split val"
+-See submit_stitch_isbnet_hfx3d_killarney.sh for the SLURM version.
+-
+-Useful CLI overrides (defaults shown):
+-    --eval_split val                # or test
+-    --footprint 15.0                # tile XY footprint, metres
+-    --overlap 5.0                   # overlap between adjacent tiles, metres
+-    --point_max 250000              # per-tile point cap (matches training)
+-    --merge_iou 0.5                 # cross-tile same-class union-merge IoU
+-    --min_inst_points 100           # drop merged instances smaller than this
++Full-scene instance-segmentation evaluation of ISBNet on HFX3D
++(docs/BENCHMARK_PROTOCOL.md v1.1, sections 3.2 and 3.3).
++
++Tiling, forward-pass subsampling, 1-NN propagation, cross-tile merge, size
++filter and scoring are copied from the PointGroup reference script
++(Pointcept/tools/test_fullscene_insseg_hfx3d_fullres.py on tamia,
++/project/6118401/abdiaziz/insseg_fullres) so both methods are scored by the
++same procedure:
++  1. 15 m x 15 m full-height tiles, 5 m overlap (_axis_centers /
++     generate_tile_centers / tile_point_indices: verbatim).
++  2. A tile with >250k points keeps the 250k points with the lowest value of
++     ONE seeded permutation of the building (seed = 42 + building index in the
++     glob order of the split directory, as in the PointGroup script), so
++     overlapping tiles keep the same points.
++  3. Every predicted mask is propagated from the forward-pass points to EVERY
++     point of the tile by 1-NN (scipy cKDTree on xyz) BEFORE merging. This is
++     the fix for the audit's subsample bug: the old ISBNet script kept
++     predictions only on the <=250k forward-pass points and scored them
++     against full-resolution GT.
++  4. Same-class proposals with mask IoU >= 0.5 are unioned (connected
++     components), merged score = max member score (merge_tile_predictions:
++     verbatim).
++  5. Merged predictions with < 100 points are discarded.
++  6. ScanNet-v2 evaluator: tools/insseg_eval_utils.py is a byte-identical
++     copy of hfx3d-benchmark/evaluation/insseg_eval_utils.py (void = stuff
++     classes OR instance == -1). GT is read straight from the released .h5
++     (labels/semantic raw 0-11, labels/instance with -1 = ignore), with the
++     same class list and segment_ignore_index (-1, 0, 6, 7, 9) as PointGroup.
++
++ISBNet-specific parts (only these differ from the PointGroup script):
++  * infer_tile(): tile-local coordinates (HFX3DDataset's tile_local_coords,
++    the same shift used for training crops), ISBNet's own transform_test
++    (incl. its fixed 0.35*pi rotation) and collate_fn, model forward, RLE
++    decode. GT labels are NOT passed to the model (dummy labels).
++  * Predicted classes are ISBNet thing indices 0..7 and are mapped back to
++    raw HFX3D ids (window 1, door 2, balcony 3, vegetation 4, stairs 5,
++    blinds 8, column 10, arch 11). Score = ISBNet's native
++    sqrt(cls_prob * mask_iou_conf).
++  * Inference is deterministic (no random op at test time in ISBNet's
++    forward_test with iterative_sampling False; the fixed permutation is
++    seeded).
++
++HOW TO RUN (inside the ISBNet container, from the ISBNet repo root):
++    export PYTHONPATH=$PWD:$PWD/isbnet/pointnet2:$PWD/.deps
++    python3 tools/test_fullscene_hfx3d.py configs/hfx3d/isbnet_hfx3d.yaml \\
++        work_dirs/instance_s42/step_18000.pth \\
++        --data_root /project/6118401/abdiaziz/fresh/data/HFX3D_Instance \\
++        --eval_split val --save_dir work_dirs/instance_s42/eval_val_step_18000
++    Optional: --only HFX_BLD008_ZEB_CLEAN (score one building; its seed is
++    still taken from its position in the full split directory listing).
++See slurm/eval_isbnet_fresh_tamia.sh for the SLURM version.
+ """
+ 
+ import argparse
+ import glob
++import json
+ import os
+ import sys
+ import time
+ 
++import h5py
+ import numpy as np
+ import torch
+ import yaml
+ from munch import Munch
++from scipy.spatial import cKDTree
+ 
+ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+-from insseg_eval_utils import ScanNetInstanceEvaluator
++from insseg_eval_utils import ScanNetInstanceEvaluator  # noqa: E402
+ 
+-from isbnet.data.hfx3d import HFX3DDataset
+-from isbnet.model import ISBNet
+-from isbnet.util import get_root_logger, load_checkpoint, rle_decode
+-
+-# Dense stuff-first class order (protocol §3), matching
+-# isbnet_hfx3d_converter.py's RAW_TO_DENSE table exactly.
+-DENSE_CLASS_NAMES = [
+-    "wall", "terrain", "roof", "other",
+-    "window", "door", "balcony", "vegetation", "stairs", "blinds", "column", "arch",
++from isbnet.data.hfx3d import HFX3DDataset, tile_local_coords  # noqa: E402
++from isbnet.model import ISBNet  # noqa: E402
++from isbnet.util import get_root_logger, load_checkpoint, rle_decode  # noqa: E402
++
++# Raw HFX3D label order and stuff/ignore set -- identical to
++# configs/hfx3d/insseg-pointgroup-v1m1-0-spunet-base.py (class_names,
++# segment_ignore_index), which the PointGroup full-scene script passes to the
++# same evaluator.
++CLASS_NAMES = [
++    "wall", "window", "door", "balcony", "vegetation", "stairs",
++    "terrain", "roof", "blinds", "other", "column", "arch",
+ ]
+-STUFF_IDS = (0, 1, 2, 3)  # segment_ignore_index for the shared evaluator
+-LABEL_SHIFT = 4
+-MIN_TILE_POINTS = 50
++SEGMENT_IGNORE_INDEX = (-1, 0, 6, 7, 9)
++INSTANCE_IGNORE_INDEX = -1
++# ISBNet thing index (dense id - 4, see isbnet_hfx3d_converter.py) -> raw HFX3D id
++THING_TO_RAW = np.array([1, 2, 3, 4, 5, 8, 10, 11], dtype=int)
++MIN_TILE_POINTS = 50  # skip tiles this small -- not worth a forward pass (as PointGroup)
+ 
+ 
+ def get_args():
+-    parser = argparse.ArgumentParser("ISBNet full-scene stitching eval")
++    parser = argparse.ArgumentParser("ISBNet HFX3D full-scene evaluation (protocol 3.2/3.3)")
+     parser.add_argument("config", type=str)
+     parser.add_argument("checkpoint", type=str)
++    parser.add_argument("--data_root", type=str, required=True, help="HFX3D_Instance root with <split>/*.h5")
+     parser.add_argument("--eval_split", type=str, default="val")
++    parser.add_argument("--save_dir", type=str, required=True)
++    parser.add_argument("--only", type=str, nargs="*", default=None, help="building names to score (subset)")
+     parser.add_argument("--footprint", type=float, default=15.0)
+     parser.add_argument("--overlap", type=float, default=5.0)
+     parser.add_argument("--point_max", type=int, default=250000)
+     parser.add_argument("--merge_iou", type=float, default=0.5)
+     parser.add_argument("--min_inst_points", type=int, default=100)
+-    parser.add_argument("--limit", type=int, default=None, help="process only the first N buildings (smoke test)")
++    parser.add_argument("--no_dump", action="store_true", help="do not save per-point predictions")
+     return parser.parse_args()
+ 
+ 
++# ---------------------------------------------------------------------------
++# Model-agnostic part: verbatim from test_fullscene_insseg_hfx3d_fullres.py
++# ---------------------------------------------------------------------------
+ def _axis_centers(v_min, v_max, footprint, stride):
+-    """Verbatim from Pointcept/tools/test_fullscene_insseg_hfx3d.py --
+-    pure numpy, model-agnostic tiling geometry."""
+     half = footprint / 2
+     if v_max - v_min <= footprint:
+         return [(v_min + v_max) / 2]
+@@ -104,7 +122,7 @@
+ 
+ def generate_tile_centers(coord_xy, footprint, overlap):
+     stride = footprint - overlap
+-    assert stride > 0
++    assert stride > 0, "overlap must be smaller than footprint"
+     xy_min = coord_xy.min(axis=0)
+     xy_max = coord_xy.max(axis=0)
+     xs = _axis_centers(xy_min[0], xy_max[0], footprint, stride)
+@@ -117,7 +135,6 @@
+ 
+ 
+ def merge_tile_predictions(n_points_building, tile_results, merge_iou_thresh, min_inst_points):
+-    """Verbatim from Pointcept/tools/test_fullscene_insseg_hfx3d.py."""
+     per_class = {}
+     for idx_crop, pred_masks, pred_classes, pred_scores in tile_results:
+         for m, c, s in zip(pred_masks, pred_classes, pred_scores):
+@@ -144,10 +161,14 @@
+ 
+         for i in range(n):
+             for j in range(i + 1, n):
+-                inter = np.intersect1d(proposals[i]["idx"], proposals[j]["idx"], assume_unique=True).shape[0]
++                inter = np.intersect1d(
++                    proposals[i]["idx"], proposals[j]["idx"], assume_unique=True
++                ).shape[0]
+                 if inter == 0:
+                     continue
+-                union_size = proposals[i]["idx"].shape[0] + proposals[j]["idx"].shape[0] - inter
++                union_size = (
++                    proposals[i]["idx"].shape[0] + proposals[j]["idx"].shape[0] - inter
++                )
+                 if inter / union_size >= merge_iou_thresh:
+                     union(i, j)
+ 
+@@ -168,56 +189,55 @@
+     return final_masks, final_classes, final_scores
+ 
+ 
++# ---------------------------------------------------------------------------
++# ISBNet-specific part
++# ---------------------------------------------------------------------------
+ @torch.no_grad()
+-def infer_tile(model, dataset, scan_id, xyz, colors, sem_labels, inst_labels):
+-    """Builds one tile through HFX3DDataset's REAL transform_test/collate_fn
+-    (not reimplemented), runs ISBNet inference, decodes RLE masks, and
+-    returns (pred_masks[bool, n_tile], pred_classes[int, dense 0..11],
+-    pred_scores[float]) in the tile's own local point order."""
+-    xyz_t, xyz_middle, colors_t, sem_t, inst_t, spp_t = dataset.transform_test(
+-        xyz, colors, sem_labels, inst_labels, np.arange(xyz.shape[0], dtype=np.int64)
++def infer_tile(model, dataset, scan_id, xyz, feat):
++    """One forward pass on the given (<= point_max) points. Returns
++    (pred_masks[bool, n_pts], pred_classes[raw HFX3D id], pred_scores) in the
++    order of the input points."""
++    n = xyz.shape[0]
++    xyz_local = tile_local_coords(xyz.astype(np.float32))
++    dummy_sem = np.zeros(n, dtype=np.int64)  # GT is never given to the model
++    dummy_inst = np.full(n, -100, dtype=np.int64)
++    xyz_t, xyz_middle, feat_t, sem_t, inst_t, spp_t = dataset.transform_test(
++        xyz_local, feat.astype(np.float32), dummy_sem, dummy_inst, np.arange(n, dtype=np.int64)
++    )
++    item = (
++        scan_id,
++        torch.from_numpy(xyz_t).long(),
++        torch.from_numpy(xyz_middle),
++        torch.from_numpy(feat_t).float(),
++        torch.from_numpy(sem_t),
++        torch.from_numpy(inst_t),
++        torch.from_numpy(spp_t),
++        0,
+     )
+-    inst_num = int(inst_t.max()) + 1 if inst_t.max() >= 0 else 0
+-
+-    coord = torch.from_numpy(xyz_t).long()
+-    coord_float = torch.from_numpy(xyz_middle)
+-    feat = torch.from_numpy(colors_t).float()
+-    semantic_label = torch.from_numpy(sem_t)
+-    instance_label = torch.from_numpy(inst_t)
+-    spp = torch.from_numpy(spp_t)
+-
+-    item = (scan_id, coord, coord_float, feat, semantic_label, instance_label, spp, inst_num)
+     batch = dataset.collate_fn([item])
+-
+     for key in list(batch.keys()):
+         if isinstance(batch[key], torch.Tensor):
+             batch[key] = batch[key].cuda(non_blocking=True)
+ 
+     res = model(batch)
+     pred_instances = res.get("pred_instances", [])
+-    n_tile = xyz.shape[0]
+     if len(pred_instances) == 0:
+-        return (
+-            np.zeros((0, n_tile), dtype=bool),
+-            np.zeros((0,), dtype=int),
+-            np.zeros((0,), dtype=float),
+-        )
+-
++        return np.zeros((0, n), dtype=bool), np.zeros((0,), dtype=int), np.zeros((0,), dtype=float)
+     masks = np.stack([rle_decode(p["pred_mask"]) for p in pred_instances]).astype(bool)
+-    # label_id = cls_final + 1 (see isbnet.py get_instance's "hfx3d" branch)
+-    # -- cls_final is a THING-class index 0..7 (instance_classes), so the
+-    # dense (0..11, stuff-first) class id is cls_final + LABEL_SHIFT.
+-    classes = np.array([(p["label_id"] - 1) + LABEL_SHIFT for p in pred_instances], dtype=int)
++    assert masks.shape[1] == n
++    # get_instance() hfx3d branch: label_id = thing index + 1
++    classes = THING_TO_RAW[np.array([p["label_id"] - 1 for p in pred_instances], dtype=int)]
+     scores = np.array([p["conf"] for p in pred_instances], dtype=float)
+     return masks, classes, scores
+ 
+ 
+-def process_building(model, dataset, name, xyz, colors, sem_labels, inst_labels,
+-                      footprint, overlap, point_max, merge_iou, min_inst_points, logger, seed):
+-    n_points = xyz.shape[0]
+-    coord_xy = xyz[:, :2]
++def process_building(model, dataset, name, coord, feat, footprint, overlap, point_max,
++                     merge_iou, min_inst_points, logger, seed):
++    n_points = coord.shape[0]
++    coord_xy = coord[:, :2]
+     centers = generate_tile_centers(coord_xy, footprint, overlap)
+     half_footprint = footprint / 2
++    # Fixed per-point priority for the whole building (same as PointGroup).
+     point_priority = np.random.RandomState(seed).permutation(n_points)
+ 
+     tile_results = []
+@@ -225,24 +245,25 @@
+     n_tiles_capped = 0
+     n_raw_proposals = 0
+     for center in centers:
+-        idx_crop = tile_point_indices(coord_xy, np.array(center), half_footprint)
+-        if idx_crop.shape[0] < MIN_TILE_POINTS:
++        idx_full = tile_point_indices(coord_xy, np.array(center), half_footprint)
++        if idx_full.shape[0] < MIN_TILE_POINTS:
+             continue
+-        if idx_crop.shape[0] > point_max:
+-            local_priority = point_priority[idx_crop]
++        idx_crop = idx_full
++        if idx_full.shape[0] > point_max:
++            local_priority = point_priority[idx_full]
+             keep = np.argpartition(local_priority, point_max)[:point_max]
+-            idx_crop = idx_crop[keep]
++            idx_crop = idx_full[keep]
+             n_tiles_capped += 1
+-
+-        pred_masks, pred_classes, pred_scores = infer_tile(
+-            model, dataset, name,
+-            xyz[idx_crop].copy(), colors[idx_crop].copy(),
+-            sem_labels[idx_crop].copy(), inst_labels[idx_crop].copy(),
+-        )
++        pred_masks, pred_classes, pred_scores = infer_tile(model, dataset, name, coord[idx_crop], feat[idx_crop])
+         n_tiles_used += 1
+         n_raw_proposals += pred_masks.shape[0]
+         if pred_masks.shape[0] > 0:
+-            tile_results.append((idx_crop, pred_masks, pred_classes, pred_scores))
++            if idx_crop.shape[0] != idx_full.shape[0]:
++                # FULLRES FIX: give every tile point the prediction of its
++                # nearest subsampled point, so masks are scored at full resolution.
++                _, nn = cKDTree(coord[idx_crop]).query(coord[idx_full], k=1, workers=-1)
++                pred_masks = pred_masks[:, nn]
++            tile_results.append((idx_full, pred_masks, pred_classes, pred_scores))
+ 
+     logger.info(
+         f"  {n_tiles_used} tiles processed ({n_tiles_capped} subsampled at "
+@@ -255,61 +276,76 @@
+     return final_masks, final_classes, final_scores
+ 
+ 
++def load_building(h5_path):
++    with h5py.File(h5_path, "r") as f:
++        xyz = f["point_cloud/xyz"][:].astype(np.float32)
++        rgb = f["point_cloud/rgb"][:].astype(np.float32)
++        intensity = f["point_cloud/intensity"][:].astype(np.float32)
++        segment = f["labels/semantic"][:].reshape([-1]).astype(np.int32)
++        instance = f["labels/instance"][:].reshape([-1]).astype(np.int32)
++    # Same 4-channel feature the converter writes for training: released [0,1] scales.
++    feat = np.concatenate([rgb, intensity.reshape(-1, 1)], axis=1)
++    return xyz, feat, segment, instance
++
++
+ def main():
+     args = get_args()
+-    logger = get_root_logger()
+-
+-    cfg_txt = open(args.config).read()
+-    cfg = Munch.fromDict(yaml.safe_load(cfg_txt))
++    os.makedirs(args.save_dir, exist_ok=True)
++    logger = get_root_logger(log_file=os.path.join(args.save_dir, "test_fullscene.log"))
++    logger.info(f"ISBNet full-scene eval (protocol v1.1 3.2/3.3, FULLRES propagation). args={vars(args)}")
+ 
++    cfg = Munch.fromDict(yaml.safe_load(open(args.config).read()))
++    assert not cfg.model.semantic_only
+     model = ISBNet(**cfg.model, dataset_name="hfx3d").cuda()
+     model.eval()
+     logger.info(f"Loading weight at: {args.checkpoint}")
+     load_checkpoint(args.checkpoint, logger, model)
++    ck = torch.load(args.checkpoint, map_location="cpu")
++    logger.info(f"checkpoint global_step={ck.get('global_step')} stage_step={ck.get('step')}")
+ 
+-    # Dummy dataset instance purely to reuse its REAL transform_test/
+-    # collate_fn/voxel_cfg -- not iterated via __getitem__/file list.
+-    dataset = HFX3DDataset(
+-        data_root=cfg.data.test.data_root, prefix=args.eval_split, suffix=".pth",
+-        voxel_cfg=Munch.fromDict(cfg.data.test.voxel_cfg), training=False, logger=logger,
+-    )
+-
+-    evaluator = ScanNetInstanceEvaluator(DENSE_CLASS_NAMES, STUFF_IDS, -100)
++    # Used only for its transform_test/collate_fn/voxel_cfg (no file list is read).
++    dataset = HFX3DDataset.__new__(HFX3DDataset)
++    dataset.voxel_cfg = Munch.fromDict(cfg.data.test.voxel_cfg)
++    dataset.training = False
++    dataset.logger = logger
++
++    evaluator = ScanNetInstanceEvaluator(CLASS_NAMES, SEGMENT_IGNORE_INDEX, INSTANCE_IGNORE_INDEX)
++    # Same building order / seed rule as the PointGroup script: Pointcept's
++    # DefaultDataset.get_data_list() is an UNSORTED glob of <split>/*, and the
++    # seed is 42 + index in that list.
++    data_list = glob.glob(os.path.join(args.data_root, args.eval_split, "*"))
+     scenes = []
+-
+-    files = sorted(glob.glob(os.path.join(cfg.data.test.data_root, args.eval_split, "*.pth")))
+-    if args.limit:
+-        files = files[: args.limit]
+-    for i, path in enumerate(files):
++    per_building = {}
++    t_all = time.time()
++    for idx, path in enumerate(data_list):
+         name = os.path.splitext(os.path.basename(path))[0]
+-        xyz, colors, sem_labels, inst_labels = torch.load(path)
+-        logger.info(f"[{i + 1}/{len(files)}] {name}: {xyz.shape[0]} points")
++        if args.only and name not in args.only:
++            continue
+         t0 = time.time()
++        coord, feat, segment, instance = load_building(path)
++        logger.info(f"[{idx + 1}/{len(data_list)}] {name}: {coord.shape[0]} points (seed {42 + idx})")
+         final_masks, final_classes, final_scores = process_building(
+-            model, dataset, name, xyz, colors, sem_labels, inst_labels,
+-            args.footprint, args.overlap, args.point_max, args.merge_iou,
+-            args.min_inst_points, logger, seed=42 + i,
++            model, dataset, name, coord, feat, args.footprint, args.overlap, args.point_max,
++            args.merge_iou, args.min_inst_points, logger, seed=42 + idx,
+         )
+-        # qualdump save stitched per-point instance predictions (additive) ---
+-        import os as _os_qd, numpy as _np_qd
+-        _pred_dir = _os_qd.path.join(_os_qd.path.dirname(args.checkpoint), "pred_" + args.eval_split)
+-        _os_qd.makedirs(_pred_dir, exist_ok=True)
+-        _coord_qd = xyz
+-        _inst_qd = _np_qd.full(_coord_qd.shape[0], -1, dtype=_np_qd.int32)
+-        _ord_qd = _np_qd.argsort(_np_qd.asarray(final_scores)) if len(final_scores) else []
+-        for _i_qd in _ord_qd:
+-            _inst_qd[final_masks[int(_i_qd)]] = int(_i_qd)
+-        _np_qd.save(_os_qd.path.join(_pred_dir, str(name) + "_instance.npy"), _inst_qd)
+-        _np_qd.save(_os_qd.path.join(_pred_dir, str(name) + "_xyz.npy"), _np_qd.asarray(_coord_qd, dtype=_np_qd.float32))
+-        _np_qd.save(_os_qd.path.join(_pred_dir, str(name) + "_classes.npy"), _np_qd.asarray(final_classes, dtype=_np_qd.int32))
+-        _np_qd.save(_os_qd.path.join(_pred_dir, str(name) + "_scores.npy"), _np_qd.asarray(final_scores, dtype=_np_qd.float32))
+-        # qualdump end ---
++        if not args.no_dump:
++            pred_dir = os.path.join(args.save_dir, "predictions")
++            os.makedirs(pred_dir, exist_ok=True)
++            inst = np.full(coord.shape[0], -1, dtype=np.int32)
++            for i in (np.argsort(np.asarray(final_scores)) if len(final_scores) else []):
++                inst[final_masks[int(i)]] = int(i)
++            np.save(os.path.join(pred_dir, f"{name}_instance.npy"), inst)
++            np.save(os.path.join(pred_dir, f"{name}_classes.npy"), np.asarray(final_classes, dtype=np.int32))
++            np.save(os.path.join(pred_dir, f"{name}_scores.npy"), np.asarray(final_scores, dtype=np.float32))
+         gt_instances, pred_instances = evaluator.associate_instances(
+-            final_masks, final_classes, final_scores, sem_labels, inst_labels
++            final_masks, final_classes, final_scores, segment, instance
+         )
+         scenes.append(dict(gt=gt_instances, pred=pred_instances))
++        per_building[name] = dict(n_points=int(coord.shape[0]), n_pred=len(final_masks), seed=42 + idx,
++                                  seconds=round(time.time() - t0, 1))
+         logger.info(f"  done in {time.time() - t0:.1f}s")
+ 
++    assert scenes, "no building evaluated"
+     ap_scores = evaluator.evaluate_matches(scenes)
+     logger.info(
+         "=== Full-scene {} result: mAP/AP50/AP25 {:.4f}/{:.4f}/{:.4f} ===".format(
+@@ -320,6 +356,18 @@
+         c = ap_scores["classes"][label_name]
+         logger.info(f"  {label_name:12s} AP/AP50/AP25: {c['ap']:.4f}/{c['ap50']:.4f}/{c['ap25']:.4f}")
+ 
++    def _f(x):
++        return None if x is None or np.isnan(x) else float(x)
++
++    out = dict(
++        checkpoint=args.checkpoint, global_step=ck.get("global_step"), split=args.eval_split,
++        buildings=per_building, seconds=round(time.time() - t_all, 1),
++        AP=_f(ap_scores["all_ap"]), AP50=_f(ap_scores["all_ap_50"]), AP25=_f(ap_scores["all_ap_25"]),
++        classes={k: {m: _f(v[m]) for m in ("ap", "ap50", "ap25")} for k, v in ap_scores["classes"].items()},
++    )
++    with open(os.path.join(args.save_dir, "result.json"), "w") as f:
++        json.dump(out, f, indent=2)
++
+ 
+ if __name__ == "__main__":
+     main()
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/ISBNet/tools/train.py new/ISBNet/tools/train.py
+--- old/ISBNet/tools/train.py	2026-08-15 23:57:17.000000000 -0300
++++ new/ISBNet/tools/train.py	2026-11-01 05:52:18.958893700 -0400
+@@ -7,6 +7,7 @@
+ import argparse
+ import datetime
+ import os
++import random
+ import os.path as osp
+ import shutil
+ import time
+@@ -28,11 +29,15 @@
+     is_multiple,
+     is_power2,
+     load_checkpoint,
++    weights_to_cpu,
+ )
+ 
+ 
+-np.random.seed(42)  # HFX3D fix: protocol locks seed=42 across all models
+-torch.manual_seed(42)
++SEED = 42  # protocol 1.3: Python, NumPy, PyTorch (CPU + CUDA); workers seeded in build_dataloader
++random.seed(SEED)
++np.random.seed(SEED)
++torch.manual_seed(SEED)
++torch.cuda.manual_seed_all(SEED)
+ 
+ 
+ def get_args():
+@@ -46,82 +51,132 @@
+     parser.add_argument("--exp_name", type=str, default="default")
+     parser.add_argument("--only_backbone", action="store_true", help="only train backbone")
+     parser.add_argument("--trainall", action="store_true", help="only train backbone")
++    # HFX3D (protocol 3.4): iteration-based schedule; CLI values override the config
++    parser.add_argument("--total_steps", type=int, default=None, help="optimizer steps in THIS stage")
++    parser.add_argument("--lr_cosine_start_step", type=int, default=None)
++    parser.add_argument("--save_every", type=int, default=None, help="checkpoint every N GLOBAL steps")
++    parser.add_argument("--global_step_offset", type=int, default=None, help="steps done by earlier stages")
++    parser.add_argument("--pretrain", type=str, default=None, help="override cfg.pretrain")
++    parser.add_argument("--data_root", type=str, default=None, help="override cfg.data.train.data_root")
+     args = parser.parse_args()
+     return args
+ 
+ 
+-def train(epoch, model, optimizer, scheduler, scaler, train_loader, cfg, logger, writer):
++def infinite_batches(train_loader):
++    """Endless stream of batches; the shuffling sampler is re-drawn every pass."""
++    epoch = 0
++    while True:
++        epoch += 1
++        if train_loader.sampler is not None and hasattr(train_loader.sampler, "set_epoch"):
++            train_loader.sampler.set_epoch(epoch)
++        for batch in train_loader:
++            yield batch
++
++
++def save_step_checkpoint(cfg, model, optimizer, step, global_step, n_skipped):
++    """step = optimizer steps done in this stage; global_step = summed over stages."""
++    if hasattr(model, "module"):
++        model = model.module
++    ckpt = {
++        "net": weights_to_cpu(model.state_dict()),
++        "optimizer": optimizer.state_dict(),
++        "step": step,
++        "global_step": global_step,
++        "n_skipped_batches": n_skipped,
++        "epoch": 0,  # kept so isbnet.util.load_checkpoint() reads these files unchanged
++    }
++    torch.save(ckpt, osp.join(cfg.work_dir, f"step_{global_step:05d}.pth"))
++    tmp = osp.join(cfg.work_dir, "latest.pth.tmp")
++    torch.save(ckpt, tmp)
++    os.replace(tmp, osp.join(cfg.work_dir, "latest.pth"))
++
++
++def train_steps(model, optimizer, scaler, train_loader, cfg, logger, writer, start_step=0, n_skipped=0):
++    """HFX3D fix (audit 2026-11-01: the old run did ~600 optimizer steps per
++    stage because one 'epoch' was 6 iterations). Iteration-based loop: exactly
++    cfg.total_steps optimizer steps in this stage.
++
++    A batch that yields no gradient -- ISBNet's own 'placeholder' loss when a
++    crop has <=100 foreground voxels, or the BatchNorm single-voxel ValueError
++    guard -- is logged and redrawn and does NOT count as an optimizer step.
++
++    LR: ISBNet's cosine_lr_after_step evaluated per step instead of per epoch
++    (constant until lr_cosine_start_step, cosine to ~0 at total_steps)."""
+     model.train()
+     iter_time = AverageMeter(True)
+     data_time = AverageMeter(True)
+     meter_dict = {}
++    total_steps = cfg.total_steps
++    offset = cfg.global_step_offset
++    batches = infinite_batches(train_loader)
++    step = start_step
++    consecutive_skips = 0
+     end = time.time()
+-
+-    if train_loader.sampler is not None and cfg.dist:
+-        train_loader.sampler.set_epoch(epoch)
+-
+-    for i, batch in enumerate(train_loader, start=1):
++    t_start = time.time()
++    while step < total_steps:
++        batch = next(batches)
+         data_time.update(time.time() - end)
+ 
+-        if scheduler is None:
+-            cosine_lr_after_step(optimizer, cfg.optimizer.lr, epoch - 1, cfg.step_epoch, cfg.epochs)
+-        # HFX3D fix: a batch that gets truncated down to size 1 (some
+-        # crops in this batch failed min_npoint after 5 retries, see
+-        # custom.py's "batch is truncated from size X to Y" logging)
+-        # combined with a very sparse crop can make some intermediate
+-        # sparse-conv layer's feature map collapse to a single active
+-        # voxel across the whole (batch-size-1) input -- BatchNorm1d
+-        # requires >1 value per channel to compute a variance and raises
+-        # ValueError("Expected more than 1 value per channel...") instead
+-        # of a CUDA-side crash. Confirmed: crashed after 8 successful
+-        # epochs, once, on this exact rare combination -- same class of
+-        # small-batch/BatchNorm edge case as this project's own
+-        # RandLA-Net fix (CLAUDE.md: "too few batches for BatchNorm").
+-        # Skip just this one degenerate batch rather than crash the job.
++        cosine_lr_after_step(optimizer, cfg.optimizer.lr, step, cfg.lr_cosine_start_step, total_steps)
+         try:
+             with torch.cuda.amp.autocast(enabled=cfg.fp16):
+-                loss, log_vars = model(batch, return_loss=True, epoch=epoch - 1)
++                loss, log_vars = model(batch, return_loss=True, epoch=0)
+         except ValueError as e:
+-            logger.info(f"Skipping degenerate batch (epoch {epoch}, iter {i}): {e}")
++            loss, log_vars = None, {"placeholder": 0.0}
++            logger.info(f"Degenerate batch at stage step {step}: {e}")
++
++        if "placeholder" in log_vars:
++            n_skipped += 1
++            consecutive_skips += 1
++            if n_skipped <= 20 or n_skipped % 100 == 0:
++                logger.info(f"No-gradient batch at stage step {step} (total redrawn: {n_skipped})")
++            if consecutive_skips >= cfg.get("max_consecutive_skips", 200):
++                raise RuntimeError(f"{consecutive_skips} consecutive no-gradient batches; aborting")
++            end = time.time()
+             continue
++        consecutive_skips = 0
+ 
+-        # meter_dict
+         for k, v in log_vars.items():
+-            if k != "placeholder":
+-                if k not in meter_dict.keys():
+-                    meter_dict[k] = AverageMeter()
+-                meter_dict[k].update(v)
++            if k not in meter_dict:
++                meter_dict[k] = AverageMeter()
++            meter_dict[k].update(v)
+ 
+-        # backward
+         optimizer.zero_grad()
+         scaler.scale(loss).backward()
+         scaler.step(optimizer)
+         scaler.update()
++        step += 1
++        global_step = offset + step
+ 
+-        # time and print
+-        remain_iter = len(train_loader) * (cfg.epochs - epoch + 1) - i
+         iter_time.update(time.time() - end)
+         end = time.time()
+-        remain_time = remain_iter * iter_time.avg
+-        remain_time = str(datetime.timedelta(seconds=int(remain_time)))
+-        lr = optimizer.param_groups[0]["lr"]
+-
+-        if scheduler is not None:
+-            scheduler.step()
+-
+-        if is_multiple(i, 10):
+-            log_str = f"Epoch [{epoch}/{cfg.epochs}][{i}/{len(train_loader)}]  "
+-            log_str += (
+-                f"lr: {lr:.2g}, eta: {remain_time}, mem: {get_max_memory()}, "
+-                f"data_time: {data_time.val:.2f}, iter_time: {iter_time.val:.2f}"
++
++        if step % 10 == 0 or step == total_steps:
++            lr = optimizer.param_groups[0]["lr"]
++            remain = str(datetime.timedelta(seconds=int((total_steps - step) * iter_time.avg)))
++            log_str = (
++                f"Step [{step}/{total_steps}] (global {global_step})  lr: {lr:.3g}, eta: {remain}, "
++                f"mem: {get_max_memory()}, data_time: {data_time.val:.2f}, iter_time: {iter_time.val:.2f} "
++                f"(avg {iter_time.avg:.3f}), redrawn: {n_skipped}"
+             )
+             for k, v in meter_dict.items():
+-                log_str += f", {k}: {v.val:.4f}"
++                log_str += f", {k}: {v.avg:.4f}"
+             logger.info(log_str)
+-    writer.add_scalar("train/learning_rate", lr, epoch)
+-    for k, v in meter_dict.items():
+-        writer.add_scalar(f"train/{k}", v.avg, epoch)
+-    checkpoint_save(epoch, model, optimizer, cfg.work_dir, cfg.save_freq)
++            writer.add_scalar("train/learning_rate", lr, global_step)
++            for k, v in meter_dict.items():
++                writer.add_scalar(f"train/{k}", v.avg, global_step)
++            meter_dict = {}
++
++        if global_step % cfg.save_every == 0 or step == total_steps:
++            save_step_checkpoint(cfg, model, optimizer, step, global_step, n_skipped)
++            logger.info(f"Saved checkpoint: global step {global_step} (stage step {step})")
++            writer.flush()
++
++    logger.info(
++        f"Stage finished: {total_steps} optimizer steps (global {offset + total_steps}), "
++        f"{n_skipped} no-gradient batches redrawn, {time.time() - t_start:.0f}s in this process, "
++        f"mean iter_time {iter_time.avg:.3f}s, mean data_time {data_time.avg:.3f}s"
++    )
+ 
+ 
+ def validate(epoch, model, optimizer, val_loader, cfg, logger, writer):
+@@ -210,9 +265,19 @@
+     cfg = Munch.fromDict(yaml.safe_load(cfg_txt))
+ 
+     if args.dist:
+-        init_dist()
++        # The loop above redraws no-gradient batches per process; under DDP the
++        # ranks would disagree on when to all-reduce and hang.
++        raise NotImplementedError("HFX3D iteration-based training is single-process (effective batch = batch_size)")
+     cfg.dist = args.dist
+ 
++    for key in ("total_steps", "lr_cosine_start_step", "save_every", "global_step_offset", "pretrain"):
++        if getattr(args, key) is not None:
++            cfg[key] = getattr(args, key)
++    if args.data_root is not None:
++        cfg.data.train.data_root = args.data_root
++    for key in ("total_steps", "lr_cosine_start_step", "save_every", "global_step_offset"):
++        assert key in cfg, f"config is missing {key} (HFX3D iteration-based schedule)"
++
+     # work_dir & logger
+     if args.work_dir:
+         cfg.work_dir = args.work_dir
+@@ -250,9 +315,13 @@
+         cfg.model.semantic_weight,
+         cfg.model.ignore_label,
+         semantic_only=cfg.model.semantic_only,
+-        total_epoch=cfg.epochs,
++        total_epoch=cfg.get("epochs", 1),  # stored but unused by Criterion
+         trainall=args.trainall,
+-        voxel_scale=cfg.data.train.voxel_cfg.scale,
++        # Criterion multiplies the metric offset/box L1 losses by voxel_scale/50
++        # (= 1 on ScanNet's 2 cm voxels; 0.4 at HFX3D's 5 cm; 0.06 in the old
++        # 0.33 m run). Exposed as cfg.loss_voxel_scale so the weighting can be
++        # set independently of the voxel; the HFX3D configs keep ISBNet's rule (20).
++        voxel_scale=cfg.get("loss_voxel_scale", cfg.data.train.voxel_cfg.scale),
+     )
+ 
+     model = ISBNet(**cfg.model, criterion=criterion, dataset_name=cfg.data.train.type, trainall=args.trainall).cuda()
+@@ -274,11 +343,11 @@
+     scaler = torch.cuda.amp.GradScaler(enabled=cfg.fp16)
+ 
+     # data
++    # HFX3D: ISBNet's built-in validate() is not the protocol metric (3.2/3.3);
++    # checkpoints are scored offline with tools/test_fullscene_hfx3d.py.
++    assert args.skip_validate, "use --skip_validate; validation is the offline full-scene pipeline"
+     train_set = build_dataset(cfg.data.train, logger)
+-    val_set = build_dataset(cfg.data.test, logger)
+-
+-    train_loader = build_dataloader(train_set, training=True, dist=args.dist, **cfg.dataloader.train)
+-    val_loader = build_dataloader(val_set, training=False, dist=False, **cfg.dataloader.test)
++    train_loader = build_dataloader(train_set, training=True, dist=args.dist, seed=SEED, **cfg.dataloader.train)
+ 
+     # optim
+     default_lr = cfg.optimizer.lr  # default for batch 16
+@@ -290,28 +359,27 @@
+     optimizer = build_optimizer(model, cfg.optimizer)
+ 
+     # pretrain, resume
+-    start_epoch = 1
++    start_step, n_skipped = 0, 0
+     if args.resume:
+         logger.info(f"Resume from {args.resume}")
+-        start_epoch = load_checkpoint(args.resume, logger, model, optimizer=optimizer)
++        load_checkpoint(args.resume, logger, model, optimizer=optimizer)
++        ck = torch.load(args.resume, map_location="cpu")
++        start_step, n_skipped = int(ck["step"]), int(ck.get("n_skipped_batches", 0))
++        logger.info(f"Resuming at stage step {start_step} (data/augmentation RNG state is NOT restored)")
+     elif cfg.pretrain:
+         logger.info(f"Load pretrain from {cfg.pretrain}")
+         load_checkpoint(cfg.pretrain, logger, model)
+ 
+-    scheduler = None
+-    global best_metric
+-    best_metric = 0
+-
+-    # if is_main_process():
+-    #     validate(0, model, optimizer, val_loader, cfg, logger, writer)
+-
+-    # train and val
+-    logger.info("Training")
+-    for epoch in range(start_epoch, cfg.epochs + 1):
+-        train(epoch, model, optimizer, scheduler, scaler, train_loader, cfg, logger, writer)
+-        if not args.skip_validate and (is_multiple(epoch, cfg.save_freq) or is_power2(epoch)) and is_main_process():
+-            validate(epoch, model, optimizer, val_loader, cfg, logger, writer)
+-        writer.flush()
++    logger.info(
++        f"Training (iteration-based): total_steps={cfg.total_steps} "
++        f"lr_cosine_start_step={cfg.lr_cosine_start_step} save_every={cfg.save_every} (global) "
++        f"global_step_offset={cfg.global_step_offset} effective_batch={total_batch_size} lr={cfg.optimizer.lr} "
++        f"data_root={cfg.data.train.data_root} pretrain={cfg.pretrain!r}"
++    )
++    with open(osp.join(cfg.work_dir, "resolved_config.yaml"), "w") as f:
++        yaml.safe_dump(cfg.toDict(), f, sort_keys=False)
++    train_steps(model, optimizer, scaler, train_loader, cfg, logger, writer, start_step=start_step, n_skipped=n_skipped)
++    writer.flush()
+ 
+     logger.info(f"Finish!!! Model at: {cfg.work_dir}")
+ 
+diff -ruN -x __pycache__ -x logs -x work_dirs -x 'submit_*' -x 'patch_*.py' -x run_isbnet_converter.sh -x '*.bak_qualdump' old/isbnet_hfx3d_converter.py new/isbnet_hfx3d_converter.py
+--- old/isbnet_hfx3d_converter.py	2026-08-14 15:38:32.000000000 -0300
++++ new/isbnet_hfx3d_converter.py	2026-11-01 05:31:02.793364100 -0400
+@@ -1,6 +1,18 @@
+ """
+ HFX3D -> ISBNet data converter.
+ 
++FRESH v1.1 SETUP (2026-11-01) -- changes vs the Aug-2026 converter:
++  * colour is written AS RELEASED ([0,1], protocol 1.2), not remapped to
++    [-1,1]; feat = [r, g, b, intensity], all in [0,1].
++  * output is one directory of memory-mappable .npy arrays per split
++    (<name>_xyz.npy / _feat.npy / _sem.npy / _inst.npy) instead of a pickled
++    .pth tuple, so the 16 data-loader workers share ONE page-cached copy of
++    each building instead of re-unpickling a 1-2 GB file per training crop.
++  * --splits selects which splits to convert (training only needs train;
++    the full-scene evaluator reads the released .h5 files directly).
++  Labels, the stuff-first remap, -1/stuff -> -100 ignore and the dense
++  instance renumbering are unchanged.
++
+ ISBNet (VinAIResearch/ISBNet, CVPR'23) was chosen as HAIS's substitute in the
+ HFX3D instance-seg benchmark: HAIS's own reference repo is a dead spconv1.0/
+ CUDA9.2 stack that cannot target either H100 or L40S (compiler predates both
+@@ -83,13 +95,14 @@
+ 
+ HOW TO RUN THIS YOURSELF:
+     Requires only h5py, numpy, torch (any environment has these -- doesn't
+-    need the ISBNet container). On Killarney, from a login node:
++    need the ISBNet container). Fresh v1.1 setup, tamia login node:
+ 
+-        module load apptainer/1.3.5
+-        apptainer exec /project/6118401/abdiaziz/containers/killarney_pointcept.sif \\
+-          python3 isbnet_hfx3d_converter.py \\
+-            --data_root /project/6118401/abdiaziz/HFX3D_Instance \\
+-            --out_root  /project/6118401/abdiaziz/repos/ISBNet/dataset/hfx3d
++        cd /project/6118401/abdiaziz/fresh/isbnet
++        module load apptainer
++        apptainer exec --bind /project/6118401/abdiaziz:/project/6118401/abdiaziz \\
++          containers/killarney_pointcept.sif python3 isbnet_hfx3d_converter.py \\
++            --data_root /project/6118401/abdiaziz/fresh/data/HFX3D_Instance \\
++            --out_root  /project/6118401/abdiaziz/fresh/isbnet/data/hfx3d_isbnet --splits train
+ 
+     Or locally (any machine with the 3 packages above):
+         python isbnet_hfx3d_converter.py --data_root <path> --out_root <path>
+@@ -115,6 +128,7 @@
+     1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 8: 9, 10: 10, 11: 11,
+ }
+ LABEL_SHIFT = 4  # number of stuff classes -- matches ISBNet's semantic_classes - instance_classes
++CHUNK = 4_000_000  # points per read/write chunk
+ 
+ 
+ def convert_split(data_root, out_root, split):
+@@ -127,57 +141,71 @@
+ 
+     for h5_path in h5_files:
+         name = os.path.splitext(os.path.basename(h5_path))[0]
+-
+-        with h5py.File(h5_path, "r") as f:
+-            xyz = f["point_cloud/xyz"][:].astype(np.float32)
+-            rgb = f["point_cloud/rgb"][:].astype(np.float32)
+-            intensity = f["point_cloud/intensity"][:].astype(np.float32)
+-            semantic = f["labels/semantic"][:].astype(np.int64)
+-            instance = f["labels/instance"][:].astype(np.int64)
+-
+-        colors = np.concatenate([rgb * 2.0 - 1.0, intensity[:, None]], axis=1)  # (N, 4): rgb + intensity
+-
+-        # Lookup-table remap, not np.vectorize -- np.vectorize boxes every
+-        # element as a Python object (huge memory/time overhead at 47.9M
+-        # points/building) and OOM-killed the login node on the first
+-        # attempt (confirmed: process killed, exit trace showed no python
+-        # traceback, consistent with an OOM kill not a code error).
++        base = os.path.join(out_dir, name)
++        done = os.path.join(out_dir, name + ".done")
++        if os.path.isfile(done):
++            # Resumable (a login-node process limit killed the first run mid-split):
++            # a building is only marked done after all four arrays are written.
++            sem_done = np.load(base + "_sem.npy", mmap_mode="r")
++            class_point_counts += np.bincount(sem_done, minlength=len(DENSE_CLASS_NAMES))
++            print(f"[{split}] {name}: already converted, counted", flush=True)
++            continue
++
++        # Chunked (a whole 45M-point building in RAM got OOM-killed on the
++        # tamia login node). Two passes over the h5: (1) collect the kept
++        # thing-instance ids, (2) remap and write through np.lib.format
++        # memmaps. Output is identical to the original whole-array version.
+         sem_lut = np.zeros(max(RAW_TO_DENSE.keys()) + 1, dtype=np.int64)
+         for raw_id, dense_id in RAW_TO_DENSE.items():
+             sem_lut[raw_id] = dense_id
+-        sem_labels = sem_lut[semantic]
+-        class_point_counts += np.bincount(sem_labels, minlength=len(DENSE_CLASS_NAMES))
++        with h5py.File(h5_path, "r") as f:
++            n = f["point_cloud/xyz"].shape[0]
++            chunks = [(s, min(s + CHUNK, n)) for s in range(0, n, CHUNK)]
+ 
+-        # Ignore: HFX3D's own -1 (already applied 200-pt min-instance-size
+-        # filter, protocol §3) OR any stuff-class point (dense id < LABEL_SHIFT).
+-        ignore_mask = (instance == -1) | (sem_labels < LABEL_SHIFT)
+-        instance_labels = instance.copy()
+-        instance_labels[ignore_mask] = -1
+-
+-        # Renumber remaining (thing-class, non-ignored) instance ids to a
+-        # dense 0..K-1 range -- ISBNet's get_instance_info requires no gaps.
+-        # Lookup table again, not np.vectorize, same reason as above.
+-        remaining_ids = np.unique(instance_labels[~ignore_mask])
+-        instance_labels_dense = np.full(instance_labels.shape, -100, dtype=np.int64)
+-        if len(remaining_ids) > 0:
+-            keep = ~ignore_mask
+-            inst_lut = np.full(int(remaining_ids.max()) + 1, -100, dtype=np.int64)
++            # Ignore: HFX3D's own -1 (the 200-pt min-instance-size filter
++            # already applied in the released file, protocol 3.1) OR any
++            # stuff-class point (dense id < LABEL_SHIFT) -> -100.
++            remaining_ids = np.zeros(0, dtype=np.int64)
++            for s, e in chunks:
++                sem = sem_lut[f["labels/semantic"][s:e].astype(np.int64)]
++                inst = f["labels/instance"][s:e].astype(np.int64)
++                keep = (inst != -1) & (sem >= LABEL_SHIFT)
++                remaining_ids = np.union1d(remaining_ids, np.unique(inst[keep]))
++            # Dense 0..K-1 renumbering (ISBNet's get_instance_info needs no gaps).
++            inst_lut = np.full(int(remaining_ids.max()) + 1 if len(remaining_ids) else 1, -100, dtype=np.int64)
+             inst_lut[remaining_ids] = np.arange(len(remaining_ids), dtype=np.int64)
+-            instance_labels_dense[keep] = inst_lut[instance_labels[keep]]
+ 
+-        out_path = os.path.join(out_dir, f"{name}.pth")
+-        torch.save(
+-            (
+-                xyz.astype(np.float32),
+-                colors.astype(np.float32),
+-                sem_labels.astype(np.int64),
+-                instance_labels_dense.astype(np.int64),
+-            ),
+-            out_path,
+-        )
++            om = np.lib.format.open_memmap
++            out_xyz = om(base + "_xyz.npy", mode="w+", dtype=np.float32, shape=(n, 3))
++            out_feat = om(base + "_feat.npy", mode="w+", dtype=np.float32, shape=(n, 4))
++            out_sem = om(base + "_sem.npy", mode="w+", dtype=np.int64, shape=(n,))
++            out_inst = om(base + "_inst.npy", mode="w+", dtype=np.int64, shape=(n,))
++            n_ign = 0
++            for s, e in chunks:
++                out_xyz[s:e] = f["point_cloud/xyz"][s:e].astype(np.float32)
++                rgb = f["point_cloud/rgb"][s:e].astype(np.float32)
++                intensity = f["point_cloud/intensity"][s:e].astype(np.float32)
++                # Protocol 1.2: released scales, no reinterpretation.
++                colors = np.concatenate([rgb, intensity.reshape(-1, 1)], axis=1)
++                assert np.all(np.isfinite(colors)) and colors.min() >= 0.0 and colors.max() <= 1.0, name
++                out_feat[s:e] = colors
++                sem = sem_lut[f["labels/semantic"][s:e].astype(np.int64)]
++                inst = f["labels/instance"][s:e].astype(np.int64)
++                class_point_counts += np.bincount(sem, minlength=len(DENSE_CLASS_NAMES))
++                keep = (inst != -1) & (sem >= LABEL_SHIFT)
++                dense = np.full(e - s, -100, dtype=np.int64)
++                dense[keep] = inst_lut[inst[keep]]
++                out_sem[s:e] = sem
++                out_inst[s:e] = dense
++                n_ign += int(np.count_nonzero((inst == -1) & (sem >= LABEL_SHIFT)))
++            for a_ in (out_xyz, out_feat, out_sem, out_inst):
++                a_.flush()
++            del out_xyz, out_feat, out_sem, out_inst
++        open(done, "w").close()
+         print(
+-            f"[{split}] {name}: {xyz.shape[0]:,} pts, "
+-            f"{len(remaining_ids)} thing instances -> {out_path}"
++            f"[{split}] {name}: {n:,} pts, {len(remaining_ids)} thing instances, "
++            f"{n_ign:,} thing pts with instance -1 (-> -100 ignore) -> {base}_*.npy",
++            flush=True,
+         )
+ 
+     return class_point_counts
+@@ -206,15 +234,15 @@
+     parser = argparse.ArgumentParser()
+     parser.add_argument("--data_root", required=True, help="HFX3D_Instance root (train/val/test subdirs of .h5)")
+     parser.add_argument("--out_root", required=True, help="ISBNet dataset/hfx3d output root")
++    parser.add_argument("--splits", nargs="+", default=["train"], choices=["train", "val", "test"])
+     args = parser.parse_args()
+ 
+     os.makedirs(args.out_root, exist_ok=True)
+ 
+-    train_counts = convert_split(args.data_root, args.out_root, "train")
+-    convert_split(args.data_root, args.out_root, "val")
+-    convert_split(args.data_root, args.out_root, "test")
+-
+-    write_semantic_weight(args.out_root, train_counts)
++    for split in args.splits:
++        counts = convert_split(args.data_root, args.out_root, split)
++        if split == "train":
++            write_semantic_weight(args.out_root, counts)
+ 
+ 
+ if __name__ == "__main__":

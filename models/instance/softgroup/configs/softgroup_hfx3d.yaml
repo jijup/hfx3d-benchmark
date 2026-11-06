@@ -1,0 +1,89 @@
+model:
+  channels: 16
+  num_blocks: 7
+  semantic_classes: 12
+  instance_classes: 8
+  sem2ins_classes: []
+  semantic_only: False
+  # Dense order: wall, terrain, roof, other (stuff, 0-3), window, door,
+  # balcony, vegetation, stairs, blinds, column, arch (thing, 4-11) --
+  # remapped from PointGroup's own already-computed RAW-order class_weight
+  # (configs/hfx3d/insseg-pointgroup-v1m1-0-spunet-base.py), same source
+  # data, just reordered to match SoftGroup's stuff-first convention.
+  semantic_weight: [2.2669, 3.3933, 32.2491, 21.4144, 8.8449, 39.8035, 29.8392,
+                    8.3796, 32.8102, 20.7645, 29.7737, 43.0959]
+  ignore_label: -100
+  with_coords: False
+  grouping_cfg:
+    score_thr: 0.2
+    radius: 0.9
+    mean_active: 3
+    # Real per-class mean instance point count, computed from the full
+    # preprocessed train set (322 blocks, all 18 train buildings) via
+    # compute_class_numpoint_mean.py -- dense order 4-11: window, door,
+    # balcony, vegetation, stairs, blinds, column, arch.
+    class_numpoint_mean: [-1., -1., -1., -1., 13143.3, 11732.2, 17448.5,
+                          81423.1, 71428.2, 7047.5, 51846.4, 6865.3]
+    npoint_thr: 0.05
+    ignore_classes: [0, 1, 2, 3]
+  instance_voxel_cfg:
+    scale: 20
+    spatial_shape: 20
+  train_cfg:
+    max_proposal_num: 300
+    pos_iou_thr: 0.5
+    match_low_quality: True
+    min_pos_thr: 0.1
+  test_cfg:
+    x4_split: False
+    cls_score_thr: 0.001
+    mask_score_thr: -0.5
+    min_npoint: 15
+    eval_tasks: ['semantic', 'instance']
+  fixed_modules: []
+
+data:
+  train:
+    type: 'hfx3d'
+    data_root: 'dataset/hfx3d'
+    prefix: 'train'
+    suffix: '_inst_nostuff.pth'
+    training: True
+    repeat: 1
+    voxel_cfg:
+      scale: 20
+      spatial_shape: [128, 512]
+      max_npoint: 250000
+      min_npoint: 5000
+  test:
+    type: 'hfx3d'
+    data_root: 'dataset/hfx3d'
+    prefix: 'val'
+    suffix: '_inst_nostuff.pth'
+    training: False
+    voxel_cfg:
+      scale: 20
+      spatial_shape: [128, 512]
+      max_npoint: 250000
+      min_npoint: 5000
+
+dataloader:
+  train:
+    batch_size: 4
+    num_workers: 2
+  test:
+    batch_size: 1
+    num_workers: 1
+
+optimizer:
+  type: 'Adam'
+  lr: 0.004
+
+eval_min_npoint: 10
+
+fp16: False
+epochs: 200
+step_epoch: 20
+save_freq: 4
+pretrain: ''
+work_dir: ''

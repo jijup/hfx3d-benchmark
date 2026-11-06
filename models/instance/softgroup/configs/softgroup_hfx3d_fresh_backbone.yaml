@@ -1,0 +1,89 @@
+# SoftGroup on HFX3D
+# STAGE 1 / 2: semantic + offset backbone only (semantic_only), from scratch.
+# Budget: 18,000 optimizer steps total at batch 4 = 5,400 (stage 1) + 12,600 (stage 2).
+seed: 42
+model:
+  in_channels: 4          # rgb(3) + intensity(1); with_coords appends xyz(3) -> 7-D input
+  channels: 32            # SoftGroup default / ScanNet / S3DIS width (old run: 16, STPLS3D)
+  num_blocks: 7
+  semantic_classes: 12
+  instance_classes: 8
+  sem2ins_classes: []
+  semantic_only: True
+  # Dense stuff-first order: wall, terrain, roof, other | window, door, balcony,
+  # vegetation, stairs, blinds, column, arch. Weights = 1/(freq+0.02) recomputed
+  # on the released training split (343,690,544 pts; tools/hfx3d_grouping_stats.py).
+  # Equal to PointGroup's class_weight except stairs 32.6784 (PG 32.8102) and
+  # other 21.4710 (PG 21.4144) -- PG's were computed on an earlier label version.
+  semantic_weight: [2.2669, 3.3933, 32.2491, 21.4710, 8.8449, 39.8035, 29.8392,
+                    8.3796, 32.6784, 20.7645, 29.7737, 43.0959]
+  ignore_label: -100
+  with_coords: True       # xyz (metres, crop-local xy) also used as features
+  grouping_cfg:
+    score_thr: 0.2        # official value on every SoftGroup dataset
+    # Ball-query radius on shifted points (coords + offsets), metres. 0.075 m =
+    # 1.5 voxels = PointGroup's cluster radius (cluster_thresh 1.5 x 5 cm). Training
+    # crops (<=250k pts, median keep fraction 0.13): 1-NN spacing median 2.1 cm,
+    # p90 4.7 cm -> radius/spacing 3.6 (ScanNet official: 4 cm at ~1-2 cm spacing);
+    # mean 24 neighbours at 7.5 cm on unshifted points. Same-class GT centroid
+    # separation p5: blinds 0.86 m, vegetation 1.12, balcony 1.22, window 1.44 m,
+    # i.e. >10x the radius. Old run: 0.9 m (STPLS3D, 33 cm voxels) ~ 390+ neighbours
+    # at 0.3 m alone -> chains neighbouring windows/blinds into one proposal.
+    radius: 0.075
+    mean_active: 25       # initial ball-query buffer only (auto-grows) = ~mean #neighbours at 7.5 cm
+    # Mean thing-instance size in FORWARD-PASS points of training crops
+    # (15 m column, <=250k pts), training split only, tools/hfx3d_grouping_stats.py.
+    # (720 crops, 40/building, separate RNG stream; old values were full-res
+    # per-block sizes, ~8-14x too large for the <=250k-point forward pass)
+    class_numpoint_mean: [-1., -1., -1., -1., 1739.3, 1610.7, 2470.6, 12555.5, 8965.5,
+                          822.4, 5108.3, 640.1]
+    npoint_thr: 0.05      # official (relative to class_numpoint_mean)
+    ignore_classes: [0, 1, 2, 3]
+  instance_voxel_cfg:
+    scale: 20             # = backbone voxel (5 cm)
+    spatial_shape: 20     # official
+  train_cfg:
+    max_proposal_num: 300 # official STPLS3D full-stage value
+    pos_iou_thr: 0.5
+    match_low_quality: True
+    min_pos_thr: 0.1
+  test_cfg:
+    x4_split: False
+    cls_score_thr: 0.001
+    mask_score_thr: -0.5
+    min_npoint: 15        # official STPLS3D full-stage value (forward-pass points)
+    eval_tasks: ['semantic', 'instance']
+  fixed_modules: []
+
+data:
+  train:
+    data_root: /scratch/abdiaziz/hfx3d/fresh/softgroup/data/HFX3D_Instance
+    prefix: train
+    cache_root: /scratch/abdiaziz/hfx3d/fresh/softgroup/data/npy_cache
+    footprint: 15.0       # training crop = 15 m x 15 m full-height column
+    color_noise_std: 0.05 # upstream 0.1 on [-1,1] colour -> 0.05 on [0,1]
+    elastic_ref_scale: 50 # upstream elastic params are for scale 50; rescaled by scale/50
+    voxel_cfg:
+      scale: 20           # 1 / 0.05 m
+      spatial_shape: [128, 512]
+      max_npoint: 250000  # crop cap
+      min_npoint: 5000
+
+dataloader:
+  train:
+    batch_size: 4         # effective batch 4 (single GPU)
+
+optimizer:
+  type: 'Adam'
+  lr: 0.004
+
+schedule:
+  stage: backbone
+  global_start: 0
+  iters: 5400
+  lr: 0.004
+  hold_iters: 5400        # STPLS3D backbone: step_epoch == epochs -> constant LR
+  min_lr: 1.0e-6
+  save_every: 1800        # global steps 1800, 3600, 5400
+
+pretrain: ''

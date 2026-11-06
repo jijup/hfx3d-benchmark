@@ -1,0 +1,104 @@
+# HFX3D ISBNet, stage 2/2: instance head on the FROZEN stage-1 backbone.
+# Base recipe: ISBNet's own configs/stpls3d/isbnet_stpls3d.yaml. ISBNet's official
+# stage-2 configs for EVERY dataset (ScanNetV2, ScanNet200, S3DIS, STPLS3D) freeze
+# the backbone via fixed_modules below; we follow that.
+# Run with: tools/train.py <this> --skip_validate (no --only_backbone / --trainall).
+model:
+  channels: 16
+  num_blocks: 7
+  semantic_classes: 12
+  instance_classes: 8
+  sem2ins_classes: []
+  semantic_only: False
+  semantic_weight: [0.1000, 0.1000, 1.8241, 0.7556, 0.2158, 3.9194, 1.4860, 0.2021, 1.8942, 0.7131, 1.4780, 6.2673]
+  with_coords: True      # HFX3D: must match stage 1 (see isbnet_backbone_hfx3d.yaml)
+  ignore_label: -100
+  voxel_scale: 20        # HFX3D: 0.05 m voxels
+  use_spp_pool: False
+  filter_bg_thresh: 0.1
+  iterative_sampling: False
+  mask_dim_out: 32
+  instance_head_cfg:
+    num_dyco_layer: 2
+    dec_dim: 64
+    n_sample_pa1: 2048
+    n_queries: 256
+    # HFX3D: ball-query radii are METRIC (applied to coords in metres):
+    #   aggregator1 r = 0.2*radius_scale, aggregator2 r = 0.4*radius_scale (post-radius 2x).
+    #   ScanNet (official): radius_scale 1 -> 0.2 / 0.4 m at 2 cm voxels (10 / 20 voxels).
+    #   STPLS3D / old HFX3D run: 10 -> 2.0 / 4.0 m (tuned for 50 m urban blocks; with only
+    #   16 neighbours per ball, a 2 m ball over 5 cm voxels samples an arbitrary 16 of ~5k).
+    #   HFX3D: 2.5 -> 0.5 / 1.0 m (post 1.0 / 2.0 m) = the SAME 10 / 20 voxels per radius as
+    #   ISBNet's ScanNet design at our 5 cm voxel, and ~half the width of a typical window
+    #   or door (1-2 m). Not tuned on val.
+    radius_scale: 2.5
+    radius: 0.4          # unused by the code
+    neighbor: 16
+  test_cfg:
+    x4_split: False
+    logit_thresh: 0.0
+    score_thresh: 0.2
+    npoint_thresh: 10    # voxels/points; permissive pre-filter, the -pt filter is applied after the merge
+    type_nms: 'matrix'
+    topk: 100
+
+  fixed_modules: ['input_conv', 'unet', 'output_layer', 'semantic_linear', 'offset_linear', 'offset_vertices_linear', 'box_conf_linear']
+
+data:
+  train:
+    type: 'hfx3d'
+    data_root: '/scratch/abdiaziz/hfx3d/fresh/isbnet/data/hfx3d_isbnet'  # overridden by --data_root
+    prefix: 'train'
+    suffix: '_xyz.npy'
+    training: True
+    repeat: 20           # HFX3D: each building 20x per sampler pass (see backbone config); step count = total_steps
+    voxel_cfg:
+      scale: 20
+      spatial_shape: [128, 512]
+      max_npoint: 250000
+      min_npoint: 5000
+  test:
+    type: 'hfx3d'
+    data_root: '/scratch/abdiaziz/hfx3d/fresh/isbnet/data/hfx3d_isbnet'
+    prefix: 'val'
+    suffix: '_xyz.npy'
+    training: False
+    voxel_cfg:
+      scale: 20
+      spatial_shape: [128, 512]
+      max_npoint: 250000
+      min_npoint: 5000
+
+dataloader:
+  train:
+    batch_size: 4
+    num_workers: 40       # HFX3D: loading is CPU-bound (column crop + elastic)
+  test:
+    batch_size: 1
+    num_workers: 1
+
+optimizer:
+  type: 'AdamW'
+  lr: 0.001              # ISBNet stage-2 value "for batch 16" -> 0.00025 at batch 4
+  weight_decay: 0.0001
+
+save_cfg:
+  semantic: False
+  offset: False
+  instance: True
+  offset_vertices: False
+  nmc_clusters: False
+  object_conditions: False
+
+fp16: False              # ISBNet's STPLS3D stage 2 uses True; it crashed the old HFX3D stage 2 (instance-id
+                         # indexing assert), so it stays off. Speed only, not accuracy-relevant.
+loss_voxel_scale: 20     # = voxel_scale: ISBNet's own rule, offset/box L1 losses x voxel_scale/50 = 0.4 (see report: open question)
+# HFX3D: iteration-based schedule, 12,000 of the 18,000 total steps. ISBNet stage-2 recipe
+# (STPLS3D): 120 epochs, constant LR for 50 then cosine -> 50/120 of 12,000 = 5,000.
+total_steps: 12000
+lr_cosine_start_step: 5000
+save_every: 1800         # GLOBAL steps: 7200, 9000, ..., 18000 (7 instance checkpoints)
+global_step_offset: 6000
+max_consecutive_skips: 200
+pretrain: '/scratch/abdiaziz/hfx3d/fresh/isbnet/work_dirs/backbone_s42/step_06000.pth'
+work_dir: ''

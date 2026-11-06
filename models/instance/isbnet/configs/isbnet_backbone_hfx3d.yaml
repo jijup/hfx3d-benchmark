@@ -1,0 +1,97 @@
+# HFX3D ISBNet, stage 1/2: backbone (semantic + offset + box heads), from scratch.
+# Base recipe: ISBNet's own configs/stpls3d/isbnet_backbone_stpls3d.yaml (closest
+# outdoor precedent). Every change vs that file / the old Aug-2026 HFX3D run is
+# marked "HFX3D:".
+# Run with: tools/train.py <this> --only_backbone --skip_validate (see slurm script).
+model:
+  channels: 16
+  num_blocks: 7
+  semantic_classes: 12   # 4 stuff + 8 thing (dense stuff-first ids, see converter)
+  instance_classes: 8
+  sem2ins_classes: []
+  semantic_only: False   # --only_backbone sets True for this stage
+  # median-frequency weights from the train split (converter, semantic_weight.txt)
+  semantic_weight: [0.1000, 0.1000, 1.8241, 0.7556, 0.2158, 3.9194, 1.4860, 0.2021, 1.8942, 0.7131, 1.4780, 6.2673]
+  with_coords: True      # HFX3D: "xyz as features where the architecture allows";
+                         # ISBNet supports it (ScanNet/S3DIS configs use True). Input = 4 feat
+                         # [r,g,b,intensity] + 3 tile-local xyz (metres) = 7 channels.
+  ignore_label: -100
+  voxel_scale: 20        # HFX3D: 1 voxel = 1/20 m = 0.05 m. Old run: 3 (0.33 m).
+  use_spp_pool: False
+  filter_bg_thresh: 0.1
+  iterative_sampling: False
+  instance_head_cfg:     # not built in this stage (semantic_only); kept identical to stage 2
+    dec_dim: 64
+    n_sample_pa1: 2048
+    n_queries: 256
+    radius_scale: 2.5    # HFX3D: see isbnet_hfx3d.yaml
+    radius: 0.4          # unused by the code (only radius_scale is read)
+    neighbor: 16
+  test_cfg:
+    x4_split: False
+    logit_thresh: 0.0
+    score_thresh: 0.2
+    npoint_thresh: 10
+    type_nms: 'matrix'
+    topk: 100
+
+  fixed_modules: []
+
+data:
+  train:
+    type: 'hfx3d'
+    data_root: '/scratch/abdiaziz/hfx3d/fresh/isbnet/data/hfx3d_isbnet'  # overridden by --data_root
+    prefix: 'train'
+    suffix: '_xyz.npy'   # HFX3D: one memory-mapped .npy set per building
+    training: True
+    repeat: 20           # HFX3D: each building listed 20x per sampler pass (uniform over buildings, as PointGroup loop=20) so the
+                         # loader has 90 batches per pass to pipeline over its workers; step count is set by total_steps
+    voxel_cfg:
+      scale: 20          # HFX3D: 0.05 m voxels
+      spatial_shape: [128, 512]   # [0] = min sparse-tensor extent; [1] only used by crop(), which HFX3D skips
+      max_npoint: 250000 # crop cap (enforced in HFX3DDataset.load)
+      min_npoint: 5000
+  test:                  # not used (validation = offline full-scene script)
+    type: 'hfx3d'
+    data_root: '/scratch/abdiaziz/hfx3d/fresh/isbnet/data/hfx3d_isbnet'
+    prefix: 'val'
+    suffix: '_xyz.npy'
+    training: False
+    voxel_cfg:
+      scale: 20
+      spatial_shape: [128, 512]
+      max_npoint: 250000
+      min_npoint: 5000
+
+dataloader:
+  train:
+    batch_size: 4        # HFX3D: protocol effective batch 4 (1 GPU x 4 crops)
+    num_workers: 40       # HFX3D: loading is CPU-bound (column crop + elastic)
+  test:
+    batch_size: 1
+    num_workers: 1
+
+optimizer:
+  type: 'AdamW'
+  lr: 0.004              # ISBNet value "for batch 16"; train.py scales linearly -> 0.001 at batch 4
+  weight_decay: 0.0001
+
+save_cfg:
+  semantic: False
+  offset: False
+  instance: True
+  offset_vertices: False
+  nmc_clusters: False
+  object_conditions: False
+
+fp16: False              # as ISBNet's backbone configs
+loss_voxel_scale: 20     # = voxel_scale: ISBNet's own rule, offset/box L1 losses x voxel_scale/50 = 0.4 (see report: open question)
+# HFX3D: iteration-based schedule.
+# ISBNet backbone recipe: 100 epochs, constant LR for the first 40 then cosine -> 40% of 6,000 = 2,400.
+total_steps: 6000
+lr_cosine_start_step: 2400
+save_every: 1800         # GLOBAL steps (checkpoints at 1800/3600/5400 + final 6000)
+global_step_offset: 0
+max_consecutive_skips: 200
+pretrain: ''
+work_dir: ''

@@ -1,0 +1,1758 @@
+# Review diff: the HFX3D SoftGroup changes against the upstream/previous setup.
+# Captures every edit to thangvubk/SoftGroup made for this benchmark.
+diff --git a/softgroup/model/softgroup.py b/softgroup/model/softgroup.py
+index 267cdc1..c4fc14f 100644
+--- upstream/softgroup/model/softgroup.py
++++ b/softgroup/model/softgroup.py
+@@ -437,6 +437,10 @@ class SoftGroup(nn.Module):
+             object_idxs = (scores > self.grouping_cfg.score_thr).nonzero().view(-1)
+             if object_idxs.size(0) < self.test_cfg.min_npoint:
+                 continue
++            # HFX3D fresh run: the old local 1M-point unseeded torch.randperm cap was
++            # REMOVED here (restores upstream). It made grouping nondeterministic and
++            # clipped large instances; with <=250k points per forward pass (protocol
++            # §3.2/§3.4) it can never be needed.
+             batch_idxs_ = batch_idxs[object_idxs]
+             coords_ = coords_float[object_idxs]
+             pt_offsets_ = pt_offsets[object_idxs]
+@@ -567,7 +571,8 @@ class SoftGroup(nn.Module):
+                 score_pred = cur_cls_scores * cur_iou_scores.clamp(0, 1)
+                 mask_pred = torch.zeros((num_instances, num_points), dtype=torch.int, device='cuda')
+                 mask_inds = cur_mask_scores > self.test_cfg.mask_score_thr
+-                cur_proposals_idx = proposals_idx[mask_inds].long()
++                # Upstream bug: proposals_idx is CPU, mask_inds is CUDA (from cur_mask_scores, a GPU model output) -- indexing a CPU tensor with a CUDA bool mask raises "indices should be either on cpu or on the same device as the indexed tensor". Moving proposals_idx to mask_inds's device also satisfies the very next line, which indexes into mask_pred (explicitly created on 'cuda').
++                cur_proposals_idx = proposals_idx.to(mask_inds.device)[mask_inds].long()
+                 mask_pred[cur_proposals_idx[:, 0], cur_proposals_idx[:, 1]] = 1
+ 
+                 # filter low score instance
+# NOTE: relative to the OLD local copy, the only model change is removal of the 4-line max_grouping_points randperm block (the CUDA-device fix is kept).
+--- old/softgroup/data/hfx3d.py
++++ new/softgroup/data/hfx3d.py
+@@ -1,41 +1,277 @@
+-from .custom import CustomDataset
+-
+-# Must match LABEL_SHIFT = semantic_classes - instance_classes in
+-# configs/softgroup/softgroup_hfx3d.yaml (12 - 8 = 4) and prepare_data_hfx3d.py's
+-# dense stuff-first remap (stuff=0-3, thing=4-11).
+-LABEL_SHIFT = 4
+-
+-
+-class HFX3DDataset(CustomDataset):
+-    """Thin CustomDataset subclass, same pattern as STPLS3DDataset -- most of
+-    the real work (tiling, remap to dense stuff-first ids, instance
+-    re-indexing) already happened offline in prepare_data_hfx3d.py.
+-
+-    getInstanceInfo() override IS still needed, though (corrected from an
+-    earlier wrong assumption that it wasn't -- confirmed by a real crash:
+-    "Assertion `t >= 0 && t < n_classes` failed" in nll_loss, job 4652470,
+-    epoch 1 iter 30, the first iteration with a positively-matched
+-    proposal). The base class's getInstanceInfo() stores the raw semantic
+-    label at each instance's first point directly into instance_cls -- for
+-    us that's a DENSE id in [4, 11] (thing classes, post stuff-first remap).
+-    But softgroup.py's classification head is sized instance_classes+1 = 9
+-    (see cls_linear = nn.Linear(channels, instance_classes + 1)), i.e. it
+-    expects targets already 0-indexed over JUST the thing classes: [0, 7].
+-    The dense stuff-first remap fixed contiguity for the SEMANTIC label
+-    space (what softgroup.py's cls_offset/label_shift math needs elsewhere)
+-    -- it does NOT also 0-index the instance-classification target space;
+-    that needs its own separate shift, same as STPLS3DDataset's own
+-    getInstanceInfo() override does (`x - 1` there, `x - LABEL_SHIFT` here --
+-    same mechanism, different shift amount, because STPLS3D's raw class 0 is
+-    already the sole ignored class while ours has 4 stuff classes shifted to
+-    a dense prefix)."""
+-
+-    CLASSES = (
+-        "window", "door", "balcony", "vegetation", "stairs", "blinds", "column", "arch",
+-    )
+-
+-    def getInstanceInfo(self, xyz, instance_label, semantic_label):
+-        ret = super().getInstanceInfo(xyz, instance_label, semantic_label)
+-        instance_num, instance_pointnum, instance_cls, pt_offset_label = ret
+-        instance_cls = [x - LABEL_SHIFT if x != -100 else x for x in instance_cls]
+-        return instance_num, instance_pointnum, instance_cls, pt_offset_label
++"""HFX3D dataset for SoftGroup -- protocol v1.1 (docs/BENCHMARK_PROTOCOL.md §1.2, §3.4).
++
++Replaces the old offline-block pipeline (dataset/hfx3d/prepare_data_hfx3d.py:
++non-overlapping 15 m blocks, rgb remapped to [-1,1], 3-channel input). Here:
++
++* Reads the released HFX3D_Instance .h5 files directly (via an uncompressed
++  .npy mmap cache, built once by ensure_cache(); the cache is a byte-exact
++  copy of the h5 arrays, no transformation).
++* Training crops: the same sampler as the PointGroup baseline
++  (Pointcept ColumnCrop, mode="random"): centre = xy of a uniformly drawn
++  point, keep every point with |dx|,|dy| <= 7.5 m (full height), and if more
++  than 250k points remain, keep a random 250k subset. Buildings are visited
++  in a shuffled order, each building once per 18 samples (PointGroup's
++  loop-over-buildings sampler). Every sample i uses its own RandomState seeded
++  from (seed, i), so the data stream is identical regardless of worker count
++  and is exactly resumable.
++* Input: 7-D [x, y, z, r, g, b, intensity] as released (xyz in metres,
++  rgb in [0,1], intensity in [0,1]). feats = [r, g, b, intensity]; the model
++  appends coords_float (xyz, metres) because with_coords=True -> 7 channels.
++* Labels: raw ids are remapped to SoftGroup's stuff-first dense order
++  (stuff = wall, terrain, roof, other -> 0..3; things -> 4..11). Instance
++  targets: stuff points AND thing points with instance == -1 (ignored <200-pt
++  GT objects) get -100, i.e. they are excluded from offset/instance targets.
++"""
++import glob
++import math
++import os
++import os.path as osp
++from multiprocessing import Pool
++
++import h5py
++import numpy as np
++import scipy.interpolate
++import scipy.ndimage
++import torch
++
++from .custom import CustomDataset
++
++# raw HFX3D id -> SoftGroup dense id (stuff-first). Same table as the old
++# prepare_data_hfx3d.py RAW_TO_DENSE (unchanged).
++RAW_TO_DENSE = np.array([0, 4, 5, 6, 7, 8, 1, 2, 9, 3, 10, 11], dtype=np.int64)
++DENSE_TO_RAW = np.argsort(RAW_TO_DENSE)  # dense id -> raw id
++LABEL_SHIFT = 4  # semantic_classes - instance_classes
++# instance-class index k (0..7, SoftGroup label_id = k+1) -> raw HFX3D id
++THING_RAW = DENSE_TO_RAW[LABEL_SHIFT:]  # [1, 2, 3, 4, 5, 8, 10, 11]
++RAW_CLASS_NAMES = ("wall", "window", "door", "balcony", "vegetation", "stairs", "terrain", "roof",
++                   "blinds", "other", "column", "arch")
++CACHE_KEYS = ("xyz", "feat", "sem", "inst")
++
++
++# ----------------------------------------------------------------------------- cache
++def _cache_one(args):
++    h5_path, out_dir = args
++    if all(osp.isfile(osp.join(out_dir, f"{k}.npy")) for k in CACHE_KEYS):
++        return out_dir
++    tmp = out_dir + ".tmp"
++    os.makedirs(tmp, exist_ok=True)
++    with h5py.File(h5_path, "r") as f:
++        xyz = f["point_cloud/xyz"][:].astype(np.float32)
++        rgb = f["point_cloud/rgb"][:].astype(np.float32)
++        inten = f["point_cloud/intensity"][:].astype(np.float32).reshape(-1, 1)
++        sem = f["labels/semantic"][:].reshape(-1).astype(np.uint8)
++        inst = f["labels/instance"][:].reshape(-1).astype(np.int32)
++    np.save(osp.join(tmp, "xyz.npy"), xyz)
++    np.save(osp.join(tmp, "feat.npy"), np.concatenate([rgb, inten], 1))  # (N,4) rgb|intensity
++    np.save(osp.join(tmp, "sem.npy"), sem)  # RAW semantic ids 0..11
++    np.save(osp.join(tmp, "inst.npy"), inst)  # RAW instance ids (-1 = ignore)
++    if osp.isdir(out_dir):  # stale partial dir
++        for k in CACHE_KEYS:
++            if osp.isfile(osp.join(out_dir, f"{k}.npy")):
++                os.remove(osp.join(out_dir, f"{k}.npy"))
++        os.rmdir(out_dir)
++    os.rename(tmp, out_dir)
++    return out_dir
++
++
++def ensure_cache(data_root, split, cache_root, names=None, processes=16):
++    """Uncompressed .npy copy of each building's h5 arrays (mmap-able, shared
++    page cache across DataLoader workers). Returns sorted [(name, dir)]."""
++    paths = sorted(glob.glob(osp.join(data_root, split, "*.h5")))
++    assert paths, f"no h5 files in {osp.join(data_root, split)}"
++    if names:
++        paths = [p for p in paths if osp.splitext(osp.basename(p))[0] in names]
++    jobs = [(p, osp.join(cache_root, split, osp.splitext(osp.basename(p))[0])) for p in paths]
++    todo = [j for j in jobs if not all(osp.isfile(osp.join(j[1], f"{k}.npy")) for k in CACHE_KEYS)]
++    if todo:
++        os.makedirs(osp.join(cache_root, split), exist_ok=True)
++        with Pool(min(processes, len(todo))) as pool:
++            pool.map(_cache_one, todo)
++    return [(osp.basename(d), d) for _, d in jobs]
++
++
++def load_building(cache_dir, mmap=True):
++    mode = "r" if mmap else None
++    return {k: np.load(osp.join(cache_dir, f"{k}.npy"), mmap_mode=mode) for k in CACHE_KEYS}
++
++
++def split_building_names(data_root, split):
++    return [osp.splitext(osp.basename(p))[0]
++            for p in sorted(glob.glob(osp.join(data_root, split, "*.h5")))]
++
++
++# ----------------------------------------------------------------------------- helpers
++def sample_rng(seed, index):
++    return np.random.RandomState(np.random.SeedSequence([seed, index]).generate_state(4))
++
++
++def column_crop(xy, rng, footprint=15.0, point_max=250000):
++    """Exact replica of Pointcept ColumnCrop(mode='random') used by PointGroup,
++    with an explicit RandomState instead of the global np.random."""
++    half = footprint / 2
++    center_xy = xy[rng.randint(xy.shape[0])]
++    idx = np.flatnonzero((np.abs(xy[:, 0] - center_xy[0]) <= half)
++                         & (np.abs(xy[:, 1] - center_xy[1]) <= half))
++    if idx.shape[0] > point_max:
++        idx = rng.choice(idx, point_max, replace=False)
++    return idx
++
++
++def center_xy(xyz):
++    """Crop/tile-local frame: xy centred on the crop's xy bounding-box centre,
++    z kept as released (building-mean-centred metres). Used identically for
++    training crops and evaluation tiles."""
++    xyz = np.array(xyz, dtype=np.float32, copy=True)
++    xyz[:, :2] -= (xyz[:, :2].min(0) + xyz[:, :2].max(0)) / 2
++    return xyz
++
++
++def dense_semantic(raw_sem):
++    return RAW_TO_DENSE[raw_sem.astype(np.int64)]
++
++
++def instance_targets(raw_inst, sem_dense):
++    """0..K-1 contiguous instance ids for valid thing instances; -100 for
++    stuff points and for ignored (-1, <200-pt) thing instances."""
++    valid = (sem_dense >= LABEL_SHIFT) & (raw_inst != -1)
++    out = np.full(raw_inst.shape[0], -100, dtype=np.int64)
++    if valid.any():
++        _, inv = np.unique(raw_inst[valid], return_inverse=True)
++        out[valid] = inv
++    return out
++
++
++def instance_info(xyz_middle, inst, sem_dense):
++    """Vectorised equivalent of CustomDataset.getInstanceInfo + HFX3D's
++    instance_cls shift (dense thing id 4..11 -> 0..7)."""
++    n_inst = int(inst.max()) + 1 if (inst >= 0).any() else 0
++    offset = np.zeros_like(xyz_middle, dtype=np.float32)  # masked out for -100 points
++    if n_inst == 0:
++        return 0, [], [], offset
++    v = inst >= 0
++    counts = np.bincount(inst[v], minlength=n_inst)
++    sums = np.stack([np.bincount(inst[v], weights=xyz_middle[v, d], minlength=n_inst)
++                     for d in range(3)], 1)
++    mean = sums / np.maximum(counts, 1)[:, None]
++    offset[v] = (mean[inst[v]] - xyz_middle[v]).astype(np.float32)
++    idx_v = np.flatnonzero(v)
++    _, first_in_v = np.unique(inst[v], return_index=True)  # ids are contiguous 0..n_inst-1
++    first = idx_v[first_in_v]  # first point of each instance (same as upstream's [0])
++    cls = (sem_dense[first] - LABEL_SHIFT).tolist()
++    return n_inst, counts.tolist(), cls, offset
++
++
++def elastic(x, gran, mag, rng):
++    """Upstream CustomDataset.elastic with an explicit RNG and integer grid size
++    (gran may be fractional after rescaling)."""
++    blur0 = np.ones((3, 1, 1)).astype('float32') / 3
++    blur1 = np.ones((1, 3, 1)).astype('float32') / 3
++    blur2 = np.ones((1, 1, 3)).astype('float32') / 3
++    bb = (np.abs(x).max(0) // gran).astype(np.int32) + 3
++    noise = [rng.randn(bb[0], bb[1], bb[2]).astype('float32') for _ in range(3)]
++    for blur in (blur0, blur1, blur2, blur0, blur1, blur2):
++        noise = [scipy.ndimage.convolve(n, blur, mode='constant', cval=0) for n in noise]
++    ax = [np.linspace(-(b - 1) * gran, (b - 1) * gran, b) for b in bb]
++    interp = [scipy.interpolate.RegularGridInterpolator(ax, n, bounds_error=0, fill_value=0)
++              for n in noise]
++    return x + np.hstack([i(x)[:, None] for i in interp]) * mag
++
++
++def augment_xyz(xyz, rng):
++    """Upstream CustomDataset.dataAugment(jitter, flip, rot, scale) with an
++    explicit RNG (same distributions)."""
++    m = np.eye(3)
++    m += rng.randn(3, 3) * 0.1
++    m[0][0] *= rng.randint(0, 2) * 2 - 1
++    theta = rng.rand() * 2 * math.pi
++    m = np.matmul(m, [[math.cos(theta), math.sin(theta), 0],
++                      [-math.sin(theta), math.cos(theta), 0], [0, 0, 1]])
++    xyz = xyz * rng.uniform(0.95, 1.05)
++    return np.matmul(xyz, m).astype(np.float32)
++
++
++def make_sample(scan_id, xyz_middle, feat, sem_dense, inst, scale, xyz_vox=None):
++    """Pack one crop/tile into SoftGroup's per-sample tuple (CustomDataset.__getitem__)."""
++    if xyz_vox is None:
++        xyz_vox = xyz_middle * scale
++    xyz_vox = xyz_vox - xyz_vox.min(0)
++    n_inst, inst_pointnum, inst_cls, pt_offset = instance_info(xyz_middle, inst, sem_dense)
++    return (scan_id, torch.from_numpy(xyz_vox).long(), torch.from_numpy(xyz_middle).float(),
++            torch.from_numpy(np.ascontiguousarray(feat)).float(), torch.from_numpy(sem_dense),
++            torch.from_numpy(inst), n_inst, inst_pointnum, inst_cls, torch.from_numpy(pt_offset))
++
++
++# ----------------------------------------------------------------------------- dataset
++class HFX3DDataset(CustomDataset):
++    """Iteration-indexed training stream of random 15 m column crops.
++
++    Sample k of this dataset is GLOBAL sample index (start_sample + k); the
++    trainer sets start_sample = global_step * batch_size, so the crops seen
++    at any optimizer step are fixed by (seed, step) alone.
++    """
++
++    CLASSES = ("window", "door", "balcony", "vegetation", "stairs", "blinds", "column", "arch")
++
++    def __init__(self, data_root, prefix, cache_root, voxel_cfg=None, training=True, logger=None,
++                 seed=42, footprint=15.0, aug_prob=1.0, color_noise_std=0.05,
++                 elastic_ref_scale=50.0, num_samples=0, start_sample=0, names=None, **kwargs):
++        assert training, 'HFX3DDataset is a training stream; evaluation uses ' \
++            'tools/test_fullscene_softgroup_hfx3d.py (protocol §3.2)'
++        self.data_root, self.prefix, self.cache_root = data_root, prefix, cache_root
++        self.voxel_cfg, self.training, self.logger = voxel_cfg, training, logger
++        self.mode = 'train'
++        self.seed, self.footprint, self.aug_prob = seed, footprint, aug_prob
++        self.color_noise_std = color_noise_std
++        # Upstream elastic params (6,40) and (20,160) are in VOXEL units and were
++        # designed at scale 50 (2 cm voxels, ScanNet/S3DIS). Rescale so the
++        # distortion has the same METRIC granularity/magnitude at our scale.
++        self.elastic_factor = voxel_cfg.scale / elastic_ref_scale
++        self.buildings = ensure_cache(data_root, prefix, cache_root, names=names)
++        self.data = [load_building(d) for _, d in self.buildings]
++        self.names = [n for n, _ in self.buildings]
++        self.num_samples, self.start_sample = num_samples, start_sample
++        if logger is not None:
++            logger.info(f'HFX3D {prefix}: {len(self.names)} buildings, '
++                        f'{sum(d["xyz"].shape[0] for d in self.data)} points, '
++                        f'elastic factor {self.elastic_factor:.3f}')
++
++    def set_range(self, start_sample, num_samples):
++        self.start_sample, self.num_samples = start_sample, num_samples
++
++    def __len__(self):
++        return self.num_samples
++
++    def building_for(self, s):
++        nb = len(self.data)
++        order = np.random.RandomState(
++            np.random.SeedSequence([self.seed, 1, s // nb]).generate_state(4)).permutation(nb)
++        return int(order[s % nb])
++
++    def __getitem__(self, k):
++        s = self.start_sample + k
++        rng = sample_rng(self.seed, s)
++        b = self.building_for(s)
++        d = self.data[b]
++        xy = d['xyz'][:, :2]
++        for _ in range(50):  # resample centre if the column is too sparse (keeps batch exactly 4)
++            idx = column_crop(xy, rng, self.footprint, self.voxel_cfg.max_npoint)
++            if idx.shape[0] >= self.voxel_cfg.min_npoint:
++                break
++        idx = np.sort(idx)
++        xyz = center_xy(d['xyz'][idx])
++        feat = np.array(d['feat'][idx], dtype=np.float32)
++        sem_dense = dense_semantic(d['sem'][idx])
++        inst = instance_targets(np.asarray(d['inst'][idx]), sem_dense)
++
++        scale = self.voxel_cfg.scale
++        xyz_middle = augment_xyz(xyz, rng)
++        xyz_vox = xyz_middle * scale
++        if rng.rand() < self.aug_prob:
++            f = self.elastic_factor
++            xyz_vox = elastic(xyz_vox, 6 * f, 40 * f, rng)
++            xyz_vox = elastic(xyz_vox, 20 * f, 160 * f, rng)
++        # Upstream adds N(0, 0.1) per-channel to colour in [-1,1]; HFX3D colour is
++        # [0,1] (half the range) -> 0.05. Applied to rgb only, not intensity.
++        feat[:, :3] += (rng.randn(3) * self.color_noise_std).astype(np.float32)
++        return make_sample(f'{self.names[b]}_s{s}', xyz_middle, feat, sem_dense, inst, scale,
++                           xyz_vox=xyz_vox)
+--- old/configs/softgroup/softgroup_hfx3d.yaml
++++ new/configs/softgroup/softgroup_hfx3d_fresh_full.yaml
+@@ -1,89 +1,91 @@
+-model:
+-  channels: 16
+-  num_blocks: 7
+-  semantic_classes: 12
+-  instance_classes: 8
+-  sem2ins_classes: []
+-  semantic_only: False
+-  # Dense order: wall, terrain, roof, other (stuff, 0-3), window, door,
+-  # balcony, vegetation, stairs, blinds, column, arch (thing, 4-11) --
+-  # remapped from PointGroup's own already-computed RAW-order class_weight
+-  # (configs/hfx3d/insseg-pointgroup-v1m1-0-spunet-base.py), same source
+-  # data, just reordered to match SoftGroup's stuff-first convention.
+-  semantic_weight: [2.2669, 3.3933, 32.2491, 21.4144, 8.8449, 39.8035, 29.8392,
+-                    8.3796, 32.8102, 20.7645, 29.7737, 43.0959]
+-  ignore_label: -100
+-  with_coords: False
+-  grouping_cfg:
+-    score_thr: 0.2
+-    radius: 0.9
+-    mean_active: 3
+-    # Real per-class mean instance point count, computed from the full
+-    # preprocessed train set (322 blocks, all 18 train buildings) via
+-    # compute_class_numpoint_mean.py -- dense order 4-11: window, door,
+-    # balcony, vegetation, stairs, blinds, column, arch.
+-    class_numpoint_mean: [-1., -1., -1., -1., 13143.3, 11732.2, 17448.5,
+-                          81423.1, 71428.2, 7047.5, 51846.4, 6865.3]
+-    npoint_thr: 0.05
+-    ignore_classes: [0, 1, 2, 3]
+-  instance_voxel_cfg:
+-    scale: 20
+-    spatial_shape: 20
+-  train_cfg:
+-    max_proposal_num: 300
+-    pos_iou_thr: 0.5
+-    match_low_quality: True
+-    min_pos_thr: 0.1
+-  test_cfg:
+-    x4_split: False
+-    cls_score_thr: 0.001
+-    mask_score_thr: -0.5
+-    min_npoint: 15
+-    eval_tasks: ['semantic', 'instance']
+-  fixed_modules: []
+-
+-data:
+-  train:
+-    type: 'hfx3d'
+-    data_root: 'dataset/hfx3d'
+-    prefix: 'train'
+-    suffix: '_inst_nostuff.pth'
+-    training: True
+-    repeat: 1
+-    voxel_cfg:
+-      scale: 20
+-      spatial_shape: [128, 512]
+-      max_npoint: 250000
+-      min_npoint: 5000
+-  test:
+-    type: 'hfx3d'
+-    data_root: 'dataset/hfx3d'
+-    prefix: 'val'
+-    suffix: '_inst_nostuff.pth'
+-    training: False
+-    voxel_cfg:
+-      scale: 20
+-      spatial_shape: [128, 512]
+-      max_npoint: 250000
+-      min_npoint: 5000
+-
+-dataloader:
+-  train:
+-    batch_size: 4
+-    num_workers: 2
+-  test:
+-    batch_size: 1
+-    num_workers: 1
+-
+-optimizer:
+-  type: 'Adam'
+-  lr: 0.004
+-
+-eval_min_npoint: 10
+-
+-fp16: False
+-epochs: 200
+-step_epoch: 20
+-save_freq: 4
+-pretrain: ''
+-work_dir: ''
++# SoftGroup on HFX3D -- protocol v1.1 (docs/BENCHMARK_PROTOCOL.md §1.2, §3.4)
++# STAGE 2 / 2: full model (backbone + top-down refinement), initialised from the
++# stage-1 checkpoint at global step 5400, backbone NOT frozen (official
++# from-scratch STPLS3D recipe: softgroup_stpls3d.yaml has fixed_modules: []).
++# Budget: 18,000 optimizer steps total at batch 4 = 5,400 (stage 1) + 12,600 (stage 2).
++seed: 42
++model:
++  in_channels: 4          # rgb(3) + intensity(1); with_coords appends xyz(3) -> 7-D input (§1.2)
++  channels: 32            # SoftGroup default / ScanNet / S3DIS width (old run: 16, STPLS3D)
++  num_blocks: 7
++  semantic_classes: 12
++  instance_classes: 8
++  sem2ins_classes: []
++  semantic_only: False
++  # Dense stuff-first order: wall, terrain, roof, other | window, door, balcony,
++  # vegetation, stairs, blinds, column, arch. Weights = 1/(freq+0.02) recomputed
++  # on the released training split (343,690,544 pts; tools/hfx3d_grouping_stats.py).
++  # Equal to PointGroup's class_weight except stairs 32.6784 (PG 32.8102) and
++  # other 21.4710 (PG 21.4144) -- PG's were computed on an earlier label version.
++  semantic_weight: [2.2669, 3.3933, 32.2491, 21.4710, 8.8449, 39.8035, 29.8392,
++                    8.3796, 32.6784, 20.7645, 29.7737, 43.0959]
++  ignore_label: -100
++  with_coords: True       # xyz (metres, crop-local xy) also used as features (§3.4)
++  grouping_cfg:
++    score_thr: 0.2        # official value on every SoftGroup dataset
++    # Ball-query radius on shifted points (coords + offsets), metres. 0.075 m =
++    # 1.5 voxels = PointGroup's cluster radius (cluster_thresh 1.5 x 5 cm). Training
++    # crops (<=250k pts, median keep fraction 0.13): 1-NN spacing median 2.1 cm,
++    # p90 4.7 cm -> radius/spacing 3.6 (ScanNet official: 4 cm at ~1-2 cm spacing);
++    # mean 24 neighbours at 7.5 cm on unshifted points. Same-class GT centroid
++    # separation p5: blinds 0.86 m, vegetation 1.12, balcony 1.22, window 1.44 m,
++    # i.e. >10x the radius. Old run: 0.9 m (STPLS3D, 33 cm voxels) ~ 390+ neighbours
++    # at 0.3 m alone -> chains neighbouring windows/blinds into one proposal.
++    radius: 0.075
++    mean_active: 25       # initial ball-query buffer only (auto-grows) = ~mean #neighbours at 7.5 cm
++    # Mean thing-instance size in FORWARD-PASS points of training crops
++    # (15 m column, <=250k pts), training split only, tools/hfx3d_grouping_stats.py.
++    # (720 crops, 40/building, separate RNG stream; old values were full-res
++    # per-block sizes, ~8-14x too large for the <=250k-point forward pass)
++    class_numpoint_mean: [-1., -1., -1., -1., 1739.3, 1610.7, 2470.6, 12555.5, 8965.5,
++                          822.4, 5108.3, 640.1]
++    npoint_thr: 0.05      # official (relative to class_numpoint_mean)
++    ignore_classes: [0, 1, 2, 3]
++  instance_voxel_cfg:
++    scale: 20             # = backbone voxel (5 cm)
++    spatial_shape: 20     # official
++  train_cfg:
++    max_proposal_num: 300 # official STPLS3D full-stage value
++    pos_iou_thr: 0.5
++    match_low_quality: True
++    min_pos_thr: 0.1
++  test_cfg:
++    x4_split: False
++    cls_score_thr: 0.001
++    mask_score_thr: -0.5
++    min_npoint: 15        # official STPLS3D full-stage value (forward-pass points)
++    eval_tasks: ['semantic', 'instance']
++  fixed_modules: []
++
++data:
++  train:
++    data_root: /project/6118401/abdiaziz/fresh/softgroup/data/HFX3D_Instance
++    prefix: train
++    cache_root: /project/6118401/abdiaziz/fresh/softgroup/data/npy_cache
++    footprint: 15.0       # §3.4 training crop = 15 m x 15 m full-height column
++    color_noise_std: 0.05 # upstream 0.1 on [-1,1] colour -> 0.05 on [0,1]
++    elastic_ref_scale: 50 # upstream elastic params are for scale 50; rescaled by scale/50
++    voxel_cfg:
++      scale: 20           # 1 / 0.05 m  (§3.4 voxel 5 cm)
++      spatial_shape: [128, 512]
++      max_npoint: 250000  # §3.4 crop cap
++      min_npoint: 5000
++
++dataloader:
++  train:
++    batch_size: 4         # §3.4 effective batch 4 (single GPU)
++
++optimizer:
++  type: 'Adam'
++  lr: 0.004
++
++schedule:
++  stage: full
++  global_start: 5400
++  iters: 12600
++  lr: 0.004
++  hold_iters: 2333        # STPLS3D: step_epoch 20 of 108 epochs constant, then cosine -> 12600*20/108
++  min_lr: 1.0e-6
++  save_every: 1800        # global steps 7200, 9000, ..., 18000
++
++pretrain: /project/6118401/abdiaziz/fresh/softgroup/work_dirs/hfx3d_fresh_s42/step_05400.pth
+--- /dev/null
++++ new/configs/softgroup/softgroup_hfx3d_fresh_backbone.yaml
+@@ -0,0 +1,89 @@
++# SoftGroup on HFX3D -- protocol v1.1 (docs/BENCHMARK_PROTOCOL.md §1.2, §3.4)
++# STAGE 1 / 2: semantic + offset backbone only (semantic_only), from scratch.
++# Budget: 18,000 optimizer steps total at batch 4 = 5,400 (stage 1) + 12,600 (stage 2).
++seed: 42
++model:
++  in_channels: 4          # rgb(3) + intensity(1); with_coords appends xyz(3) -> 7-D input (§1.2)
++  channels: 32            # SoftGroup default / ScanNet / S3DIS width (old run: 16, STPLS3D)
++  num_blocks: 7
++  semantic_classes: 12
++  instance_classes: 8
++  sem2ins_classes: []
++  semantic_only: True
++  # Dense stuff-first order: wall, terrain, roof, other | window, door, balcony,
++  # vegetation, stairs, blinds, column, arch. Weights = 1/(freq+0.02) recomputed
++  # on the released training split (343,690,544 pts; tools/hfx3d_grouping_stats.py).
++  # Equal to PointGroup's class_weight except stairs 32.6784 (PG 32.8102) and
++  # other 21.4710 (PG 21.4144) -- PG's were computed on an earlier label version.
++  semantic_weight: [2.2669, 3.3933, 32.2491, 21.4710, 8.8449, 39.8035, 29.8392,
++                    8.3796, 32.6784, 20.7645, 29.7737, 43.0959]
++  ignore_label: -100
++  with_coords: True       # xyz (metres, crop-local xy) also used as features (§3.4)
++  grouping_cfg:
++    score_thr: 0.2        # official value on every SoftGroup dataset
++    # Ball-query radius on shifted points (coords + offsets), metres. 0.075 m =
++    # 1.5 voxels = PointGroup's cluster radius (cluster_thresh 1.5 x 5 cm). Training
++    # crops (<=250k pts, median keep fraction 0.13): 1-NN spacing median 2.1 cm,
++    # p90 4.7 cm -> radius/spacing 3.6 (ScanNet official: 4 cm at ~1-2 cm spacing);
++    # mean 24 neighbours at 7.5 cm on unshifted points. Same-class GT centroid
++    # separation p5: blinds 0.86 m, vegetation 1.12, balcony 1.22, window 1.44 m,
++    # i.e. >10x the radius. Old run: 0.9 m (STPLS3D, 33 cm voxels) ~ 390+ neighbours
++    # at 0.3 m alone -> chains neighbouring windows/blinds into one proposal.
++    radius: 0.075
++    mean_active: 25       # initial ball-query buffer only (auto-grows) = ~mean #neighbours at 7.5 cm
++    # Mean thing-instance size in FORWARD-PASS points of training crops
++    # (15 m column, <=250k pts), training split only, tools/hfx3d_grouping_stats.py.
++    # (720 crops, 40/building, separate RNG stream; old values were full-res
++    # per-block sizes, ~8-14x too large for the <=250k-point forward pass)
++    class_numpoint_mean: [-1., -1., -1., -1., 1739.3, 1610.7, 2470.6, 12555.5, 8965.5,
++                          822.4, 5108.3, 640.1]
++    npoint_thr: 0.05      # official (relative to class_numpoint_mean)
++    ignore_classes: [0, 1, 2, 3]
++  instance_voxel_cfg:
++    scale: 20             # = backbone voxel (5 cm)
++    spatial_shape: 20     # official
++  train_cfg:
++    max_proposal_num: 300 # official STPLS3D full-stage value
++    pos_iou_thr: 0.5
++    match_low_quality: True
++    min_pos_thr: 0.1
++  test_cfg:
++    x4_split: False
++    cls_score_thr: 0.001
++    mask_score_thr: -0.5
++    min_npoint: 15        # official STPLS3D full-stage value (forward-pass points)
++    eval_tasks: ['semantic', 'instance']
++  fixed_modules: []
++
++data:
++  train:
++    data_root: /project/6118401/abdiaziz/fresh/softgroup/data/HFX3D_Instance
++    prefix: train
++    cache_root: /project/6118401/abdiaziz/fresh/softgroup/data/npy_cache
++    footprint: 15.0       # §3.4 training crop = 15 m x 15 m full-height column
++    color_noise_std: 0.05 # upstream 0.1 on [-1,1] colour -> 0.05 on [0,1]
++    elastic_ref_scale: 50 # upstream elastic params are for scale 50; rescaled by scale/50
++    voxel_cfg:
++      scale: 20           # 1 / 0.05 m  (§3.4 voxel 5 cm)
++      spatial_shape: [128, 512]
++      max_npoint: 250000  # §3.4 crop cap
++      min_npoint: 5000
++
++dataloader:
++  train:
++    batch_size: 4         # §3.4 effective batch 4 (single GPU)
++
++optimizer:
++  type: 'Adam'
++  lr: 0.004
++
++schedule:
++  stage: backbone
++  global_start: 0
++  iters: 5400
++  lr: 0.004
++  hold_iters: 5400        # STPLS3D backbone: step_epoch == epochs -> constant LR
++  min_lr: 1.0e-6
++  save_every: 1800        # global steps 1800, 3600, 5400
++
++pretrain: ''
+--- /dev/null
++++ new/tools/train_hfx3d.py
+@@ -0,0 +1,191 @@
++"""Iteration-exact SoftGroup trainer for HFX3D (protocol v1.1 §3.4).
++
++Replaces tools/train.py's epoch loop for HFX3D runs:
++* the budget is counted in OPTIMIZER STEPS on a GLOBAL counter shared by both
++  stages (stage 1 = semantic/offset backbone, stage 2 = full model);
++* each stage config has a `schedule` block: global_start, iters, lr,
++  hold_iters (constant-LR steps) then cosine to min_lr (SoftGroup's own
++  cosine_lr_after_step, in steps instead of epochs);
++* a checkpoint is written at every global step that is a multiple of
++  schedule.save_every (1800) and at the end of the stage;
++* seed 42 for python/numpy/torch; the data stream is a pure function of
++  (seed, global sample index) -- see softgroup/data/hfx3d.py -- so resuming
++  from step s replays exactly the crops a non-interrupted run would see;
++* SoftGroup's own per-block validate() is NOT run (protocol: reported numbers
++  come only from tools/test_fullscene_softgroup_hfx3d.py).
++
++Usage (inside the container, from the repo root):
++  python tools/train_hfx3d.py configs/softgroup/softgroup_hfx3d_fresh_backbone.yaml \
++      --work_dir work_dirs/hfx3d_fresh [--resume <ckpt>] [--stop_after N]
++"""
++import argparse
++import datetime
++import os
++import os.path as osp
++import random
++import shutil
++import time
++from math import cos, pi
++
++import numpy as np
++import torch
++import yaml
++from munch import Munch
++from torch.utils.data import DataLoader
++
++from softgroup.data.hfx3d import HFX3DDataset
++from softgroup.model import SoftGroup
++from softgroup.util import build_optimizer, get_root_logger, load_checkpoint
++
++
++def get_args():
++    p = argparse.ArgumentParser('SoftGroup-HFX3D')
++    p.add_argument('config')
++    p.add_argument('--work_dir', required=True)
++    p.add_argument('--resume', default=None, help='checkpoint of THIS stage to resume from')
++    p.add_argument('--stop_after', type=int, default=0,
++                   help='smoke test only: stop after N steps of this stage (schedule unchanged)')
++    p.add_argument('--save_every', type=int, default=0, help='override schedule.save_every')
++    p.add_argument('--num_workers', type=int, default=16)
++    p.add_argument('--pretrain', default=None, help='override cfg.pretrain (stage-1 checkpoint)')
++    return p.parse_args()
++
++
++def lr_at(t, sch):
++    """t = step index within the stage (0-based)."""
++    if t < sch.hold_iters:
++        return sch.lr
++    span = max(sch.iters - sch.hold_iters, 1)
++    return sch.min_lr + 0.5 * (sch.lr - sch.min_lr) * (1 + cos(pi * (t - sch.hold_iters) / span))
++
++
++def worker_init_fn(worker_id):
++    # Crops are seeded per sample (independent of workers); this only makes any
++    # stray global-RNG use inside workers deterministic too.
++    s = 42 + worker_id
++    random.seed(s)
++    np.random.seed(s)
++    torch.manual_seed(s)
++
++
++def save_ckpt(path, model, optimizer, global_step, stage, work_dir):
++    state = {
++        'net': {k: v.cpu() for k, v in model.state_dict().items()},
++        'optimizer': optimizer.state_dict(),
++        'global_step': global_step,
++        'stage': stage,
++        'rng': {'python': random.getstate(), 'numpy': np.random.get_state(),
++                'torch': torch.get_rng_state(), 'cuda': torch.cuda.get_rng_state_all()},
++    }
++    tmp = path + '.tmp'
++    torch.save(state, tmp)
++    os.replace(tmp, path)
++    latest = osp.join(work_dir, f'latest_{stage}.pth')
++    if osp.lexists(latest):
++        os.remove(latest)
++    os.symlink(osp.basename(path), latest)
++
++
++def main():
++    args = get_args()
++    cfg_txt = open(args.config).read()
++    cfg = Munch.fromDict(yaml.safe_load(cfg_txt))
++    sch = cfg.schedule
++    if args.pretrain:
++        cfg.pretrain = args.pretrain
++    seed = cfg.get('seed', 42)
++    random.seed(seed)
++    np.random.seed(seed)
++    torch.manual_seed(seed)
++    torch.cuda.manual_seed_all(seed)
++
++    os.makedirs(args.work_dir, exist_ok=True)
++    stage = sch.stage
++    ts = time.strftime('%Y%m%d_%H%M%S', time.localtime())
++    logger = get_root_logger(log_file=osp.join(args.work_dir, f'{stage}_{ts}.log'))
++    logger.info(f'Config:\n{cfg_txt}')
++    shutil.copy(args.config, osp.join(args.work_dir, osp.basename(args.config)))
++
++    model = SoftGroup(**cfg.model).cuda()
++    n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
++    logger.info(f'trainable params: {n_params}')
++    optimizer = build_optimizer(model, cfg.optimizer)
++
++    global_step = sch.global_start
++    end_step = sch.global_start + sch.iters
++    if args.resume:
++        logger.info(f'Resume from {args.resume}')
++        load_checkpoint(args.resume, logger, model, optimizer=optimizer)
++        ck = torch.load(args.resume, map_location='cpu', weights_only=False)
++        assert ck['stage'] == stage, f"resume checkpoint is from stage {ck['stage']}"
++        global_step = ck['global_step']
++        random.setstate(ck['rng']['python'])
++        np.random.set_state(ck['rng']['numpy'])
++        torch.set_rng_state(ck['rng']['torch'])
++        torch.cuda.set_rng_state_all(ck['rng']['cuda'])
++    elif cfg.get('pretrain'):
++        logger.info(f'Load pretrain (model weights only) from {cfg.pretrain}')
++        load_checkpoint(cfg.pretrain, logger, model)
++    if global_step >= end_step:
++        logger.info(f'stage {stage} already complete at step {global_step}')
++        return
++
++    bs = cfg.dataloader.train.batch_size
++    dataset = HFX3DDataset(**cfg.data.train, logger=logger, seed=seed)
++    dataset.set_range(global_step * bs, (end_step - global_step) * bs)
++    loader = DataLoader(dataset, batch_size=bs, shuffle=False, drop_last=True,
++                        num_workers=args.num_workers, collate_fn=dataset.collate_fn,
++                        pin_memory=True, worker_init_fn=worker_init_fn,
++                        prefetch_factor=4 if args.num_workers > 0 else None,
++                        persistent_workers=False)
++    save_every = args.save_every or sch.save_every
++    logger.info(f'stage={stage} global steps {global_step} -> {end_step} '
++                f'(batch {bs}, lr {sch.lr}, hold {sch.hold_iters}, save_every {save_every})')
++
++    model.train()
++    stage_start = global_step
++    t_data, t_iter, end = 0.0, 0.0, time.time()
++    win = []  # recent iteration times
++    for batch in loader:
++        td = time.time() - end
++        t = global_step - sch.global_start
++        lr = lr_at(t, sch)
++        for g in optimizer.param_groups:
++            g['lr'] = lr
++        loss, log_vars = model(batch, return_loss=True)
++        optimizer.zero_grad()
++        loss.backward()
++        optimizer.step()
++        global_step += 1
++        ti = time.time() - end
++        end = time.time()
++        win.append(ti)
++        win = win[-50:]
++        if global_step % 10 == 0 or global_step - stage_start <= 5 or args.stop_after:
++            eta = datetime.timedelta(seconds=int(np.mean(win) * (end_step - global_step)))
++            mem = torch.cuda.max_memory_allocated() / 2**30
++            npts = int(batch['coords'].shape[0])
++            fp = float(batch['coords_float'].double().abs().sum())  # data-stream fingerprint
++            s = (f'[{stage}] step {global_step}/{end_step} lr {lr:.2e} pts {npts} fp {fp:.1f} '
++                 f'data {td:.2f}s iter {ti:.2f}s (avg50 {np.mean(win):.2f}s) eta {eta} '
++                 f'maxmem {mem:.1f}G')
++            for k, v in log_vars.items():
++                s += f' {k} {v:.4f}'
++            logger.info(s)
++        if not np.isfinite(log_vars['loss']):
++            logger.error(f'non-finite loss at step {global_step}; aborting')
++            raise SystemExit(1)
++        stop = args.stop_after and global_step - stage_start >= args.stop_after
++        if global_step % save_every == 0 or global_step == end_step or stop:
++            path = osp.join(args.work_dir, f'step_{global_step:05d}.pth')
++            save_ckpt(path, model, optimizer, global_step, stage, args.work_dir)
++            logger.info(f'saved {path}')
++        if stop:
++            logger.info(f'--stop_after {args.stop_after} reached at step {global_step}')
++            break
++    logger.info(f'stage {stage} done at global step {global_step}; '
++                f'max GPU mem {torch.cuda.max_memory_allocated() / 2**30:.1f}G')
++
++
++if __name__ == '__main__':
++    main()
+--- /dev/null
++++ new/tools/test_fullscene_softgroup_hfx3d.py
+@@ -0,0 +1,370 @@
++"""Full-scene HFX3D instance evaluation for SoftGroup (protocol v1.1 §3.2-3.3).
++
++Port of the PointGroup reference
++  insseg_fullres/Pointcept/tools/test_fullscene_insseg_hfx3d_fullres.py
++Only the two model-specific pieces are new: build_tile_data_dict() and
++infer_tile(). Tiling (generate_tile_centers/_axis_centers/tile_point_indices),
++the fixed per-building point priority (RandomState(42 + building index in the
++sorted split list).permutation), the 250k cap via argpartition, 1-NN
++propagation of every mask to every tile point BEFORE merging, the same-class
++IoU>=0.5 union-find merge (max member score) and the <100-point filter follow
++the reference line for line. merge_tile_predictions() finds candidate pairs
++with a sparse intersection matrix instead of testing all O(n^2) pairs; the
++pairs it unions and the resulting groups/order are identical to the reference
++loop (pairs with zero intersection can never reach IoU>=0.5).
++
++Scoring: tools/insseg_eval_utils.py = byte-identical copy of the repo's
++evaluation/insseg_eval_utils.py (ScanNet-v2 port, void = stuff OR instance -1),
++per building at full resolution against the released h5 GT.
++SoftGroup's own per-block ScanNetEval is not used.
++
++A secondary, NON-protocol diagnostic is also logged: full-resolution semantic
++mIoU of the backbone (1-NN-propagated per tile, later tiles overwrite earlier
++ones). It is the only signal available for semantic-only (stage 1) checkpoints.
++
++HOW TO RUN (inside the container, repo root as cwd, GPU required):
++  python tools/test_fullscene_softgroup_hfx3d.py \
++      --config configs/softgroup/softgroup_hfx3d_fresh.yaml \
++      --ckpt work_dirs/hfx3d_fresh/step_18000.pth --split val \
++      --out_dir work_dirs/hfx3d_fresh/eval_val_step_18000 [--buildings HFX_BLD008_ZEB_CLEAN]
++"""
++import argparse
++import json
++import logging
++import os
++import os.path as osp
++import sys
++import time
++
++import numpy as np
++import scipy.sparse as sp
++import spconv.pytorch as spconv
++import torch
++import yaml
++from munch import Munch
++from scipy.spatial import cKDTree
++
++sys.path.insert(0, osp.dirname(osp.abspath(__file__)))
++sys.path.insert(0, osp.dirname(osp.dirname(osp.abspath(__file__))))
++from insseg_eval_utils import ScanNetInstanceEvaluator  # noqa: E402
++
++from softgroup.data.hfx3d import (DENSE_TO_RAW, RAW_CLASS_NAMES, THING_RAW, center_xy,  # noqa
++                                  dense_semantic, ensure_cache, load_building, make_sample,
++                                  split_building_names)
++from softgroup.model import SoftGroup  # noqa: E402
++from softgroup.ops import voxelization, voxelization_idx  # noqa: E402
++from softgroup.util import rle_decode  # noqa: E402
++
++MIN_TILE_POINTS = 50  # reference: skip tiles this small
++SEGMENT_IGNORE_INDEX = (-1, 0, 6, 7, 9)  # stuff (raw ids) -- same as PointGroup eval
++
++
++# ------------------------------------------------------------------ tiling (reference, verbatim)
++def _axis_centers(v_min, v_max, footprint, stride):
++    half = footprint / 2
++    if v_max - v_min <= footprint:
++        return [(v_min + v_max) / 2]
++    centers = list(np.arange(v_min + half, v_max - half, stride))
++    if not centers:
++        centers = [v_min + half]
++    if centers[-1] < v_max - half - 1e-6:
++        centers.append(v_max - half)
++    return centers
++
++
++def generate_tile_centers(coord_xy, footprint, overlap):
++    stride = footprint - overlap
++    assert stride > 0, "overlap must be smaller than footprint"
++    xy_min = coord_xy.min(axis=0)
++    xy_max = coord_xy.max(axis=0)
++    xs = _axis_centers(xy_min[0], xy_max[0], footprint, stride)
++    ys = _axis_centers(xy_min[1], xy_max[1], footprint, stride)
++    return [(x, y) for x in xs for y in ys]
++
++
++def tile_point_indices(coord_xy, center, half_footprint):
++    return np.flatnonzero(np.all(np.abs(coord_xy - center) <= half_footprint, axis=1))
++
++
++# ------------------------------------------------------------------ model-specific
++def build_tile_data_dict(raw, idx_crop, scale, min_spatial_shape):
++    """SoftGroup test-time preprocessing of one tile: same crop-local frame as
++    training (xy centred on bbox centre, z as released), 4 feats rgb|intensity
++    (+xyz appended by the model, with_coords=True), voxel coords at `scale`,
++    no augmentation."""
++    xyz_middle = center_xy(raw["xyz"][idx_crop])
++    feat = np.asarray(raw["feat"][idx_crop], dtype=np.float32)
++    n = xyz_middle.shape[0]
++    sem_dummy = np.zeros(n, dtype=np.int64)  # labels are not used at inference
++    inst_dummy = np.full(n, -100, dtype=np.int64)
++    (_, coord, coord_float, feat_t, _, _, _, _, _, _) = make_sample(
++        "tile", xyz_middle, feat, sem_dummy, inst_dummy, scale)
++    coords = torch.cat([coord.new_zeros((n, 1)), coord], 1)
++    voxel_coords, v2p_map, p2v_map = voxelization_idx(coords, 1)
++    spatial_shape = np.clip(coords.max(0)[0][1:].numpy() + 1, min_spatial_shape, None)
++    return dict(batch_idxs=coords[:, 0].int(), voxel_coords=voxel_coords, p2v_map=p2v_map,
++                v2p_map=v2p_map, coords_float=coord_float, feats=feat_t,
++                spatial_shape=spatial_shape, n=n)
++
++
++@torch.no_grad()
++def infer_tile(model, d):
++    """Returns (pred_masks [M, n] bool over the forward-pass points,
++    pred_classes [M] RAW HFX3D ids, pred_scores [M], sem_pred [n] RAW ids).
++    Same computation as SoftGroup.forward_test (no x4_split, no lvl_fusion),
++    without its GT bookkeeping."""
++    feats = d["feats"].cuda()
++    coords_float = d["coords_float"].cuda()
++    batch_idxs = d["batch_idxs"].cuda()
++    if model.with_coords:
++        feats = torch.cat((feats, coords_float), 1)
++    voxel_feats = voxelization(feats, d["p2v_map"].cuda())
++    inp = spconv.SparseConvTensor(voxel_feats, d["voxel_coords"].int().cuda(), d["spatial_shape"], 1)
++    semantic_scores, pt_offsets, output_feats = model.forward_backbone(inp, d["v2p_map"].cuda())
++    sem_pred = DENSE_TO_RAW[semantic_scores.max(1)[1].cpu().numpy()]
++    n = d["n"]
++    empty = (np.zeros((0, n), dtype=bool), np.zeros((0,), dtype=int), np.zeros((0,), dtype=float))
++    if model.semantic_only:
++        return (*empty, sem_pred)
++    proposals_idx, proposals_offset = model.forward_grouping(
++        semantic_scores, pt_offsets, batch_idxs, coords_float, model.grouping_cfg)
++    inst_feats, inst_map = model.clusters_voxelization(
++        proposals_idx, proposals_offset, output_feats, coords_float, **model.instance_voxel_cfg)
++    _, cls_scores, iou_scores, mask_scores = model.forward_instance(inst_feats, inst_map)
++    preds = model.get_instances("tile", proposals_idx, semantic_scores, cls_scores, iou_scores,
++                                mask_scores)
++    if len(preds) == 0:
++        return (*empty, sem_pred)
++    pred_masks = np.stack([rle_decode(p["pred_mask"]).astype(bool) for p in preds])
++    pred_classes = THING_RAW[np.array([int(p["label_id"]) - 1 for p in preds])]
++    pred_scores = np.array([float(p["conf"]) for p in preds], dtype=float)
++    return pred_masks, pred_classes.astype(int), pred_scores, sem_pred
++
++
++# ------------------------------------------------------------------ merge (reference semantics)
++def merge_tile_predictions(n_points_building, tile_results, merge_iou_thresh, min_inst_points):
++    """tile_results: list of (idx_full, pred_masks, pred_classes, pred_scores)
++    with masks over idx_full (global point indices). Returns (list of sorted
++    global index arrays, classes, scores) -- one per merged instance, in the
++    same order as the reference implementation."""
++    per_class = {}
++    for idx_crop, pred_masks, pred_classes, pred_scores in tile_results:
++        for m, c, s in zip(pred_masks, pred_classes, pred_scores):
++            global_idx = np.sort(idx_crop[m])
++            if global_idx.shape[0] == 0:
++                continue
++            per_class.setdefault(int(c), []).append(dict(idx=global_idx, score=float(s)))
++
++    final_idx, final_classes, final_scores = [], [], []
++    for class_id, proposals in per_class.items():
++        n = len(proposals)
++        parent = list(range(n))
++
++        def find(x):
++            while parent[x] != x:
++                parent[x] = parent[parent[x]]
++                x = parent[x]
++            return x
++
++        def union(a, b):
++            ra, rb = find(a), find(b)
++            if ra != rb:
++                parent[ra] = rb
++
++        sizes = np.array([p["idx"].shape[0] for p in proposals], dtype=np.int64)
++        rows = np.repeat(np.arange(n), sizes)
++        cols = np.concatenate([p["idx"] for p in proposals])
++        A = sp.csr_matrix((np.ones(cols.shape[0], dtype=np.int64), (rows, cols)),
++                          shape=(n, n_points_building))
++        inter = sp.triu(A @ A.T, k=1).tocoo()  # only pairs i<j that share >=1 point
++        order = np.lexsort((inter.col, inter.row))  # reference visits (i, j) in i-major order
++        for i, j, v in zip(inter.row[order], inter.col[order], inter.data[order]):
++            if v / (sizes[i] + sizes[j] - v) >= merge_iou_thresh:
++                union(int(i), int(j))
++
++        groups = {}
++        for i in range(n):
++            groups.setdefault(find(i), []).append(i)
++        for members in groups.values():
++            merged_idx = np.unique(np.concatenate([proposals[i]["idx"] for i in members]))
++            if merged_idx.shape[0] < min_inst_points:
++                continue
++            final_idx.append(merged_idx)
++            final_classes.append(class_id)
++            final_scores.append(max(proposals[i]["score"] for i in members))
++    return final_idx, final_classes, final_scores
++
++
++class LazyMasks:
++    """Dense boolean masks built one at a time on access. The shared evaluator
++    only does np.not_equal(pred_masks[i], 0) per prediction, so this gives the
++    exact same result as a list of dense masks without holding them all
++    (a 26M-point building x thousands of predictions would not fit in RAM)."""
++
++    def __init__(self, idx_list, n):
++        self.idx_list, self.n = idx_list, n
++
++    def __len__(self):
++        return len(self.idx_list)
++
++    def __getitem__(self, i):
++        m = np.zeros(self.n, dtype=bool)
++        m[self.idx_list[i]] = True
++        return m
++
++
++def process_building(model, raw, footprint, overlap, point_max, scale, min_spatial_shape,
++                     merge_iou, min_inst_points, logger, seed):
++    coord = np.asarray(raw["xyz"])
++    n_points = coord.shape[0]
++    coord_xy = coord[:, :2]
++    centers = generate_tile_centers(coord_xy, footprint, overlap)
++    half_footprint = footprint / 2
++    point_priority = np.random.RandomState(seed).permutation(n_points)  # reference
++    sem_full = np.full(n_points, -1, dtype=np.int16)
++
++    tile_results = []
++    n_tiles_used = n_tiles_capped = n_raw_proposals = 0
++    t_fwd = 0.0
++    for center in centers:
++        idx_full = tile_point_indices(coord_xy, np.array(center), half_footprint)
++        if idx_full.shape[0] < MIN_TILE_POINTS:
++            continue
++        idx_crop = idx_full
++        if idx_full.shape[0] > point_max:
++            local_priority = point_priority[idx_full]
++            keep = np.argpartition(local_priority, point_max)[:point_max]
++            idx_crop = idx_full[keep]
++            n_tiles_capped += 1
++        t0 = time.time()
++        tile = build_tile_data_dict(raw, idx_crop, scale, min_spatial_shape)
++        pred_masks, pred_classes, pred_scores, sem_pred = infer_tile(model, tile)
++        t_fwd += time.time() - t0
++        n_tiles_used += 1
++        n_raw_proposals += pred_masks.shape[0]
++        nn = None
++        if idx_crop.shape[0] != idx_full.shape[0]:
++            # FULLRES: every tile point takes the prediction of its nearest forward-pass point
++            _, nn = cKDTree(coord[idx_crop]).query(coord[idx_full], k=1, workers=-1)
++        sem_full[idx_full] = sem_pred if nn is None else sem_pred[nn]
++        if pred_masks.shape[0] > 0:
++            if nn is not None:
++                pred_masks = pred_masks[:, nn]
++            tile_results.append((idx_full, pred_masks, pred_classes, pred_scores))
++
++    logger.info(f"  {n_tiles_used} tiles processed ({n_tiles_capped} subsampled at "
++                f"point_max={point_max}), {n_raw_proposals} raw proposals, "
++                f"model+preproc {t_fwd:.1f}s")
++    t0 = time.time()
++    final_idx, final_classes, final_scores = merge_tile_predictions(
++        n_points, tile_results, merge_iou, min_inst_points)
++    logger.info(f"  -> {len(final_idx)} merged instances after union-merge + size filter "
++                f"({time.time() - t0:.1f}s)")
++    return final_idx, final_classes, final_scores, sem_full
++
++
++def build_model(cfg_path, ckpt, logger):
++    cfg = Munch.fromDict(yaml.safe_load(open(cfg_path)))
++    model = SoftGroup(**cfg.model).cuda()
++    state = torch.load(ckpt, map_location="cpu", weights_only=False)
++    net = {k[7:] if k.startswith("module.") else k: v for k, v in state["net"].items()}
++    model.load_state_dict(net, strict=True)
++    model.eval()
++    logger.info(f"loaded {ckpt} (global_step {state.get('global_step')}, stage "
++                f"{state.get('stage')}, semantic_only={model.semantic_only})")
++    return cfg, model
++
++
++def main():
++    ap = argparse.ArgumentParser()
++    ap.add_argument("--config", required=True, help="model config the checkpoint was trained with")
++    ap.add_argument("--ckpt", required=True)
++    ap.add_argument("--split", default="val", choices=["val", "test"])
++    ap.add_argument("--buildings", nargs="*", default=None, help="subset (names); default all")
++    ap.add_argument("--data_root", default="/project/6118401/abdiaziz/fresh/softgroup/data/HFX3D_Instance")
++    ap.add_argument("--cache_root", default="/project/6118401/abdiaziz/fresh/softgroup/data/npy_cache")
++    ap.add_argument("--out_dir", required=True)
++    ap.add_argument("--footprint", type=float, default=15.0)
++    ap.add_argument("--overlap", type=float, default=5.0)
++    ap.add_argument("--point_max", type=int, default=250000)
++    ap.add_argument("--merge_iou", type=float, default=0.5)
++    ap.add_argument("--min_inst_points", type=int, default=100)
++    ap.add_argument("--seed", type=int, default=42)
++    args = ap.parse_args()
++
++    os.makedirs(args.out_dir, exist_ok=True)
++    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s",
++                        handlers=[logging.FileHandler(osp.join(args.out_dir, "eval.log")),
++                                  logging.StreamHandler(sys.stdout)])
++    logger = logging.getLogger("fullscene")
++    logger.info(f"args: {vars(args)}")
++    torch.manual_seed(args.seed)
++    np.random.seed(args.seed)
++
++    cfg, model = build_model(args.config, args.ckpt, logger)
++    scale = cfg.data.train.voxel_cfg.scale
++    min_spatial_shape = cfg.data.train.voxel_cfg.spatial_shape[0]
++
++    all_names = split_building_names(args.data_root, args.split)  # sorted -> seed index
++    names = all_names if not args.buildings else [n for n in all_names if n in args.buildings]
++    assert names, "no buildings selected"
++    cache = dict(ensure_cache(args.data_root, args.split, args.cache_root, names=names))
++
++    evaluator = ScanNetInstanceEvaluator(list(RAW_CLASS_NAMES), SEGMENT_IGNORE_INDEX, -1)
++    scenes, per_building = [], {}
++    conf = np.zeros((12, 12), dtype=np.int64)
++    for name in names:
++        bidx = all_names.index(name)
++        t0 = time.time()
++        raw = load_building(cache[name])
++        n = raw["xyz"].shape[0]
++        logger.info(f"[{bidx + 1}/{len(all_names)}] {name}: {n} points (seed {args.seed + bidx})")
++        final_idx, final_classes, final_scores, sem_full = process_building(
++            model, raw, args.footprint, args.overlap, args.point_max, scale, min_spatial_shape,
++            args.merge_iou, args.min_inst_points, logger, seed=args.seed + bidx)
++        gt_sem = np.asarray(raw["sem"]).astype(np.int64)
++        gt_inst = np.asarray(raw["inst"]).astype(np.int64)
++        cov = sem_full >= 0
++        conf += np.bincount(gt_sem[cov] * 12 + sem_full[cov], minlength=144).reshape(12, 12)
++        sizes = np.array([len(x) for x in final_idx], dtype=np.int64)
++        np.savez_compressed(
++            osp.join(args.out_dir, f"{name}_pred.npz"),
++            idx=np.concatenate(final_idx) if final_idx else np.zeros(0, np.int64),
++            offsets=np.concatenate([[0], np.cumsum(sizes)]),
++            classes=np.array(final_classes, dtype=np.int32),
++            scores=np.array(final_scores, dtype=np.float32))
++        t1 = time.time()
++        gt_instances, pred_instances = evaluator.associate_instances(
++            LazyMasks(final_idx, n), final_classes, final_scores, gt_sem, gt_inst)
++        scenes.append(dict(gt=gt_instances, pred=pred_instances))
++        one = evaluator.evaluate_matches([scenes[-1]])
++        per_building[name] = dict(ap=float(one["all_ap"]), ap50=float(one["all_ap_50"]),
++                                  ap25=float(one["all_ap_25"]), n_pred=len(final_idx),
++                                  semantic_coverage=float(cov.mean()))
++        logger.info(f"  building AP/AP50/AP25 {one['all_ap']:.4f}/{one['all_ap_50']:.4f}/"
++                    f"{one['all_ap_25']:.4f}; associate {time.time() - t1:.1f}s; "
++                    f"total {time.time() - t0:.1f}s")
++
++    res = evaluator.evaluate_matches(scenes)
++    iou = np.diag(conf) / np.maximum(conf.sum(0) + conf.sum(1) - np.diag(conf), 1)
++    present = conf.sum(1) > 0
++    out = dict(split=args.split, buildings=names, ckpt=args.ckpt,
++               ap=float(res["all_ap"]), ap50=float(res["all_ap_50"]), ap25=float(res["all_ap_25"]),
++               classes={k: {kk: float(vv) for kk, vv in v.items()} for k, v in res["classes"].items()},
++               per_building=per_building,
++               diag_semantic_miou_present_classes=float(iou[present].mean()),
++               diag_semantic_iou={RAW_CLASS_NAMES[i]: float(iou[i]) for i in range(12) if present[i]},
++               settings=dict(footprint=args.footprint, overlap=args.overlap,
++                             point_max=args.point_max, merge_iou=args.merge_iou,
++                             min_inst_points=args.min_inst_points, seed=args.seed))
++    json.dump(out, open(osp.join(args.out_dir, "result.json"), "w"), indent=1)
++    logger.info("=== Full-scene {} result: AP/AP50/AP25 {:.4f}/{:.4f}/{:.4f} ===".format(
++        args.split, out["ap"], out["ap50"], out["ap25"]))
++    for name_, c in out["classes"].items():
++        logger.info(f"  {name_:12s} AP/AP50/AP25: {c['ap']:.4f}/{c['ap50']:.4f}/{c['ap25']:.4f}")
++    logger.info(f"  [diagnostic, not protocol] full-res semantic mIoU (present classes) "
++                f"{out['diag_semantic_miou_present_classes']:.4f}")
++
++
++if __name__ == "__main__":
++    main()
+--- /dev/null
++++ new/tools/hfx3d_grouping_stats.py
+@@ -0,0 +1,126 @@
++"""Derive SoftGroup grouping hyperparameters for HFX3D from the TRAINING split only.
++
++Outputs (json + log):
++* class_numpoint_mean -- mean point count of each thing class's GT instances
++  AS SEEN BY THE NETWORK, i.e. inside training crops drawn with the training
++  sampler (15 m column, <=250k points). SoftGroup's bfs_cluster drops
++  proposals smaller than npoint_thr * class_numpoint_mean, in forward-pass
++  points, so full-resolution or per-block sizes (old config) are the wrong unit.
++* point spacing in crops (1-NN distance) and mean neighbour counts within
++  candidate ball-query radii (sets the lower bound for the grouping radius
++  and the initial mean_active buffer);
++* same-class GT instance centroid separation (full-res; upper-bound context
++  for the radius: proposals chain across instances once shifted points of
++  neighbouring objects come within `radius`);
++* semantic class weights 1/(freq+0.02) (check against the PointGroup weights).
++
++Crops use a separate RNG stream (seed 2026), not the training stream.
++
++Usage: python tools/hfx3d_grouping_stats.py --out stats_train.json [--crops_per_building 40]
++"""
++import argparse
++import json
++import time
++
++import numpy as np
++from scipy.spatial import cKDTree
++
++import sys, os.path as osp  # noqa: E401
++sys.path.insert(0, osp.dirname(osp.dirname(osp.abspath(__file__))))
++from softgroup.data.hfx3d import (RAW_CLASS_NAMES, THING_RAW, column_crop, ensure_cache,  # noqa
++                                  load_building, sample_rng)
++
++RADII = [0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3]
++
++
++def main():
++    ap = argparse.ArgumentParser()
++    ap.add_argument('--data_root', default='/project/6118401/abdiaziz/fresh/softgroup/data/HFX3D_Instance')
++    ap.add_argument('--cache_root', default='/project/6118401/abdiaziz/fresh/softgroup/data/npy_cache')
++    ap.add_argument('--crops_per_building', type=int, default=40)
++    ap.add_argument('--spacing_crops_per_building', type=int, default=3)
++    ap.add_argument('--seed', type=int, default=2026)
++    ap.add_argument('--out', required=True)
++    args = ap.parse_args()
++    t0 = time.time()
++    blds = ensure_cache(args.data_root, 'train', args.cache_root)
++    assert len(blds) == 18, len(blds)
++
++    sem_counts = np.zeros(12, dtype=np.int64)
++    inst_sizes = {int(c): [] for c in THING_RAW}  # crop-level instance sizes
++    full_sizes = {int(c): [] for c in THING_RAW}
++    sep = {int(c): [] for c in THING_RAW}
++    crop_pts, crop_capped, crop_frac = [], [], []
++    nn1, nbr = [], {r: [] for r in RADII}
++    for bi, (name, d) in enumerate(blds):
++        b = load_building(d)
++        xyz, sem, inst = b['xyz'], np.asarray(b['sem']), np.asarray(b['inst'])
++        sem_counts += np.bincount(sem, minlength=12)
++        # full-res instance stats + same-class centroid separation
++        for c in THING_RAW:
++            m = (sem == c) & (inst != -1)
++            if not m.any():
++                continue
++            ids, invs, cnt = np.unique(inst[m], return_inverse=True, return_counts=True)
++            full_sizes[int(c)] += cnt.tolist()
++            pm = np.asarray(xyz[m], dtype=np.float64)
++            cen = np.stack([np.bincount(invs, weights=pm[:, k]) / cnt for k in range(3)], 1)
++            if len(ids) > 1:
++                dd, _ = cKDTree(cen).query(cen, k=2)
++                sep[int(c)] += dd[:, 1].tolist()
++        xy = xyz[:, :2]
++        for k in range(args.crops_per_building):
++            rng = sample_rng(args.seed, bi * 100000 + k)
++            idx = column_crop(xy, rng, 15.0, 10**12)  # uncapped first, to log the capping fraction
++            raw_n = idx.shape[0]
++            if raw_n > 250000:
++                idx = rng.choice(idx, 250000, replace=False)
++            crop_pts.append(idx.shape[0])
++            crop_capped.append(raw_n > 250000)
++            crop_frac.append(idx.shape[0] / max(raw_n, 1))
++            s, i = sem[idx], inst[idx]
++            for c in THING_RAW:
++                m = (s == c) & (i != -1)
++                if m.any():
++                    inst_sizes[int(c)] += np.unique(i[m], return_counts=True)[1].tolist()
++            if k < args.spacing_crops_per_building:
++                p = np.asarray(xyz[np.sort(idx)], dtype=np.float64)
++                tree = cKDTree(p)
++                q = p[rng.choice(p.shape[0], min(5000, p.shape[0]), replace=False)]
++                dd, _ = tree.query(q, k=2)
++                nn1 += dd[:, 1].tolist()
++                for r in RADII:
++                    nbr[r].append(float(np.mean(tree.query_ball_point(q, r, return_length=True))))
++        print(f'{name}: {xyz.shape[0]} pts ({time.time() - t0:.0f}s)', flush=True)
++
++    freq = sem_counts / sem_counts.sum()
++    out = dict(
++        n_train_points=int(sem_counts.sum()),
++        class_freq={RAW_CLASS_NAMES[c]: float(freq[c]) for c in range(12)},
++        class_weight_raw_order=[round(float(1 / (f + 0.02)), 4) for f in freq],
++        crops=dict(n=len(crop_pts), mean_points=float(np.mean(crop_pts)),
++                   frac_capped=float(np.mean(crop_capped)),
++                   median_keep_fraction=float(np.median(crop_frac)),
++                   p10_keep_fraction=float(np.percentile(crop_frac, 10))),
++        spacing=dict(nn1_median=float(np.median(nn1)), nn1_p90=float(np.percentile(nn1, 90)),
++                     mean_neighbours={str(r): float(np.mean(v)) for r, v in nbr.items()}),
++        class_numpoint_mean_crop={RAW_CLASS_NAMES[c]: float(np.mean(v)) if v else None
++                                  for c, v in inst_sizes.items()},
++        n_crop_instances={RAW_CLASS_NAMES[c]: len(v) for c, v in inst_sizes.items()},
++        full_res_instance_size_mean={RAW_CLASS_NAMES[c]: float(np.mean(v)) if v else None
++                                     for c, v in full_sizes.items()},
++        n_full_res_instances={RAW_CLASS_NAMES[c]: len(v) for c, v in full_sizes.items()},
++        same_class_centroid_sep_m={RAW_CLASS_NAMES[c]: dict(
++            p5=float(np.percentile(v, 5)), median=float(np.median(v))) if v else None
++            for c, v in sep.items()},
++    )
++    # dense stuff-first order for the SoftGroup config: stuff -1, things in THING_RAW order
++    out['class_numpoint_mean_dense'] = [-1.0] * 4 + [
++        round(out['class_numpoint_mean_crop'][RAW_CLASS_NAMES[c]], 1) for c in THING_RAW]
++    json.dump(out, open(args.out, 'w'), indent=1)
++    print(json.dumps(out, indent=1))
++    print(f'done in {time.time() - t0:.0f}s')
++
++
++if __name__ == '__main__':
++    main()
+--- /dev/null
++++ new/tools/insseg_eval_utils.py
+@@ -0,0 +1,252 @@
++"""
++Shared ScanNet-v2-style instance segmentation evaluator for HFX3D.
++
++Direct port of Pointcept's InsSegEvaluator/InsSegTester
++associate_instances()/evaluate_matches()
++(pointcept/engines/hooks/evaluator.py, pointcept/engines/test.py), adapted to
++take plain numpy arrays instead of a live trainer/tester object. Same metric,
++same overlap thresholds, same min-region-size filter -- every HFX3D
++instance-seg result in this project (PointGroup's own test.py run, the
++clustering-oracle baselines, the full-scene tiling+merge eval) goes through
++this exact same class, so numbers are directly comparable across all of them.
++
++Pure numpy -- no torch/pointcept import -- so this stays importable from
++tools/eval_cluster_gt_hfx3d.py's standalone (sklearn-only) environment as
++well as from tools/test_fullscene_insseg_hfx3d.py's full Pointcept/CUDA one.
++"""
++
++from uuid import uuid4
++
++import numpy as np
++
++
++class ScanNetInstanceEvaluator:
++    def __init__(self, class_names, segment_ignore_index, instance_ignore_index):
++        self.class_names = class_names
++        self.segment_ignore_index = segment_ignore_index
++        self.instance_ignore_index = instance_ignore_index
++        self.valid_class_names = [
++            class_names[i] for i in range(len(class_names)) if i not in segment_ignore_index
++        ]
++        self.overlaps = np.append(np.arange(0.5, 0.95, 0.05), 0.25)
++        self.min_region_sizes = 100
++
++    def associate_instances(self, pred_masks, pred_classes, pred_scores, segment, instance):
++        # Sparse (point-index-array) intersections, NOT dense N-length boolean
++        # masks. The original port (mirroring Pointcept's InsSegEvaluator/
++        # InsSegTester verbatim) stored a full dense mask per predicted
++        # instance and recomputed `instance == gt_inst["instance_id"]` (a
++        # dense O(N) scan) for every (pred, gt) pair -- fine for Pointcept's
++        # normal ~100-250k point crops and this project's clustering-oracle
++        # baseline (tens of instances/building), but it OOM'd running the
++        # full-scene PointGroup stitching eval: confirmed via `sstat` showing
++        # 67GB RSS against a 64G job limit while scoring a 47.9M-point
++        # building with 2309 barely-merged instances (2309 dense masks x
++        # ~48MB each is >100GB by itself). Fixed by converting every mask to
++        # a sorted point-index array once, and intersecting via
++        # np.intersect1d (cost scales with instance size, not building size)
++        # -- same matching logic, same output fields (just no "mask" key,
++        # which evaluate_matches() never read), so every already-reported
++        # number from this evaluator (clustering-oracle DBSCAN/HDBSCAN)
++        # stays exactly reproducible.
++        # D2 fix (2026-11-01): thing points whose instance is ignore (-1, i.e. removed
++        # <200-pt instances) are void too, as in the official ScanNet evaluator.
++        void_mask = np.isin(segment, self.segment_ignore_index) | (instance == self.instance_ignore_index)
++
++        gt_instances = {name: [] for i, name in enumerate(self.class_names) if i not in self.segment_ignore_index}
++        instance_ids, idx, counts = np.unique(instance, return_index=True, return_counts=True)
++        segment_ids = segment[idx]
++
++        # Group every point's original index by its GT instance id once
++        # (O(N log N)), instead of recomputing `instance == id` per pair.
++        order = np.argsort(instance, kind="stable")
++        sorted_instance = instance[order]
++        starts = np.searchsorted(sorted_instance, instance_ids)
++        ends = np.append(starts[1:], len(instance))
++        gt_idx_by_id = {}
++
++        for i in range(len(instance_ids)):
++            if instance_ids[i] == self.instance_ignore_index:
++                continue
++            if segment_ids[i] in self.segment_ignore_index:
++                continue
++            gt_idx_by_id[instance_ids[i]] = order[starts[i]:ends[i]]
++            gt_inst = dict(
++                instance_id=instance_ids[i], segment_id=segment_ids[i],
++                dist_conf=0.0, med_dist=-1.0, vert_count=counts[i], matched_pred=[],
++            )
++            gt_instances[self.class_names[segment_ids[i]]].append(gt_inst)
++
++        pred_instances = {name: [] for i, name in enumerate(self.class_names) if i not in self.segment_ignore_index}
++        instance_id = 0
++        for i in range(len(pred_classes)):
++            if pred_classes[i] in self.segment_ignore_index:
++                continue
++            pred_idx = np.flatnonzero(np.not_equal(pred_masks[i], 0))
++            pred_inst = dict(
++                uuid=uuid4(), instance_id=instance_id, segment_id=pred_classes[i],
++                confidence=pred_scores[i],
++            )
++            pred_inst["vert_count"] = pred_idx.shape[0]
++            pred_inst["void_intersection"] = int(np.count_nonzero(void_mask[pred_idx]))
++            if pred_inst["vert_count"] < self.min_region_sizes:
++                continue
++            segment_name = self.class_names[pred_inst["segment_id"]]
++            matched_gt = []
++            for gt_inst in gt_instances[segment_name]:
++                gt_idx = gt_idx_by_id[gt_inst["instance_id"]]
++                intersection = np.intersect1d(pred_idx, gt_idx, assume_unique=True).shape[0]
++                if intersection > 0:
++                    gt_inst_ = gt_inst.copy()
++                    pred_inst_ = pred_inst.copy()
++                    gt_inst_["intersection"] = intersection
++                    pred_inst_["intersection"] = intersection
++                    matched_gt.append(gt_inst_)
++                    gt_inst["matched_pred"].append(pred_inst_)
++            pred_inst["matched_gt"] = matched_gt
++            pred_instances[segment_name].append(pred_inst)
++            instance_id += 1
++        return gt_instances, pred_instances
++
++    def evaluate_matches(self, scenes):
++        overlaps = self.overlaps
++        min_region_size = self.min_region_sizes
++        distance_thresh = float("inf")
++        distance_conf = -float("inf")
++
++        ap_table = np.zeros((len(self.valid_class_names), len(overlaps)), float)
++        for oi, overlap_th in enumerate(overlaps):
++            pred_visited = {}
++            for scene in scenes:
++                for label_name in self.valid_class_names:
++                    for p in scene["pred"][label_name]:
++                        pred_visited[p["uuid"]] = False
++            for li, label_name in enumerate(self.valid_class_names):
++                y_true = np.empty(0)
++                y_score = np.empty(0)
++                hard_false_negatives = 0
++                has_gt = False
++                has_pred = False
++                for scene in scenes:
++                    pred_instances = scene["pred"][label_name]
++                    gt_instances = [
++                        gt for gt in scene["gt"][label_name]
++                        if gt["vert_count"] >= min_region_size
++                        and gt["med_dist"] <= distance_thresh
++                        and gt["dist_conf"] >= distance_conf
++                    ]
++                    if gt_instances:
++                        has_gt = True
++                    if pred_instances:
++                        has_pred = True
++
++                    cur_true = np.ones(len(gt_instances))
++                    cur_score = np.ones(len(gt_instances)) * (-float("inf"))
++                    cur_match = np.zeros(len(gt_instances), dtype=bool)
++                    for gti, gt in enumerate(gt_instances):
++                        found_match = False
++                        for pred in gt["matched_pred"]:
++                            if pred_visited[pred["uuid"]]:
++                                continue
++                            overlap = float(pred["intersection"]) / (
++                                gt["vert_count"] + pred["vert_count"] - pred["intersection"]
++                            )
++                            if overlap > overlap_th:
++                                confidence = pred["confidence"]
++                                if cur_match[gti]:
++                                    max_score = max(cur_score[gti], confidence)
++                                    min_score = min(cur_score[gti], confidence)
++                                    cur_score[gti] = max_score
++                                    cur_true = np.append(cur_true, 0)
++                                    cur_score = np.append(cur_score, min_score)
++                                    cur_match = np.append(cur_match, True)
++                                else:
++                                    found_match = True
++                                    cur_match[gti] = True
++                                    cur_score[gti] = confidence
++                                    pred_visited[pred["uuid"]] = True
++                        if not found_match:
++                            hard_false_negatives += 1
++                    cur_true = cur_true[cur_match]
++                    cur_score = cur_score[cur_match]
++
++                    for pred in pred_instances:
++                        found_gt = False
++                        for gt in pred["matched_gt"]:
++                            overlap = float(gt["intersection"]) / (
++                                gt["vert_count"] + pred["vert_count"] - gt["intersection"]
++                            )
++                            if overlap > overlap_th:
++                                found_gt = True
++                                break
++                        if not found_gt:
++                            num_ignore = pred["void_intersection"]
++                            for gt in pred["matched_gt"]:
++                                if gt["segment_id"] in self.segment_ignore_index:
++                                    num_ignore += gt["intersection"]
++                                if (
++                                    gt["vert_count"] < min_region_size
++                                    or gt["med_dist"] > distance_thresh
++                                    or gt["dist_conf"] < distance_conf
++                                ):
++                                    num_ignore += gt["intersection"]
++                            proportion_ignore = float(num_ignore) / pred["vert_count"]
++                            if proportion_ignore <= overlap_th:
++                                cur_true = np.append(cur_true, 0)
++                                cur_score = np.append(cur_score, pred["confidence"])
++
++                    y_true = np.append(y_true, cur_true)
++                    y_score = np.append(y_score, cur_score)
++
++                if has_gt and has_pred:
++                    score_arg_sort = np.argsort(y_score)
++                    y_score_sorted = y_score[score_arg_sort]
++                    y_true_sorted = y_true[score_arg_sort]
++                    y_true_sorted_cumsum = np.cumsum(y_true_sorted)
++
++                    (thresholds, unique_indices) = np.unique(y_score_sorted, return_index=True)
++                    num_prec_recall = len(unique_indices) + 1
++                    num_examples = len(y_score_sorted)
++                    num_true_examples = y_true_sorted_cumsum[-1] if len(y_true_sorted_cumsum) > 0 else 0
++                    precision = np.zeros(num_prec_recall)
++                    recall = np.zeros(num_prec_recall)
++
++                    y_true_sorted_cumsum = np.append(y_true_sorted_cumsum, 0)
++                    for idx_res, idx_scores in enumerate(unique_indices):
++                        cumsum = y_true_sorted_cumsum[idx_scores - 1]
++                        tp = num_true_examples - cumsum
++                        fp = num_examples - idx_scores - tp
++                        fn = cumsum + hard_false_negatives
++                        precision[idx_res] = float(tp) / (tp + fp)
++                        recall[idx_res] = float(tp) / (tp + fn)
++
++                    precision[-1] = 1.0
++                    recall[-1] = 0.0
++
++                    recall_for_conv = np.copy(recall)
++                    recall_for_conv = np.append(recall_for_conv[0], recall_for_conv)
++                    recall_for_conv = np.append(recall_for_conv, 0.0)
++                    stepWidths = np.convolve(recall_for_conv, [-0.5, 0, 0.5], "valid")
++                    ap_current = np.dot(precision, stepWidths)
++                elif has_gt:
++                    ap_current = 0.0
++                else:
++                    ap_current = float("nan")
++                ap_table[li, oi] = ap_current
++
++        o50 = np.where(np.isclose(self.overlaps, 0.5))
++        o25 = np.where(np.isclose(self.overlaps, 0.25))
++        oAllBut25 = np.where(np.logical_not(np.isclose(self.overlaps, 0.25)))
++        ap_scores = dict(
++            all_ap=np.nanmean(ap_table[:, oAllBut25]),
++            all_ap_50=np.nanmean(ap_table[:, o50]),
++            all_ap_25=np.nanmean(ap_table[:, o25]),
++            classes={},
++        )
++        for li, label_name in enumerate(self.valid_class_names):
++            ap_scores["classes"][label_name] = dict(
++                ap=np.average(ap_table[li, oAllBut25]),
++                ap50=np.average(ap_table[li, o50]),
++                ap25=np.average(ap_table[li, o25]),
++            )
++        return ap_scores
+--- /dev/null
++++ new/slurm/smoke_tamia.sh
+@@ -0,0 +1,74 @@
++#!/bin/bash
++#SBATCH --job-name=sg_fresh_smoke
++#SBATCH --account=aip-jijup
++#SBATCH --time=00:30:00
++#SBATCH --nodes=1
++#SBATCH --gpus=h100:4
++#SBATCH --cpus-per-task=48
++#SBATCH --mem=480G
++#SBATCH --output=/project/6118401/abdiaziz/fresh/softgroup/logs/%x-%j.out
++# SoftGroup HFX3D fresh setup -- SMOKE TEST ONLY (50 steps per stage + full-scene
++# eval of one val building). Run: sbatch slurm/smoke_tamia.sh  (from the repo root)
++ROOT=/project/6118401/abdiaziz/fresh/softgroup
++REPO=$ROOT/SoftGroup
++SIF=/home/a/abdiaziz/pointcept.sif
++WD=$ROOT/work_dirs/smoke_$SLURM_JOB_ID
++LOG=$ROOT/logs/smoke_$SLURM_JOB_ID
++mkdir -p $WD $LOG
++module load apptainer
++echo "Job $SLURM_JOB_ID on $SLURMD_NODENAME start $(date)"
++
++run () {  # $1 = GPU id ("" for none), rest = shell command run inside the container
++  local gpu=$1; shift
++  apptainer exec --nv --cleanenv \
++    --bind /project/6118401/abdiaziz:/project/6118401/abdiaziz \
++    --bind /home/a/abdiaziz:/home/a/abdiaziz \
++    $SIF bash -lc "cd $REPO && export PYTHONNOUSERSITE=1 PYTHONPATH=$REPO/.pydeps:$REPO OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=$gpu && $*"
++}
++
++# host resource monitor
++( while true; do echo "== $(date +%T)"; free -g | head -2; nvidia-smi --query-gpu=index,memory.used,utilization.gpu --format=csv,noheader; sleep 30; done ) > $LOG/monitor.txt 2>&1 &
++MON=$!
++
++# 0) one-time uncompressed cache of the h5 arrays (train + val BLD008)
++T0=$(date +%s)
++run "" "python -c \"from softgroup.data.hfx3d import ensure_cache as e; e('$ROOT/data/HFX3D_Instance','train','$ROOT/data/npy_cache',processes=18); e('$ROOT/data/HFX3D_Instance','val','$ROOT/data/npy_cache',names=['HFX_BLD008_ZEB_CLEAN'])\"" > $LOG/cache.log 2>&1
++echo "cache built in $(( $(date +%s) - T0 ))s (rc $?)"; du -sh $ROOT/data/npy_cache
++
++# 1) training-split statistics for the grouping config (CPU, background)
++run "" "python tools/hfx3d_grouping_stats.py --out $LOG/stats_train.json" > $LOG/stats.log 2>&1 &
++STATS=$!
++
++# 2) stage 1 (backbone), 50 steps, ckpt every 25
++T0=$(date +%s)
++run 0 "python tools/train_hfx3d.py configs/softgroup/softgroup_hfx3d_fresh_backbone.yaml --work_dir $WD/stage1 --stop_after 50 --save_every 25 --num_workers 32" > $LOG/stage1.log 2>&1
++echo "stage1 rc $? in $(( $(date +%s) - T0 ))s"
++
++# 3) stage 2 (full), 50 steps from the stage-1 checkpoint
++T0=$(date +%s)
++run 0 "python tools/train_hfx3d.py configs/softgroup/softgroup_hfx3d_fresh_full.yaml --work_dir $WD/stage2 --pretrain $WD/stage1/step_00050.pth --stop_after 50 --save_every 25 --num_workers 32" > $LOG/stage2.log 2>&1
++echo "stage2 rc $? in $(( $(date +%s) - T0 ))s"
++
++# 4) full-scene eval on ONE val building: stage-2 ckpt twice (determinism), stage-1 ckpt once
++#    (semantic-only path); plus a resume check of stage 1 on GPU0 (same crops must be replayed)
++EV="python tools/test_fullscene_softgroup_hfx3d.py --split val --buildings HFX_BLD008_ZEB_CLEAN"
++T0=$(date +%s)
++run 1 "timeout 900 $EV --config configs/softgroup/softgroup_hfx3d_fresh_full.yaml --ckpt $WD/stage2/step_05450.pth --out_dir $WD/eval_s2_a" > $LOG/eval_s2_a.log 2>&1 &
++E1=$!
++run 2 "timeout 900 $EV --config configs/softgroup/softgroup_hfx3d_fresh_full.yaml --ckpt $WD/stage2/step_05450.pth --out_dir $WD/eval_s2_b" > $LOG/eval_s2_b.log 2>&1 &
++E2=$!
++run 3 "timeout 900 $EV --config configs/softgroup/softgroup_hfx3d_fresh_backbone.yaml --ckpt $WD/stage1/step_00050.pth --out_dir $WD/eval_s1" > $LOG/eval_s1.log 2>&1 &
++E3=$!
++run 0 "python tools/train_hfx3d.py configs/softgroup/softgroup_hfx3d_fresh_backbone.yaml --work_dir $WD/stage1_resume --resume $WD/stage1/step_00025.pth --stop_after 10 --save_every 1000 --num_workers 32" > $LOG/stage1_resume.log 2>&1
++echo "resume check rc $?"
++wait $E1; echo "eval_s2_a rc $?"; wait $E2; echo "eval_s2_b rc $?"; wait $E3; echo "eval_s1 rc $?"
++echo "evals done in $(( $(date +%s) - T0 ))s"
++wait $STATS; echo "stats rc $?"
++kill $MON
++
++echo "===== determinism (stage-2 ckpt evaluated twice)"
++md5sum $WD/eval_s2_a/*_pred.npz $WD/eval_s2_b/*_pred.npz
++grep -h "Full-scene" $WD/eval_s2_a/eval.log $WD/eval_s2_b/eval.log $WD/eval_s1/eval.log
++echo "===== resume replay (pts + fingerprint per step must match steps 26-35 of stage1)"
++grep -h -o -E "step (2[6-9]|3[0-5])/5400 lr [^ ]* pts [0-9]* fp [0-9.]*" $LOG/stage1.log $LOG/stage1_resume.log
++echo "Finished $(date)"
+--- /dev/null
++++ new/slurm/train_full_tamia.sh
+@@ -0,0 +1,72 @@
++#!/bin/bash
++#SBATCH --job-name=sg_fresh_s42
++#SBATCH --account=aip-jijup
++#SBATCH --time=12:00:00
++#SBATCH --nodes=1
++#SBATCH --gpus=h100:4
++#SBATCH --cpus-per-task=48
++#SBATCH --mem=480G
++#SBATCH --output=/project/6118401/abdiaziz/fresh/softgroup/logs/%x-%j.out
++# SoftGroup on HFX3D, protocol v1.1 §3.4 -- FULL TRAINING (seed 42), 18,000 optimizer
++# steps at batch 4: stage 1 backbone 0 -> 5,400, stage 2 full model 5,400 -> 18,000.
++# GPU 0 trains. GPUs 1-3 evaluate every checkpoint (every 1,800 global steps) on the
++# 4 val buildings with the full-scene §3.2/§3.3 pipeline as soon as it is written.
++# Idempotent / resumable: resubmit the same script if it hits the time limit; it
++# resumes each stage from its latest checkpoint and skips finished evaluations.
++#
++# HOW TO RUN:  cd /project/6118401/abdiaziz/fresh/softgroup/SoftGroup && sbatch slurm/train_full_tamia.sh
++# Watch:       tail -f /project/6118401/abdiaziz/fresh/softgroup/logs/sg_fresh_s42-<jobid>.out
++# Val curve:   grep -h "Full-scene val" $WD/eval_val/step_*/eval.log
++ROOT=/project/6118401/abdiaziz/fresh/softgroup
++REPO=$ROOT/SoftGroup
++SIF=/home/a/abdiaziz/pointcept.sif
++WD=$ROOT/work_dirs/hfx3d_fresh_s42
++CFG1=configs/softgroup/softgroup_hfx3d_fresh_backbone.yaml
++CFG2=configs/softgroup/softgroup_hfx3d_fresh_full.yaml
++mkdir -p $WD/eval_val
++module load apptainer
++echo "Job $SLURM_JOB_ID on $SLURMD_NODENAME start $(date)"
++
++run () {  # $1 = GPU id ("" for none), rest = command inside the container
++  local gpu=$1; shift
++  apptainer exec --nv --cleanenv \
++    --bind /project/6118401/abdiaziz:/project/6118401/abdiaziz \
++    --bind /home/a/abdiaziz:/home/a/abdiaziz \
++    $SIF bash -lc "cd $REPO && export PYTHONNOUSERSITE=1 PYTHONPATH=$REPO/.pydeps:$REPO OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=$gpu && $*"
++}
++
++# uncompressed npy cache of the released h5 (idempotent; built once)
++run "" "python -c \"from softgroup.data.hfx3d import ensure_cache as e; [e('$ROOT/data/HFX3D_Instance', s, '$ROOT/data/npy_cache', processes=18) for s in ('train','val')]\""
++
++eval_worker () {  # $1 = GPU, $2 = worker index 0..2 -> evaluates steps k*1800 with k % 3 == $2
++  local k=0
++  for step in 1800 3600 5400 7200 9000 10800 12600 14400 16200 18000; do
++    k=$((k + 1)); [ $(( (k - 1) % 3 )) -ne $2 ] && continue
++    local s=$(printf %05d $step); local out=$WD/eval_val/step_$s
++    [ -f $out/result.json ] && continue
++    while [ ! -f $WD/step_$s.pth ]; do [ -f $WD/TRAINING_ENDED ] && return; sleep 60; done
++    local cfg=$CFG2; [ $step -le 5400 ] && cfg=$CFG1
++    run $1 "python tools/test_fullscene_softgroup_hfx3d.py --config $cfg --ckpt $WD/step_$s.pth --split val --out_dir $out" > $WD/eval_val/step_$s.log 2>&1
++    echo "val eval step $step rc $? $(date)"
++  done
++}
++rm -f $WD/TRAINING_ENDED
++eval_worker 1 0 & eval_worker 2 1 & eval_worker 3 2 &
++
++# stage 1: backbone (semantic + offsets), global steps 0 -> 5400
++if [ ! -f $WD/step_05400.pth ]; then
++  RES=""; [ -L $WD/latest_backbone.pth ] && RES="--resume $WD/latest_backbone.pth"
++  run 0 "python tools/train_hfx3d.py $CFG1 --work_dir $WD $RES --num_workers 32"
++  echo "stage1 rc $? $(date)"
++fi
++# stage 2: full model from step_05400.pth (cfg.pretrain), global steps 5400 -> 18000
++if [ -f $WD/step_05400.pth ] && [ ! -f $WD/step_18000.pth ]; then
++  RES=""; [ -L $WD/latest_full.pth ] && RES="--resume $WD/latest_full.pth"
++  run 0 "python tools/train_hfx3d.py $CFG2 --work_dir $WD $RES --num_workers 32"
++  echo "stage2 rc $? $(date)"
++fi
++touch $WD/TRAINING_ENDED
++wait
++echo "===== val curve (full-scene AP/AP50/AP25; stage-1 steps have no instance head)"
++grep -h "Full-scene val" $WD/eval_val/step_*/eval.log
++echo "Finished $(date)"
+--- /dev/null
++++ new/slurm/eval_tamia.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++#SBATCH --job-name=sg_fresh_eval
++#SBATCH --account=aip-jijup
++#SBATCH --time=06:00:00
++#SBATCH --nodes=1
++#SBATCH --gpus=h100:4
++#SBATCH --cpus-per-task=48
++#SBATCH --mem=480G
++#SBATCH --output=/project/6118401/abdiaziz/fresh/softgroup/logs/%x-%j.out
++# Full-scene §3.2/§3.3 evaluation of ONE SoftGroup checkpoint on a split.
++# Protocol: run TEST once, with the checkpoint that has the best val AP.
++# HOW TO RUN:
++#   cd /project/6118401/abdiaziz/fresh/softgroup/SoftGroup
++#   STEP=12600 SPLIT=test sbatch --export=ALL slurm/eval_tamia.sh
++ROOT=/project/6118401/abdiaziz/fresh/softgroup
++REPO=$ROOT/SoftGroup
++SIF=/home/a/abdiaziz/pointcept.sif
++WD=$ROOT/work_dirs/hfx3d_fresh_s42
++: ${STEP:?set STEP (global step of the checkpoint)} ${SPLIT:=test}
++S=$(printf %05d $STEP)
++CFG=configs/softgroup/softgroup_hfx3d_fresh_full.yaml; [ $STEP -le 5400 ] && CFG=configs/softgroup/softgroup_hfx3d_fresh_backbone.yaml
++module load apptainer
++apptainer exec --nv --cleanenv \
++  --bind /project/6118401/abdiaziz:/project/6118401/abdiaziz \
++  --bind /home/a/abdiaziz:/home/a/abdiaziz \
++  $SIF bash -lc "cd $REPO && export PYTHONNOUSERSITE=1 PYTHONPATH=$REPO/.pydeps:$REPO OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=0 && \
++  python -c \"from softgroup.data.hfx3d import ensure_cache as e; e('$ROOT/data/HFX3D_Instance','$SPLIT','$ROOT/data/npy_cache')\" && \
++  python tools/test_fullscene_softgroup_hfx3d.py --config $CFG --ckpt $WD/step_$S.pth --split $SPLIT --out_dir $WD/eval_${SPLIT}/step_$S"
