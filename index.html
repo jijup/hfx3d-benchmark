@@ -129,26 +129,27 @@
   <div class="container-sm">
     <div class="section-head text-center fade-up">
       <p class="section-label">Abstract</p>
-      <h2 class="section-title">A New Benchmark for Facade Segmentation</h2>
+      <h2 class="section-title">Function-Aware Facade Understanding</h2>
     </div>
     <div class="abstract-body fade-up">
       <p>
-        We introduce <strong>HFX3D</strong>, a large-scale LiDAR benchmark for 3D semantic segmentation
-        of urban building facades in Halifax, Nova Scotia, Canada. The dataset comprises
-        <strong>26 buildings</strong> captured with a <strong>ZEB Horizon</strong> handheld scanner,
-        spanning commercial, residential, institutional, and waterfront contexts with facades ranging
-        from historical masonry to contemporary glass curtain walls, annotated across
-        <strong>12 semantic classes</strong> totalling over
-        <strong>492 million points</strong>. Each building is enriched with semantic, instance, and
-        functional labels, making HFX3D the first facade benchmark to provide all three annotation tiers.
+        Understanding building facades is central to urban digital twins, heritage modelling, and
+        sustainable city analysis, yet existing LiDAR benchmarks stop at geometry and semantic
+        segmentation and offer little support for reasoning about the functional role of each
+        architectural element. We introduce <strong>HFX3D</strong>, a large-scale urban facade
+        benchmark of approximately <strong>492 million LiDAR points</strong> from
+        <strong>26 buildings</strong> in Halifax, Canada, captured across four seasons, day and night,
+        and varied weather. Each facade is annotated at three tiers, <strong>semantic</strong>,
+        <strong>instance</strong>, and <strong>per-instance functional attributes</strong>, making it,
+        to our knowledge, the first facade dataset to pair geometry and semantics with functional labels.
       </p>
       <p>
-        Building facade segmentation is fundamental to urban digital twins, architectural surveying,
-        heritage preservation, and infrastructure inspection, yet existing benchmarks predominantly
-        target autonomous driving or indoor environments. We benchmark seven leading 3D segmentation
-        architectures: KPConv, PTv3, PTv2, DGCNN, RandLA-Net, PointNet++, and PointNet, establishing
-        strong baselines and revealing challenges unique to close range architectural LiDAR capture
-        across five urban neighbourhoods, four seasons, and varied lighting conditions.
+        Annotations are produced by a semi-automatic pipeline that combines geometry-guided heuristics
+        with expert validation. We benchmark representative point-based, graph-based, convolutional, and
+        transformer architectures and find that semantic segmentation is already challenging under
+        severe class imbalance, while instance separation of repetitive structures and functional
+        reasoning from geometry are substantially harder. The benchmark establishes a new foundation
+        for function-aware 3D urban understanding.
       </p>
     </div>
   </div>
