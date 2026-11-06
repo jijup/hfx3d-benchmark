@@ -292,7 +292,7 @@ Full workflow, options, and the CloudCompare guide are in [`scripts/README.md`](
 
 - **Two-round cross-review** — one primary annotator per building; reviewers never review their own buildings; disagreements settled by majority vote.
 - **Inter-annotator agreement** — Cohen's κ per building: round 1 mean **0.44** → round 2 mean **0.99** after corrections.
-- **Instance refinement** — DBSCAN candidates hand-refined, **8,586 → 6,418** instances (−25.3%), mostly merging over-segmentation.
+- **Instance refinement** — DBSCAN candidates hand-refined, **8,586 → 6,549** instances (−23.7%), mostly merging over-segmentation.
 
 ---
 
