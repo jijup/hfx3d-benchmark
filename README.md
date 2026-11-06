@@ -144,11 +144,10 @@ The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon hand
 
 ## Download
 
-📦 **Coming soon.** The dataset (per-building HDF5 files with the official normalization) will be released on **[Hugging Face](https://huggingface.co/)**. Until then, contact the authors (see [Contact](#contact)) for access.
+📦 The dataset (per-building HDF5 files with the official normalization) is on **[Hugging Face](https://huggingface.co/datasets/SMU-GSCLab/hfx3d-benchmark)**. Click **Request Access** there (the dataset is gated); see [Contact](#contact) with any questions.
 
 ```bash
-# once released (example):
-# huggingface-cli download <org>/HFX3D --repo-type dataset --local-dir HFX3D_Splits
+huggingface-cli download SMU-GSCLab/hfx3d-benchmark --repo-type dataset --local-dir HFX3D_Splits
 export HFX3D_DATA_ROOT=/path/to/HFX3D_Splits
 ```
 
