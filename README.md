@@ -127,7 +127,7 @@ The dataset consists of 26 Halifax, NS buildings scanned with a ZEB Horizon hand
 The released HDF5 is **raw**; the loaders expect the normalized input, so run `normalize_hdf5.py` once after downloading:
 
 ```bash
-huggingface-cli download SMU-GSCLab/hfx3d-benchmark --repo-type dataset --local-dir HFX3D_raw
+hf download SMU-GSCLab/hfx3d-benchmark --repo-type dataset --local-dir HFX3D_raw
 python preprocessing/normalize_hdf5.py HFX3D_raw HFX3D_Splits   # mean-centre xyz, rgb→[0,1], intensity p1/p99
 export HFX3D_DATA_ROOT=/path/to/HFX3D_Splits
 ```
