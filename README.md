@@ -16,7 +16,7 @@ A benchmark for **semantic segmentation, instance segmentation, and functional-a
 **26 buildings · ~492 M points · 12 semantic classes · 4 seasons · 5 neighbourhoods**<br>
 Halifax, Nova Scotia — ZEB Horizon handheld LiDAR
 
-[**🌐 Project Page**](https://jijup.github.io/hfx3d-benchmark/)
+[**📄 Paper (arXiv)**](https://arxiv.org/abs/2611.08645) · [**🌐 Project Page**](https://jijup.github.io/hfx3d-benchmark/) · [**🤗 Dataset**](https://huggingface.co/datasets/SMU-GSCLab/hfx3d-benchmark)
 
 <br>
 
