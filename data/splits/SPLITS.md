@@ -13,6 +13,4 @@ The 26 buildings are split at the building level: 18 train / 4 val / 4 test. Ass
 | Train | 343,676,263 | 69.9 % |
 | Val   |  68,447,591 | 13.9 % |
 | Test  |  79,731,620 | 16.2 % |
-| **Total** | **491,855,474** | |
-
-To generate per-class split statistics, run `python preprocessing/analyse_dataset.py <las_dir>`.
+| **Total** | **491,855,474**  |
