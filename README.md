@@ -359,6 +359,14 @@ If you use HFX3D in your research, please cite:
 
 ---
 
+## Related Publications
+
+- **Do 3D Point Representations Encode Architectural Functions? Probing Supervised and Pretrained Models on Urban Facades**<br>
+  Abdiaziz Muse, Jiju Poovvancheri · *NeurIPS 2026 Workshop: Physical World AI* · [arXiv](https://arxiv.org/abs/2611.23720)<br>
+  Probes whether supervised and self-supervised 3D backbones encode HFX3D's 15 functional attributes, on a 22-building subset of HFX3D.
+
+---
+
 ## License
 
 | Component | License |
