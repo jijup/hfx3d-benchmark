@@ -449,6 +449,22 @@ tbody tr:hover td { background: var(--surface-2); }
 .ack-body { max-width: 680px; margin: 32px auto 0; color: var(--text-2);
   font-size: .9375rem; line-height: 1.8; text-align: center; }
 
+/* ════════════════════════════════ RELATED WORK ═══ */
+#related { padding: 80px 24px; background: var(--surface); }
+.related-card {
+  max-width: 760px; margin: 0 auto;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px 32px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.06);
+}
+.related-venue { font-size: .72rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--blue); }
+.related-title { font-size: 1.05rem; font-weight: 700; line-height: 1.45; color: var(--text-1); margin: 0; }
+.related-authors { font-size: .85rem; color: var(--text-2); margin: 0; }
+.related-desc { font-size: .875rem; color: var(--text-3); line-height: 1.65; margin: 0 0 6px; }
+@media(max-width: 600px) { .related-card { padding: 22px 18px; } }
+
 /* ════════════════════════════════ CITATION ═══ */
 #citation { padding: 100px 24px; background: var(--surface-2); }
 .citation-box { max-width: 760px; margin: 0 auto; background: var(--surface);
