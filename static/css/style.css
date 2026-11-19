@@ -463,6 +463,7 @@ tbody tr:hover td { background: var(--surface-2); }
 .related-title { font-size: 1.05rem; font-weight: 700; line-height: 1.45; color: var(--text-1); margin: 0; }
 .related-authors { font-size: .85rem; color: var(--text-2); margin: 0; }
 .related-desc { font-size: .875rem; color: var(--text-3); line-height: 1.65; margin: 0 0 6px; }
+.related-card .btn { align-self: center; }
 @media(max-width: 600px) { .related-card { padding: 22px 18px; } }
 
 /* ════════════════════════════════ CITATION ═══ */
@@ -708,6 +709,11 @@ footer { background: var(--hero-bg); border-top: 1px solid rgba(255,255,255,.06)
 }
 @media(max-width: 560px) {
   .cond-grid { grid-template-columns: repeat(2, 1fr); }
+}
+/* 9 nav links + Code button need ~900px; collapse to the burger below that */
+@media(max-width: 920px) {
+  .nav-links, .nav-actions { display: none; }
+  .nav-burger { display: flex; }
 }
 @media(max-width: 768px) {
   .hero-stats { flex-direction: column; }
